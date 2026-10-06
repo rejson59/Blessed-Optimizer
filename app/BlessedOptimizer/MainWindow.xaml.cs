@@ -555,9 +555,12 @@ public partial class MainWindow : Window
         var startInfo = new ProcessStartInfo(executable) { UseShellExecute = true, Verb = "runas" };
         if (string.Equals(Path.GetFileNameWithoutExtension(executable), "dotnet", StringComparison.OrdinalIgnoreCase))
         {
-            var assemblyPath = Assembly.GetEntryAssembly()?.Location;
-            if (string.IsNullOrWhiteSpace(assemblyPath))
+            var assemblyName = Assembly.GetEntryAssembly()?.GetName().Name;
+            if (string.IsNullOrWhiteSpace(assemblyName))
                 throw new InvalidOperationException("Nie udało się ustalić ścieżki aplikacji do bezpiecznego monitowania UAC.");
+            var assemblyPath = Path.Combine(AppContext.BaseDirectory, $"{assemblyName}.dll");
+            if (!File.Exists(assemblyPath))
+                throw new InvalidOperationException("Nie udało się znaleźć aplikacji do bezpiecznego monitowania UAC.");
             startInfo.ArgumentList.Add(assemblyPath);
         }
         startInfo.ArgumentList.Add("--apply-power-setting");
