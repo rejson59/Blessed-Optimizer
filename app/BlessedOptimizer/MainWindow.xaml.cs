@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using System.Windows.Media.Effects;
 using System.Windows.Threading;
 using BlessedOptimizer.Models;
 using BlessedOptimizer.Services;
@@ -121,6 +122,7 @@ public partial class MainWindow : Window
 
     private void RenderCurrentPage()
     {
+        UpdateWorkspaceHeader();
         PageHost.Children.Clear();
         var page = _currentPage switch
         {
@@ -144,10 +146,30 @@ public partial class MainWindow : Window
         }
     }
 
+    private void UpdateWorkspaceHeader()
+    {
+        var page = _currentPage switch
+        {
+            "connections" => (Title: "Połączenia", Crumb: "POŁĄCZENIA", Message: "Sprawdzę stan kart i pomogę wykonać test ping. Niczego nie przestawię bez Twojej decyzji."),
+            "proposals" => (Title: "Propozycje", Crumb: "PROPOZYCJE", Message: "Podpowiem bezpieczne rzeczy do sprawdzenia. To Ty wybierasz, czy otworzyć odpowiednie ustawienia Windows."),
+            "personalization" => (Title: "Personalizacja Windows", Crumb: "PERSONALIZACJA WINDOWS", Message: "Pokażę Ci ustawienia wyglądu. Motyw Blessed zmienia tylko aplikację, a ustawienia systemu otwierasz samodzielnie."),
+            "processes" => (Title: "Procesy", Crumb: "PROCESY", Message: "Pokażę lokalne zużycie CPU i pamięci. Nie zamykam procesów ani nie zmieniam ich priorytetów."),
+            "startup" => (Title: "Autostart", Crumb: "AUTOSTART", Message: "Pomogę przejrzeć wpisy autostartu bieżącego konta. Przed zmianą zachowuję kopię i pokazuję, jak ją cofnąć."),
+            "power" => (Title: "Zasilanie", Crumb: "ZASILANIE", Message: "Wyjaśnię dostępne opcje zasilania. Każda zmiana wymaga Twojego potwierdzenia i może być cofnięta."),
+            _ => (Title: "Strefa gracza", Crumb: "STREFA GRACZA", Message: "Włącz lokalne czuwanie, aby obserwować użycie procesora i pamięci podczas gry. Nie mierzę FPS ani nie zamykam aplikacji.")
+        };
+
+        WorkspaceKicker.Text = _isPortable ? "TRYB PRZENOŚNY · DANE LOKALNE" : "TWÓJ PANEL · DANE NA ŻYWO";
+        WorkspaceTitle.Text = page.Title;
+        CrumbTitle.Text = page.Crumb;
+        BlessedMessage.Text = page.Message;
+        WorkspaceStatusText.Text = _snapshot is null ? "Odczytuję komputer" : "Blessed jest gotowy";
+    }
+
     private UIElement BuildGamingPage()
     {
-        var page = NewPage("STREFA GRACZA", "Czuwanie, które nie przejmuje steru.",
-            "Blessed może lokalnie obserwować ogólne użycie procesora i pamięci podczas gry. To nie jest pomiar FPS, nie identyfikuje procesów gry i nie zamyka aplikacji.");
+        var page = NewPage("STREFA GRACZA · DANE LOKALNE", "Razem po spokojniejszą rozgrywkę.",
+            "Monitoruj lokalne użycie procesora i pamięci podczas gry. To nie jest pomiar FPS ani identyfikacja procesów gry; czuwanie włączasz i zatrzymujesz samodzielnie.");
 
         var monitor = NewPanel();
         monitor.Children.Add(Text("Tryb czuwania Blessed", 17, "TextPrimaryBrush", FontWeights.SemiBold));
@@ -598,7 +620,7 @@ public partial class MainWindow : Window
 
     private UIElement BuildConnectionsPage()
     {
-        var page = NewPage("POŁĄCZENIA", "Najpierw sprawdzę. Niczego nie przestawię.",
+        var page = NewPage("POŁĄCZENIA · DANE LOKALNE", "Sprawdzę, co jest nie tak.",
             "Lista kart pochodzi z Windows i jest odczytywana lokalnie. Pokazuję Wi-Fi/Ethernet oraz Bluetooth PAN, jeśli Windows wystawia go jako adapter sieciowy. Nie skanuję ani nie paruję urządzeń Bluetooth. Test ping wysyła jedno zapytanie do 1.1.1.1 tylko po kliknięciu.");
 
         var adaptersCard = NewPanel();
@@ -671,7 +693,7 @@ public partial class MainWindow : Window
 
     private UIElement BuildProposalsPage()
     {
-        var page = NewPage("PROPOZYCJE", "Pomysły do Twojej decyzji.",
+        var page = NewPage("PROPOZYCJE BLESSED", "Małe rzeczy warte sprawdzenia.",
             "Blessed nie wyłącza procesów ani nie zmienia ukrytych ustawień w tle. Poniższe przyciski otwierają odpowiednią stronę Ustawień Windows; o każdej zmianie decydujesz tam sam.");
 
         if (_snapshot is { TotalMemoryGb: > 0 and < 8 })
@@ -687,7 +709,7 @@ public partial class MainWindow : Window
 
     private UIElement BuildPersonalizationPage()
     {
-        var page = NewPage("PERSONALIZACJA WINDOWS", "Komputer, który pasuje do Ciebie.",
+        var page = NewPage("PERSONALIZACJA WINDOWS", "Niech komputer będzie bardziej Twój.",
             "Wybór motywu i akcentu zmienia tylko wygląd Blessed Optimizer. Ustawień systemowych Windows ta strona nie zapisuje.");
 
         var appThemeCard = NewPanel();
@@ -704,7 +726,6 @@ public partial class MainWindow : Window
         colors.Children.Add(ChoiceButton("Fiolet", () => ApplyTheme(null, "violet")));
         colors.Children.Add(ChoiceButton("Mięta", () => ApplyTheme(null, "mint")));
         appThemeCard.Children.Add(colors);
-        page.Children.Add(WrapPanel(appThemeCard));
 
         var previewCard = NewPanel();
         previewCard.Children.Add(Text("Podgląd ustawień Windows", 16, "TextPrimaryBrush", FontWeights.SemiBold));
@@ -713,7 +734,18 @@ public partial class MainWindow : Window
         var openSettings = new Button { Content = "Otwórz ustawienia personalizacji Windows", Style = (Style)FindResource("SecondaryButton"), HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 14, 0, 0) };
         openSettings.Click += (_, _) => OpenWindowsSettings("ms-settings:personalization");
         previewCard.Children.Add(openSettings);
-        page.Children.Add(WrapPanel(previewCard));
+
+        var personalizationLayout = new Grid { Margin = new Thickness(0, 0, 0, 2) };
+        personalizationLayout.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.9, GridUnitType.Star) });
+        personalizationLayout.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1.1, GridUnitType.Star) });
+        var controlsPanel = (FrameworkElement)WrapPanel(appThemeCard);
+        controlsPanel.Margin = new Thickness(0, 0, 10, 12);
+        var previewPanel = (FrameworkElement)WrapPanel(previewCard);
+        previewPanel.Margin = new Thickness(0, 0, 0, 12);
+        personalizationLayout.Children.Add(controlsPanel);
+        Grid.SetColumn(previewPanel, 1);
+        personalizationLayout.Children.Add(previewPanel);
+        page.Children.Add(personalizationLayout);
 
         var privacy = NewPanel();
         privacy.Children.Add(Text("Twoje wybory nie opuszczają aplikacji", 13, "GoldBrush", FontWeights.SemiBold));
@@ -725,10 +757,10 @@ public partial class MainWindow : Window
     private static StackPanel NewPage(string kicker, string title, string description)
     {
         var page = new StackPanel();
-        var heading = new StackPanel { Margin = new Thickness(0, 5, 0, 18) };
-        heading.Children.Add(Text(kicker, 10, "AccentBrush", FontWeights.Bold));
-        heading.Children.Add(Text(title, 27, "TextPrimaryBrush", FontWeights.SemiBold, new Thickness(0, 7, 0, 0)));
-        heading.Children.Add(Text(description, 12, "TextSecondaryBrush", margin: new Thickness(0, 8, 0, 0), lineHeight: 19));
+        var heading = new StackPanel { Margin = new Thickness(0, 2, 0, 14) };
+        heading.Children.Add(Text(kicker, 9, "AccentBrush", FontWeights.Bold));
+        heading.Children.Add(Text(title, 19, "TextPrimaryBrush", FontWeights.SemiBold, new Thickness(0, 6, 0, 0)));
+        heading.Children.Add(Text(description, 11, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 0), lineHeight: 18));
         page.Children.Add(heading);
         return page;
     }
@@ -739,10 +771,17 @@ public partial class MainWindow : Window
         var border = new Border
         {
             Child = panel,
-            Padding = new Thickness(18),
-            Margin = new Thickness(0, 0, 0, 14),
-            CornerRadius = new CornerRadius(16),
-            BorderThickness = new Thickness(1)
+            Padding = new Thickness(17),
+            Margin = new Thickness(0, 0, 0, 12),
+            CornerRadius = new CornerRadius(17),
+            BorderThickness = new Thickness(1),
+            Effect = new DropShadowEffect
+            {
+                Color = Color.FromRgb(0, 14, 36),
+                BlurRadius = 20,
+                ShadowDepth = 5,
+                Opacity = 0.22
+            }
         };
         border.SetResourceReference(Border.BackgroundProperty, "SurfaceBrush");
         border.SetResourceReference(Border.BorderBrushProperty, "BorderBrush");
@@ -914,7 +953,7 @@ public partial class MainWindow : Window
         UpdateStatusText.Text = "Sprawdzam wydania GitHub…";
         try
         {
-            var current = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(1, 0, 0);
+            var current = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(1, 0, 2);
             var result = await UpdateService.CheckLatestAsync(current, _lifetime.Token);
             UpdateStatusText.Text = result.Message;
             if (result.HasUpdate)
@@ -1000,8 +1039,13 @@ public partial class MainWindow : Window
         if (mode == "light")
         {
             resources["WindowBackgroundBrush"] = BrushFrom("#EDF4FB");
+            resources["TitleBarBrush"] = BrushFrom("#E5EEF7");
             resources["SurfaceBrush"] = BrushFrom("#FFFFFF");
+            resources["WorkspaceBrush"] = BrushFrom("#F8FBFE");
+            resources["GuideBrush"] = BrushFrom("#E7F2FC");
             resources["SurfaceRaisedBrush"] = BrushFrom("#E4EEF8");
+            resources["StatusBrush"] = BrushFrom("#DDF3E9");
+            resources["StatusTextBrush"] = BrushFrom("#275A46");
             resources["BorderBrush"] = BrushFrom("#C7D8E8");
             resources["TextPrimaryBrush"] = BrushFrom("#142A40");
             resources["TextSecondaryBrush"] = BrushFrom("#526B83");
@@ -1009,8 +1053,13 @@ public partial class MainWindow : Window
         else if (mode == "dark")
         {
             resources["WindowBackgroundBrush"] = BrushFrom("#07172C");
+            resources["TitleBarBrush"] = BrushFrom("#082647");
             resources["SurfaceBrush"] = BrushFrom("#10243D");
+            resources["WorkspaceBrush"] = BrushFrom("#0C233D");
+            resources["GuideBrush"] = BrushFrom("#183653");
             resources["SurfaceRaisedBrush"] = BrushFrom("#172F4E");
+            resources["StatusBrush"] = BrushFrom("#173C3D");
+            resources["StatusTextBrush"] = BrushFrom("#C2F4DC");
             resources["BorderBrush"] = BrushFrom("#28435F");
             resources["TextPrimaryBrush"] = BrushFrom("#F2F7FC");
             resources["TextSecondaryBrush"] = BrushFrom("#A9BED2");
@@ -1043,8 +1092,24 @@ public partial class MainWindow : Window
 
     private static string GetCurrentVersion()
     {
-        var version = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(1, 0, 0);
+        var version = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(1, 0, 2);
         return $"{version.Major}.{version.Minor}.{Math.Max(0, version.Build)}";
+    }
+
+    private void MinimizeWindow_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+
+    private void ToggleWindowState_Click(object sender, RoutedEventArgs e) =>
+        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+
+    private void CloseWindow_Click(object sender, RoutedEventArgs e) => Close();
+
+    private void Window_StateChanged(object? sender, EventArgs e)
+    {
+        var maximized = WindowState == WindowState.Maximized;
+        WindowMaximizeGlyph.Text = maximized ? "❐" : "□";
+        WindowMaximizeButton.ToolTip = maximized ? "Przywróć" : "Maksymalizuj";
+        WindowFrame.Margin = maximized ? new Thickness(0) : new Thickness(6);
+        WindowFrame.CornerRadius = maximized ? new CornerRadius(0) : new CornerRadius(18);
     }
 
     private void Window_Closing(object? sender, System.ComponentModel.CancelEventArgs e)

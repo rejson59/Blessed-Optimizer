@@ -44,7 +44,7 @@
 @keyframes wing-float{0%,100%{translate:0 0;rotate:-2deg}50%{translate:0 -2px;rotate:2deg}}
 @keyframes cursor-sparkle{0%{opacity:0;transform:translate(0,0) scale(.5) rotate(-20deg)}25%{opacity:1}100%{opacity:0;transform:translate(8px,-13px) scale(1.3) rotate(35deg)}}
 
-/* Clickable concept of the future Windows program, presented inside a real window frame. */
+/* Interactive preview of the Windows app layout, presented inside a desktop window frame. */
 .program-preview-section{position:relative;overflow:hidden;padding:62px 0 78px;background:linear-gradient(180deg,rgba(15,71,130,.3),rgba(4,32,73,.28));border-block:1px solid rgba(225,244,255,.14)}
 .program-preview-section::before{position:absolute;top:-230px;left:55%;width:min(900px,90vw);height:520px;content:"";border-radius:50%;background:radial-gradient(ellipse,rgba(215,239,255,.15),rgba(106,183,235,.08) 42%,transparent 73%);filter:blur(19px);pointer-events:none}
 .program-preview-heading{position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:space-between;gap:26px;margin-bottom:27px}
@@ -93,6 +93,7 @@
 .program-nav-button svg{flex:0 0 15px;width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .program-nav-button:hover{transform:translateY(-2px);border-color:rgba(234,248,255,.4);background:rgba(180,225,255,.17);color:#fff}
 .program-nav-button.is-active{border-color:rgba(169,229,255,.58);background:linear-gradient(145deg,rgba(160,222,255,.31),rgba(51,134,194,.31));box-shadow:0 9px 18px rgba(0,15,42,.2),inset 0 1px rgba(255,255,255,.32),inset 0 -2px 5px rgba(0,35,70,.16);color:#f4fbff}
+.program-nav-group-label{flex:0 0 auto;padding:0 3px;color:#8faec8;font-size:5.5px;font-weight:800;letter-spacing:.14em;white-space:nowrap}.program-nav-divider{flex:0 0 1px;height:25px;margin:0 3px;background:rgba(228,245,255,.23)}.program-nav-button.program-nav-tool{background:linear-gradient(145deg,rgba(235,207,143,.08),rgba(49,87,122,.18))}.program-nav-button.program-nav-tool:hover,.program-nav-button.program-nav-tool.is-active{border-color:rgba(237,213,158,.42)}
 .program-workspace{width:100%;padding:19px 22px 20px}
 .program-toolbar{min-height:38px}
 .program-online-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border:1px solid rgba(130,230,194,.24);border-radius:999px;background:rgba(89,205,161,.09);color:#bbf0d8;font-size:6px;font-weight:750;letter-spacing:.04em;white-space:nowrap}

@@ -240,7 +240,7 @@
     });
   }
 
-  // Clickable Windows application mockup inside the Simulator tab.
+  // Clickable Windows app-layout preview inside the Simulator tab.
   const programWindow = document.querySelector('.program-window');
   const programViewContent = document.getElementById('program-view-content');
   const programViewTitle = document.getElementById('program-view-title');
@@ -251,7 +251,10 @@
     gaming: { title: 'Strefa gracza', crumb: 'STREFA GRACZA', template: 'program-template-gaming', message: 'Polepszę działanie Twojego komputera — krok po kroku i tylko za Twoją zgodą. Zaczniemy od tego, co ma znaczenie podczas gry.' },
     connections: { title: 'Połączenia', crumb: 'POŁĄCZENIA', template: 'program-template-connections', message: 'Sprawdzę, co jest nie tak z połączeniem. Jeśli znajdziemy bezpieczną poprawkę, naprawię to z Tobą — po Twojej zgodzie.' },
     proposals: { title: 'Propozycje', crumb: 'PROPOZYCJE', template: 'program-template-proposals', message: 'Znalazłem kilka pomysłów na ulepszenia. Wybierz jeden, a opowiem Ci prostym językiem, co może dać i jak wrócić.' },
-    personalization: { title: 'Personalizacja Windows', crumb: 'PERSONALIZACJA', template: 'program-template-personalization', message: 'Chcesz zmienić klimat? Pokażę Ci podgląd Windowsa i wyglądu programu, zanim cokolwiek zatwierdzisz.' }
+    personalization: { title: 'Personalizacja Windows', crumb: 'PERSONALIZACJA', template: 'program-template-personalization', message: 'Chcesz zmienić klimat? Pokażę Ci podgląd Windowsa i wyglądu programu, zanim cokolwiek zatwierdzisz.' },
+    processes: { title: 'Procesy', crumb: 'PROCESY', template: 'program-template-processes', message: 'Pokażę lokalne zużycie procesora i pamięci. Aplikacja nie zamyka procesów ani nie zmienia ich priorytetów.' },
+    startup: { title: 'Autostart', crumb: 'AUTOSTART', template: 'program-template-startup', message: 'Przejrzysz wpisy autostartu bieżącego konta. Przed zmianą program zapisuje kopię i pozwala ją przywrócić.' },
+    power: { title: 'Zasilanie', crumb: 'ZASILANIE', template: 'program-template-power', message: 'Odczytasz ustawienia aktywnego planu. Każda zmiana wymaga osobnego potwierdzenia i może zostać cofnięta.' }
   };
 
   function setProgramView(viewName) {

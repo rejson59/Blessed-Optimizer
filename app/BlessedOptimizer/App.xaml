@@ -3,14 +3,38 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              ShutdownMode="OnExplicitShutdown">
   <Application.Resources>
-    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#07172C" />
-    <SolidColorBrush x:Key="SurfaceBrush" Color="#10243D" />
-    <SolidColorBrush x:Key="SurfaceRaisedBrush" Color="#172F4E" />
-    <SolidColorBrush x:Key="BorderBrush" Color="#28435F" />
+    <LinearGradientBrush x:Key="WindowBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
+      <GradientStop Color="#07182D" Offset="0" />
+      <GradientStop Color="#0C2A49" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="TitleBarBrush" StartPoint="0,0" EndPoint="1,0">
+      <GradientStop Color="#082647" Offset="0" />
+      <GradientStop Color="#123D68" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="SurfaceBrush" StartPoint="0,0" EndPoint="1,1">
+      <GradientStop Color="#142F4D" Offset="0" />
+      <GradientStop Color="#0E2947" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="WorkspaceBrush" StartPoint="0,0" EndPoint="1,1">
+      <GradientStop Color="#102943" Offset="0" />
+      <GradientStop Color="#0B223B" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="GuideBrush" StartPoint="0,0" EndPoint="1,0">
+      <GradientStop Color="#1A3A5A" Offset="0" />
+      <GradientStop Color="#17334F" Offset="0.7" />
+      <GradientStop Color="#352F35" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="SurfaceRaisedBrush" StartPoint="0,0" EndPoint="1,1">
+      <GradientStop Color="#1B3B5E" Offset="0" />
+      <GradientStop Color="#17314F" Offset="1" />
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="StatusBrush" Color="#173C3D" />
+    <SolidColorBrush x:Key="StatusTextBrush" Color="#C2F4DC" />
+    <SolidColorBrush x:Key="BorderBrush" Color="#355573" />
     <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F2F7FC" />
     <SolidColorBrush x:Key="TextSecondaryBrush" Color="#A9BED2" />
-    <SolidColorBrush x:Key="AccentBrush" Color="#69B9F5" />
-    <SolidColorBrush x:Key="AccentHoverBrush" Color="#88CCFF" />
+    <SolidColorBrush x:Key="AccentBrush" Color="#79C6F5" />
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#A0DBFF" />
     <SolidColorBrush x:Key="AccentTextBrush" Color="#08213B" />
     <SolidColorBrush x:Key="GoldBrush" Color="#F1D28D" />
 
@@ -49,21 +73,59 @@
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="BorderBrush" Value="Transparent" />
       <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="Padding" Value="12,10" />
-      <Setter Property="Margin" Value="0,3" />
-      <Setter Property="HorizontalContentAlignment" Value="Left" />
-      <Setter Property="FontSize" Value="14" />
+      <Setter Property="Padding" Value="12,8" />
+      <Setter Property="Margin" Value="0,1,6,1" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="MinHeight" Value="38" />
+      <Setter Property="FontSize" Value="12" />
       <Setter Property="FontWeight" Value="SemiBold" />
       <Setter Property="Cursor" Value="Hand" />
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="Button">
-            <Border x:Name="NavBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="11" Padding="{TemplateBinding Padding}">
+            <Border x:Name="NavBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="999" Padding="{TemplateBinding Padding}">
               <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
             </Border>
             <ControlTemplate.Triggers>
               <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="NavBorder" Property="Background" Value="{DynamicResource SurfaceRaisedBrush}" /><Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" /></Trigger>
               <Trigger Property="Tag" Value="active"><Setter TargetName="NavBorder" Property="Background" Value="{DynamicResource SurfaceRaisedBrush}" /><Setter TargetName="NavBorder" Property="BorderBrush" Value="{DynamicResource BorderBrush}" /><Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" /></Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <Style x:Key="NavigationToolButton" TargetType="Button" BasedOn="{StaticResource NavigationButton}">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="Padding" Value="10,8" />
+    </Style>
+
+    <Style x:Key="WindowControlButton" TargetType="Button">
+      <Setter Property="Width" Value="34" />
+      <Setter Property="Height" Value="34" />
+      <Setter Property="Margin" Value="2,0" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="FontSize" Value="17" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="ControlBorder" Background="{TemplateBinding Background}" CornerRadius="8">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="ControlBorder" Property="Background" Value="#315778" /></Trigger>
+              <Trigger Property="IsPressed" Value="True"><Setter TargetName="ControlBorder" Property="Opacity" Value="0.75" /></Trigger>
+              <MultiTrigger>
+                <MultiTrigger.Conditions>
+                  <Condition Property="Tag" Value="Close" />
+                  <Condition Property="IsMouseOver" Value="True" />
+                </MultiTrigger.Conditions>
+                <Setter TargetName="ControlBorder" Property="Background" Value="#C74653" />
+              </MultiTrigger>
             </ControlTemplate.Triggers>
           </ControlTemplate>
         </Setter.Value>
