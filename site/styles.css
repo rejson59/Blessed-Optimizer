@@ -34,11 +34,11 @@
 /* The native pointer remains visible; these small wings follow beside it. */
 .cursor-wings{position:fixed;z-index:200;top:0;left:0;width:0;height:0;opacity:0;pointer-events:none;will-change:transform,opacity;transition:opacity .18s ease}
 .cursor-wings.is-visible{opacity:1}
-.cursor-aura{position:absolute;top:4px;left:7px;width:57px;height:35px;border-radius:50%;background:radial-gradient(ellipse,rgba(192,239,255,.29),rgba(111,196,250,.12) 48%,transparent 76%);filter:blur(5px);transform:scale(.82);transition:transform .4s var(--ease),opacity .35s ease;opacity:.7}
-.cursor-wing-pair{position:absolute;top:6px;left:5px;width:55px;height:29px;overflow:visible;filter:drop-shadow(0 3px 5px rgba(0,17,48,.34)) drop-shadow(0 0 6px rgba(149,230,255,.36));transform-origin:38px 20px;transform:rotate(-5deg) scale(.88);transition:transform .4s var(--ease),filter .35s ease;animation:wing-float 3.6s ease-in-out infinite}
+.cursor-aura{position:absolute;top:-30px;left:-29px;width:57px;height:35px;border-radius:50%;background:radial-gradient(ellipse,rgba(192,239,255,.29),rgba(111,196,250,.12) 48%,transparent 76%);filter:blur(5px);transform:scale(.82);transition:transform .4s var(--ease),opacity .35s ease;opacity:.7}
+.cursor-wing-pair{position:absolute;top:-22.43px;left:-27.5px;width:55px;height:27.5px;overflow:visible;filter:drop-shadow(0 3px 5px rgba(0,17,48,.34)) drop-shadow(0 0 6px rgba(149,230,255,.36));transform-origin:27.5px 22.43px;transform:rotate(-5deg) scale(.88);transition:transform .4s var(--ease),filter .35s ease;animation:wing-float 3.6s ease-in-out infinite}
 .wing-fill{fill:rgba(218,244,255,.88);stroke:rgba(242,251,255,.82);stroke-width:.8;stroke-linejoin:round}.wing-line{fill:none;stroke:rgba(99,174,218,.72);stroke-width:1;stroke-linecap:round;stroke-linejoin:round}
 .cursor-spark{position:absolute;z-index:2;color:#ffe5a1;font-size:9px;font-style:normal;opacity:0;text-shadow:0 0 9px rgba(255,227,162,.95)}
-.cursor-spark-one{top:2px;left:48px}.cursor-spark-two{top:19px;left:3px;color:#a9eaff;font-size:10px}.cursor-spark-three{top:29px;left:39px;font-size:7px}
+.cursor-spark-one{top:-33px;left:15px}.cursor-spark-two{top:-17px;left:-32px;color:#a9eaff;font-size:10px}.cursor-spark-three{top:-44px;left:-4px;font-size:7px}
 .cursor-wings.is-hovering .cursor-aura{opacity:1;transform:scale(1.12)}.cursor-wings.is-hovering .cursor-wing-pair{transform:rotate(0) scale(1.03);filter:drop-shadow(0 4px 7px rgba(0,17,48,.38)) drop-shadow(0 0 10px rgba(149,230,255,.6))}
 .cursor-wings.is-pressing .cursor-wing-pair{transform:rotate(7deg) scale(.78)}.cursor-wings.is-pressing .cursor-aura{transform:scale(.7)}.cursor-wings.is-blessing .cursor-spark{animation:cursor-sparkle .62s var(--ease) both}.cursor-wings.is-blessing .cursor-spark-two{animation-delay:.06s}.cursor-wings.is-blessing .cursor-spark-three{animation-delay:.12s}
 @keyframes wing-float{0%,100%{translate:0 0;rotate:-2deg}50%{translate:0 -2px;rotate:2deg}}

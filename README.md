@@ -44,7 +44,9 @@ dotnet publish app/BlessedOptimizer/BlessedOptimizer.csproj `
 
 ## GitHub Pages
 
-Workflow `.github/workflows/pages.yml` publikuje katalog `site/` po zmianach strony na `main`. W repozytorium wybierz **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+Workflow `.github/workflows/pages.yml` sprawdza składnię JavaScript i lokalne zasoby strony w pull requestach. Po scaleniu zmiany do `main` automatycznie publikuje katalog `site/` przez GitHub Actions. Adres projektu będzie dostępny pod `https://rejson59.github.io/Blessed-Optimizer/`.
+
+Przed pierwszą publikacją administrator repozytorium musi jednorazowo wybrać **Settings → Pages → Build and deployment → Source: GitHub Actions**. Sama strona używa ścieżek względnych, więc działa pod adresem projektu GitHub Pages.
 
 ## Struktura
 

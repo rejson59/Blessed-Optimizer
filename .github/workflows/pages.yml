@@ -1,4 +1,4 @@
-name: Publish Blessed Optimizer preview
+name: Publish Blessed Optimizer on GitHub Pages
 
 on:
   push:
@@ -7,26 +7,74 @@ on:
     paths:
       - 'site/**'
       - '.github/workflows/pages.yml'
+  pull_request:
+    paths:
+      - 'site/**'
+      - '.github/workflows/pages.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: github-pages
+  group: github-pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  validate:
+    name: Validate static site
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Check JavaScript syntax
+        run: node --check site/script.js
+      - name: Verify local HTML assets
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+          from urllib.parse import unquote, urlsplit
+
+          root = Path("site")
+          errors = []
+
+          class LocalAssetChecker(HTMLParser):
+              def handle_starttag(self, tag, attrs):
+                  for name, value in attrs:
+                      if name not in {"href", "src"} or not value:
+                          continue
+                      parsed = urlsplit(value)
+                      if not parsed.path or parsed.scheme or parsed.netloc:
+                          continue
+                      asset = root / unquote(parsed.path)
+                      if not asset.is_file():
+                          errors.append(f"Missing local asset: {value}")
+
+          parser = LocalAssetChecker()
+          parser.feed((root / "index.html").read_text(encoding="utf-8"))
+          if errors:
+              raise SystemExit("\n".join(errors))
+          print("All local HTML assets exist.")
+          PY
+
   deploy:
+    name: Deploy to GitHub Pages
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
+      - name: Check out source
         uses: actions/checkout@v4
+      # One-time repo setting: Settings > Pages > Source > GitHub Actions.
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload static website
