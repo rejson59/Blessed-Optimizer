@@ -50,6 +50,10 @@ jobs:
           -p:EnableCompressionInSingleFile=true
           -p:IncludeNativeLibrariesForSelfExtract=true
 
+      - name: Run read-only Windows integration smoke checks
+        shell: pwsh
+        run: dotnet run --configuration Release --project app/BlessedOptimizer.SmokeTests/BlessedOptimizer.SmokeTests.csproj
+
       - name: Prepare installer and SHA-256 checksum
         shell: pwsh
         env:

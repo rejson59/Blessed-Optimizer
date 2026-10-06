@@ -44,6 +44,15 @@
             <Button x:Name="GamingNavButton" Tag="active" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Monitorowanie odczytów CPU i RAM podczas gry">
               <StackPanel Orientation="Horizontal"><TextBlock Text="✦" Foreground="{DynamicResource AccentBrush}" Margin="0,0,10,0"/><TextBlock Text="Strefa gracza" /></StackPanel>
             </Button>
+            <Button x:Name="ProcessesNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Szczegółowy, lokalny podgląd CPU i pamięci każdego procesu">
+              <StackPanel Orientation="Horizontal"><TextBlock Text="▤" Foreground="{DynamicResource AccentBrush}" Margin="0,0,10,0"/><TextBlock Text="Procesy" /></StackPanel>
+            </Button>
+            <Button x:Name="StartupNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Autostart bieżącego użytkownika z kopią i przywracaniem">
+              <StackPanel Orientation="Horizontal"><TextBlock Text="↻" Foreground="{DynamicResource AccentBrush}" Margin="0,0,10,0"/><TextBlock Text="Autostart" /></StackPanel>
+            </Button>
+            <Button x:Name="PowerNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Zaawansowane ustawienia planu zasilania AC i baterii">
+              <StackPanel Orientation="Horizontal"><TextBlock Text="ϟ" Foreground="{DynamicResource GoldBrush}" Margin="0,0,10,0"/><TextBlock Text="Zasilanie" /></StackPanel>
+            </Button>
             <Button x:Name="ConnectionsNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Lokalny podgląd adapterów i test ping po kliknięciu">
               <StackPanel Orientation="Horizontal"><TextBlock Text="⌁" Foreground="{DynamicResource AccentBrush}" Margin="0,0,10,0"/><TextBlock Text="Połączenia" /></StackPanel>
             </Button>
@@ -71,7 +80,7 @@
 
     <DockPanel Grid.Row="2" LastChildFill="False" Margin="4,0,4,0">
       <TextBlock Text="✦" Foreground="{DynamicResource GoldBrush}" FontSize="13" Margin="0,0,7,0" VerticalAlignment="Center" />
-      <TextBlock x:Name="FooterStatusText" Text="Tylko odczyt · Żadne procesy nie są zamykane" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" VerticalAlignment="Center" />
+      <TextBlock x:Name="FooterStatusText" Text="Działa lokalnie · każda zmiana wymaga Twojej zgody" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" VerticalAlignment="Center" />
       <TextBlock x:Name="InstallModeText" Text="Instalacja dla bieżącego użytkownika" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" VerticalAlignment="Center" HorizontalAlignment="Right" DockPanel.Dock="Right" />
     </DockPanel>
   </Grid>

@@ -1,6 +1,8 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
+using System.Security.Principal;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -17,6 +19,8 @@ public partial class MainWindow : Window
     private readonly bool _skipUpdateCheck;
     private readonly DispatcherTimer _watchTimer;
     private readonly PerformanceMonitor _performanceMonitor = new();
+    private readonly ProcessOverviewService _processOverviewService = new();
+    private readonly DispatcherTimer _processTimer;
     private readonly CancellationTokenSource _lifetime = new();
     private DeviceSnapshot? _snapshot;
     private string _currentPage = "gaming";
@@ -30,6 +34,12 @@ public partial class MainWindow : Window
     private Button? _watchButton;
     private Button? _pingButton;
     private TextBlock? _pingResult;
+    private DataGrid? _processGrid;
+    private TextBox? _processSearch;
+    private TextBlock? _processStatus;
+    private IReadOnlyList<ProcessUsageSnapshot> _processRows = Array.Empty<ProcessUsageSnapshot>();
+    private bool _processRefreshBusy;
+    private bool _powerOperationBusy;
 
     public MainWindow(DeviceSnapshot? initialSnapshot, bool isPortable, bool skipUpdateCheck)
     {
@@ -44,6 +54,8 @@ public partial class MainWindow : Window
             : $"{_snapshot.OperatingSystem} · {_snapshot.TotalMemoryGb:0.#} GB RAM";
         _watchTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _watchTimer.Tick += WatchTimer_Tick;
+        _processTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
+        _processTimer.Tick += ProcessTimer_Tick;
         RenderCurrentPage();
     }
 
@@ -79,6 +91,9 @@ public partial class MainWindow : Window
         if (sender is not Button button) return;
         var nextPage = button.Name switch
         {
+            nameof(ProcessesNavButton) => "processes",
+            nameof(StartupNavButton) => "startup",
+            nameof(PowerNavButton) => "power",
             nameof(ConnectionsNavButton) => "connections",
             nameof(ProposalsNavButton) => "proposals",
             nameof(PersonalizationNavButton) => "personalization",
@@ -86,6 +101,8 @@ public partial class MainWindow : Window
         };
         if (nextPage != "gaming" && _monitoring)
             StopMonitoring();
+        if (nextPage != "processes")
+            _processTimer.Stop();
         _currentPage = nextPage;
         UpdateNavigationState();
         RenderCurrentPage();
@@ -94,6 +111,9 @@ public partial class MainWindow : Window
     private void UpdateNavigationState()
     {
         GamingNavButton.Tag = _currentPage == "gaming" ? "active" : null;
+        ProcessesNavButton.Tag = _currentPage == "processes" ? "active" : null;
+        StartupNavButton.Tag = _currentPage == "startup" ? "active" : null;
+        PowerNavButton.Tag = _currentPage == "power" ? "active" : null;
         ConnectionsNavButton.Tag = _currentPage == "connections" ? "active" : null;
         ProposalsNavButton.Tag = _currentPage == "proposals" ? "active" : null;
         PersonalizationNavButton.Tag = _currentPage == "personalization" ? "active" : null;
@@ -102,13 +122,26 @@ public partial class MainWindow : Window
     private void RenderCurrentPage()
     {
         PageHost.Children.Clear();
-        PageHost.Children.Add(_currentPage switch
+        var page = _currentPage switch
         {
+            "processes" => BuildProcessesPage(),
+            "startup" => BuildStartupPage(),
+            "power" => BuildPowerPage(),
             "connections" => BuildConnectionsPage(),
             "proposals" => BuildProposalsPage(),
             "personalization" => BuildPersonalizationPage(),
             _ => BuildGamingPage()
-        });
+        };
+        PageHost.Children.Add(page);
+        if (_currentPage == "processes")
+        {
+            _processTimer.Start();
+            _ = RefreshProcessesAsync();
+        }
+        else
+        {
+            _processTimer.Stop();
+        }
     }
 
     private UIElement BuildGamingPage()
@@ -151,10 +184,414 @@ public partial class MainWindow : Window
 
         var note = NewPanel();
         note.Children.Add(Text("Ważne", 13, "GoldBrush", FontWeights.SemiBold));
-        note.Children.Add(Text("W v1.0 Blessed tylko pokazuje odczyty i bezpieczne wskazówki. Nie wyłącza usług, aplikacji, zabezpieczeń ani aktualizacji. Jeśli kiedyś dodamy konkretne działanie optymalizacyjne, pokażemy zakres, ryzyko i cofnięcie przed prośbą o zgodę.", 11, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 0)));
+        note.Children.Add(Text("Procesów nie zamykam, a usług, zabezpieczeń, sterowników i Windows Update nie wyłączam. Autostart bieżącego konta oraz wybrane ukryte opcje zasilania można zmieniać osobno — z opisem skutków, zgodą użytkownika i możliwością przywrócenia zapisanych wartości.", 11, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 0)));
         page.Children.Add(WrapPanel(note));
         return page;
     }
+
+    private UIElement BuildProcessesPage()
+    {
+        var page = NewPage("PROCESY", "Zobacz, co naprawdę zajmuje zasoby.",
+            "Lokalny podgląd CPU, pamięci i czasu uruchomienia każdego procesu. Lista odświeża się co 2 sekundy tylko wtedy, gdy ta karta jest otwarta; nie zamyka ani nie zmienia priorytetu żadnego procesu.");
+        var panel = NewPanel();
+        var toolbar = new DockPanel { LastChildFill = false, Margin = new Thickness(0, 0, 0, 12) };
+        _processSearch = new TextBox
+        {
+            Width = 260,
+            Height = 36,
+            Padding = new Thickness(10, 6, 10, 6),
+            VerticalContentAlignment = VerticalAlignment.Center,
+            Background = GetBrush("SurfaceRaisedBrush"),
+            Foreground = GetBrush("TextPrimaryBrush"),
+            BorderBrush = GetBrush("BorderBrush"),
+            ToolTip = "Filtruj po nazwie procesu lub PID"
+        };
+        _processSearch.TextChanged += (_, _) => FilterProcessGrid();
+        toolbar.Children.Add(_processSearch);
+        var refresh = new Button { Content = "Odśwież teraz", Style = (Style)FindResource("SecondaryButton"), Margin = new Thickness(10, 0, 0, 0), Padding = new Thickness(11, 7, 11, 7) };
+        refresh.Click += async (_, _) => await RefreshProcessesAsync();
+        DockPanel.SetDock(refresh, Dock.Right);
+        toolbar.Children.Add(refresh);
+        _processStatus = Text("Przygotowuję pierwszy pomiar…", 10, "TextSecondaryBrush", margin: new Thickness(0, 9, 0, 0));
+        DockPanel.SetDock(_processStatus, Dock.Bottom);
+        toolbar.Children.Add(_processStatus);
+        panel.Children.Add(toolbar);
+
+        _processGrid = new DataGrid
+        {
+            AutoGenerateColumns = false,
+            IsReadOnly = true,
+            CanUserAddRows = false,
+            CanUserDeleteRows = false,
+            CanUserReorderColumns = true,
+            CanUserSortColumns = true,
+            HeadersVisibility = DataGridHeadersVisibility.Column,
+            GridLinesVisibility = DataGridGridLinesVisibility.Horizontal,
+            HorizontalGridLinesBrush = GetBrush("BorderBrush"),
+            Background = GetBrush("SurfaceBrush"),
+            Foreground = GetBrush("TextPrimaryBrush"),
+            RowBackground = GetBrush("SurfaceBrush"),
+            AlternatingRowBackground = GetBrush("SurfaceRaisedBrush"),
+            BorderBrush = GetBrush("BorderBrush"),
+            BorderThickness = new Thickness(1),
+            MinHeight = 220,
+            MaxHeight = 440,
+            EnableRowVirtualization = true,
+            Margin = new Thickness(0, 0, 0, 5)
+        };
+        var headerStyle = new Style(typeof(DataGridColumnHeader));
+        headerStyle.Setters.Add(new Setter(Control.BackgroundProperty, GetBrush("SurfaceRaisedBrush")));
+        headerStyle.Setters.Add(new Setter(Control.ForegroundProperty, GetBrush("TextSecondaryBrush")));
+        headerStyle.Setters.Add(new Setter(Control.FontWeightProperty, FontWeights.SemiBold));
+        headerStyle.Setters.Add(new Setter(Control.PaddingProperty, new Thickness(8, 7, 8, 7)));
+        _processGrid.ColumnHeaderStyle = headerStyle;
+        _processGrid.Columns.Add(new DataGridTextColumn { Header = "Proces", Binding = new System.Windows.Data.Binding(nameof(ProcessUsageSnapshot.Name)), Width = new DataGridLength(1, DataGridLengthUnitType.Star), MinWidth = 130 });
+        _processGrid.Columns.Add(new DataGridTextColumn { Header = "PID", Binding = new System.Windows.Data.Binding(nameof(ProcessUsageSnapshot.ProcessId)), Width = 72 });
+        _processGrid.Columns.Add(new DataGridTextColumn { Header = "CPU", Binding = new System.Windows.Data.Binding(nameof(ProcessUsageSnapshot.CpuPercent)) { StringFormat = "{0:0.0}%" }, Width = 80 });
+        _processGrid.Columns.Add(new DataGridTextColumn { Header = "RAM", Binding = new System.Windows.Data.Binding(nameof(ProcessUsageSnapshot.WorkingSetMb)) { StringFormat = "{0:N0} MB" }, Width = 100 });
+        _processGrid.Columns.Add(new DataGridTextColumn { Header = "Uruchomiono", Binding = new System.Windows.Data.Binding(nameof(ProcessUsageSnapshot.StartedAt)) { StringFormat = "{0:g}" }, Width = 130 });
+        panel.Children.Add(_processGrid);
+        page.Children.Add(WrapPanel(panel));
+
+        var safety = NewPanel();
+        safety.Children.Add(Text("Pełny obraz, bez ryzykownego „Ubij proces”", 13, "GoldBrush", FontWeights.SemiBold));
+        safety.Children.Add(Text("Dostęp do chronionych procesów Windows może być ograniczony przez system. Blessed nie kończy zadań, nie dotyka zabezpieczeń ani nie obiecuje wzrostu FPS na podstawie samego zużycia CPU.", 11, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 0)));
+        page.Children.Add(WrapPanel(safety));
+        return page;
+    }
+
+    private async Task RefreshProcessesAsync()
+    {
+        if (_processRefreshBusy || _currentPage != "processes" || _processGrid is null)
+            return;
+        _processRefreshBusy = true;
+        try
+        {
+            var rows = await Task.Run(_processOverviewService.ReadSnapshot);
+            if (_currentPage != "processes" || _processGrid is null)
+                return;
+            _processRows = rows;
+            FilterProcessGrid();
+            if (_processStatus is not null)
+                _processStatus.Text = $"{rows.Count} procesów · odczyt lokalny {DateTime.Now:HH:mm:ss} · CPU liczone z próbek co 2 s";
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception or System.Security.SecurityException)
+        {
+            if (_processStatus is not null)
+                _processStatus.Text = "Nie udało się odczytać pełnej listy procesów. Odśwież, aby spróbować ponownie.";
+        }
+        finally
+        {
+            _processRefreshBusy = false;
+        }
+    }
+
+    private async void ProcessTimer_Tick(object? sender, EventArgs e) => await RefreshProcessesAsync();
+
+    private void FilterProcessGrid()
+    {
+        if (_processGrid is null) return;
+        var query = _processSearch?.Text.Trim() ?? string.Empty;
+        IEnumerable<ProcessUsageSnapshot> visibleRows = string.IsNullOrWhiteSpace(query)
+            ? _processRows
+            : _processRows.Where(row => row.Name.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
+                                        row.ProcessId.ToString(CultureInfo.InvariantCulture).Contains(query, StringComparison.Ordinal)).ToArray();
+        _processGrid.ItemsSource = visibleRows;
+    }
+
+    private UIElement BuildStartupPage()
+    {
+        var page = NewPage("AUTOSTART", "Wybierz, co startuje razem z Windowsem.",
+            "Lista obejmuje wyłącznie wpisy Run i RunOnce bieżącego użytkownika. Wyłączenie zapisuje kopię i usuwa tylko rejestrację autostartu — nie zamyka programu ani nie usuwa pliku. Każdą pozycję można przywrócić.");
+        var panel = NewPanel();
+        var heading = new DockPanel { LastChildFill = true, Margin = new Thickness(0, 0, 0, 12) };
+        heading.Children.Add(Text("Pozycje bieżącego konta", 16, "TextPrimaryBrush", FontWeights.SemiBold));
+        var refresh = new Button { Content = "Odśwież", Style = (Style)FindResource("SecondaryButton"), Padding = new Thickness(11, 7, 11, 7) };
+        refresh.Click += (_, _) => RenderCurrentPage();
+        DockPanel.SetDock(refresh, Dock.Right);
+        heading.Children.Insert(0, refresh);
+        panel.Children.Add(heading);
+
+        IReadOnlyList<StartupEntry> entries;
+        try
+        {
+            entries = StartupManagerService.ReadEntries();
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or System.Security.SecurityException or IOException or InvalidOperationException)
+        {
+            panel.Children.Add(Text($"Nie udało się odczytać autostartu bieżącego użytkownika: {ex.Message}", 11, "TextSecondaryBrush"));
+            page.Children.Add(WrapPanel(panel));
+            return page;
+        }
+
+        if (entries.Count == 0)
+        {
+            panel.Children.Add(Text("Nie znaleziono wpisów w autostarcie bieżącego użytkownika. Wpisy usług i wszystkich użytkowników pozostają nietknięte.", 11, "TextSecondaryBrush"));
+        }
+        foreach (var entry in entries)
+        {
+            var item = NewPanel();
+            item.Children.Add(Text(entry.Name, 14, "TextPrimaryBrush", FontWeights.SemiBold));
+            item.Children.Add(Text(entry.Source, 9, entry.IsEnabled ? "AccentBrush" : "GoldBrush", FontWeights.Bold, new Thickness(0, 3, 0, 0)));
+            item.Children.Add(Text(entry.Command, 10, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 10), lineHeight: 16));
+            var toggle = new Button
+            {
+                Content = entry.IsEnabled ? "Wyłącz autostart" : "Przywróć autostart",
+                Style = (Style)FindResource(entry.IsEnabled ? "SecondaryButton" : "PrimaryButton"),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Padding = new Thickness(12, 7, 12, 7)
+            };
+            toggle.Click += (_, _) => ToggleStartupEntry(entry);
+            item.Children.Add(toggle);
+            panel.Children.Add(WrapPanel(item));
+        }
+
+        var note = NewPanel();
+        note.Children.Add(Text("Zakres zmian", 12, "GoldBrush", FontWeights.SemiBold));
+        note.Children.Add(Text("Blessed nie wyłącza autostartu maszynowego (HKLM), usług, zadań systemowych, sterowników, Windows Update ani zabezpieczeń. Zmiana dotyczy wyłącznie wpisu konkretnej aplikacji dla zalogowanego konta. Przed wyłączeniem sprawdź polecenie; nie wyłączaj ochrony antywirusowej, kopii zapasowych, synchronizacji, narzędzi dostępności ani sterowników, jeśli nie masz pewności co do skutków.", 10, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 0)));
+        panel.Children.Add(WrapPanel(note));
+        page.Children.Add(WrapPanel(panel));
+        return page;
+    }
+
+    private void ToggleStartupEntry(StartupEntry entry)
+    {
+        var title = entry.IsEnabled ? "Wyłączyć autostart?" : "Przywrócić autostart?";
+        var details = entry.IsEnabled
+            ? $"Blessed zapisze kopię wpisu i usunie wyłącznie rejestrację startową dla bieżącego konta. Nie zamknie programu ani nie usunie pliku. Nie wyłączaj ochrony antywirusowej, kopii zapasowych, synchronizacji, narzędzi dostępności ani sterowników, jeśli nie rozpoznajesz skutków.\n\n{entry.Name}\n{entry.Command}\n\nKopię można później przywrócić w tej karcie."
+            : $"Blessed odtworzy wcześniejszy wpis w autostarcie bieżącego konta. Nie uruchomi teraz programu.\n\n{entry.Name}\n{entry.Command}";
+        if (MessageBox.Show(this, details, $"Blessed Optimizer — {title}", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
+            return;
+
+        try
+        {
+            if (entry.IsEnabled)
+                StartupManagerService.Disable(entry);
+            else
+                StartupManagerService.Restore(entry);
+            FooterStatusText.Text = entry.IsEnabled ? "Autostart wyłączono · kopia do przywrócenia została zachowana" : "Autostart przywrócono · program nie został uruchomiony";
+            RenderCurrentPage();
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or System.Security.SecurityException or IOException or InvalidOperationException or ArgumentException)
+        {
+            MessageBox.Show(this, ex.Message, "Blessed Optimizer — autostart", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private UIElement BuildPowerPage()
+    {
+        var page = NewPage("UKRYTE OPCJE ZASILANIA", "Ustawienia planu bez polowania po Panelu sterowania.",
+            "Odczytuję prawdziwe wartości aktywnego planu Windows. Zmiany dotyczą osobno zasilania z sieci i baterii, są poprzedzone wyjaśnieniem i zgodą oraz mają zapisaną kopię do cofnięcia.");
+
+        PowerPlanSnapshot snapshot;
+        try
+        {
+            snapshot = PowerSettingsService.ReadActivePlan();
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or IOException or UnauthorizedAccessException or System.Text.Json.JsonException or DllNotFoundException)
+        {
+            var problem = NewPanel();
+            problem.Children.Add(Text("Nie udało się odczytać planu zasilania", 15, "GoldBrush", FontWeights.SemiBold));
+            problem.Children.Add(Text(ex.Message, 11, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 0)));
+            page.Children.Add(WrapPanel(problem));
+            return page;
+        }
+
+        var summary = NewPanel();
+        summary.Children.Add(Text($"Aktywny plan: {snapshot.SchemeName}", 15, "TextPrimaryBrush", FontWeights.SemiBold));
+        summary.Children.Add(Text($"GUID planu: {snapshot.SchemeId:D}", 9, "TextSecondaryBrush", margin: new Thickness(0, 4, 0, 0)));
+        summary.Children.Add(Text("Zmiana otwiera osobny monit UAC dla zapisu systemowego. Blessed nie zmienia limitów temperatury, nie podkręca sprzętu i nie wyłącza zabezpieczeń.", 10, "GoldBrush", margin: new Thickness(0, 8, 0, 0)));
+        page.Children.Add(WrapPanel(summary));
+
+        if (snapshot.Settings.Count == 0)
+        {
+            var empty = NewPanel();
+            empty.Children.Add(Text("Ten komputer nie udostępnił obsługiwanych ukrytych ustawień planu.", 11, "TextSecondaryBrush"));
+            page.Children.Add(WrapPanel(empty));
+        }
+        foreach (var state in snapshot.Settings)
+            page.Children.Add(BuildPowerSettingCard(snapshot, state));
+
+        var note = NewPanel();
+        note.Children.Add(Text("Cofnięcie zmian", 12, "GoldBrush", FontWeights.SemiBold));
+        note.Children.Add(Text("Pierwsza zmiana danej opcji zapisuje oryginalne wartości AC i baterii w profilu użytkownika. Przycisk „Przywróć oryginał” odtwarza te wartości; samo przełączanie profilu nie kasuje kopii.", 10, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 0)));
+        page.Children.Add(WrapPanel(note));
+        return page;
+    }
+
+    private UIElement BuildPowerSettingCard(PowerPlanSnapshot snapshot, PowerSettingState state)
+    {
+        var panel = NewPanel();
+        panel.Children.Add(Text(state.Descriptor.Name, 14, "TextPrimaryBrush", FontWeights.SemiBold));
+        panel.Children.Add(Text(state.Descriptor.Description, 10, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 11), lineHeight: 16));
+
+        var controls = new Grid { Margin = new Thickness(0, 0, 0, 10) };
+        controls.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        controls.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        controls.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        controls.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        controls.Children.Add(Text("Zasilanie z sieci", 10, "TextSecondaryBrush", FontWeights.SemiBold, new Thickness(0, 0, 8, 4)));
+        var batteryLabel = Text("Bateria / UPS", 10, "TextSecondaryBrush", FontWeights.SemiBold, new Thickness(8, 0, 0, 4));
+        Grid.SetColumn(batteryLabel, 1);
+        controls.Children.Add(batteryLabel);
+
+        var options = state.Descriptor.Options.ToList();
+        foreach (var currentValue in new[] { state.AcValue, state.DcValue }.Distinct())
+        {
+            if (options.All(option => option.Value != currentValue))
+                options.Add(new PowerOption(currentValue, $"{currentValue} · bieżąca wartość"));
+        }
+        var acPicker = CreatePowerPicker(options, state.AcValue);
+        Grid.SetRow(acPicker, 1);
+        controls.Children.Add(acPicker);
+        var dcPicker = CreatePowerPicker(options, state.DcValue);
+        Grid.SetRow(dcPicker, 1);
+        Grid.SetColumn(dcPicker, 1);
+        controls.Children.Add(dcPicker);
+        panel.Children.Add(controls);
+
+        var actions = new StackPanel { Orientation = Orientation.Horizontal };
+        var apply = new Button { Content = "Zastosuj z potwierdzeniem", Style = (Style)FindResource("PrimaryButton"), Padding = new Thickness(12, 7, 12, 7), Margin = new Thickness(0, 0, 8, 0) };
+        apply.Click += async (_, _) =>
+        {
+            if (acPicker.SelectedValue is uint ac && dcPicker.SelectedValue is uint dc)
+                await ApplyPowerSettingAsync(snapshot, state, ac, dc);
+        };
+        actions.Children.Add(apply);
+        var restorePoint = state.RestorePoint;
+        if (restorePoint is not null)
+        {
+            var restore = new Button { Content = "Przywróć oryginał", Style = (Style)FindResource("SecondaryButton"), Padding = new Thickness(12, 7, 12, 7) };
+            restore.Click += async (_, _) => await RestorePowerSettingAsync(restorePoint, state.Descriptor);
+            actions.Children.Add(restore);
+        }
+        panel.Children.Add(actions);
+        panel.Children.Add(Text($"Teraz · sieć: {DescribePowerValue(state.Descriptor, state.AcValue)}   |   bateria: {DescribePowerValue(state.Descriptor, state.DcValue)}", 9, "TextSecondaryBrush", margin: new Thickness(0, 8, 0, 0)));
+        return WrapPanel(panel);
+    }
+
+    private static ComboBox CreatePowerPicker(IReadOnlyList<PowerOption> options, uint selectedValue)
+    {
+        var picker = new ComboBox
+        {
+            ItemsSource = options,
+            DisplayMemberPath = nameof(PowerOption.Label),
+            SelectedValuePath = nameof(PowerOption.Value),
+            SelectedValue = selectedValue,
+            MinWidth = 180,
+            Height = 34,
+            Margin = new Thickness(0, 0, 8, 0),
+            Padding = new Thickness(7, 4, 7, 4),
+            Background = GetBrush("SurfaceRaisedBrush"),
+            Foreground = GetBrush("TextPrimaryBrush"),
+            BorderBrush = GetBrush("BorderBrush")
+        };
+        return picker;
+    }
+
+    private async Task ApplyPowerSettingAsync(PowerPlanSnapshot snapshot, PowerSettingState state, uint acValue, uint dcValue)
+    {
+        if (_powerOperationBusy || (acValue == state.AcValue && dcValue == state.DcValue))
+            return;
+        var message = $"Zmienić „{state.Descriptor.Name}” w planie „{snapshot.SchemeName}”?\n\nZasilanie z sieci: {DescribePowerValue(state.Descriptor, state.AcValue)} → {DescribePowerValue(state.Descriptor, acValue)}\nBateria / UPS: {DescribePowerValue(state.Descriptor, state.DcValue)} → {DescribePowerValue(state.Descriptor, dcValue)}\n\n{state.Descriptor.Description}\n\nZmiana jest ograniczona do tej opcji planu. Windows pokaże monit UAC; możesz odmówić. Jeśli podasz inne konto administratora, operacja zostanie przerwana, by nie zmienić planu innego użytkownika. Oryginalne wartości zapiszę lokalnie, by dało się je przywrócić.";
+        if (MessageBox.Show(this, message, "Blessed Optimizer — potwierdź zmianę", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
+            return;
+
+        _powerOperationBusy = true;
+        try
+        {
+            PowerSettingsService.SaveOriginalIfNeeded(state, snapshot.SchemeId);
+            var succeeded = await RunElevatedPowerHelperAsync(snapshot.SchemeId, state.Descriptor.Key, acValue, dcValue);
+            if (!succeeded)
+            {
+                // Keep the original snapshot even after a cancelled UAC or partial Windows error; it is safe to restore later.
+                RenderCurrentPage();
+                return;
+            }
+            FooterStatusText.Text = $"Zastosowano „{state.Descriptor.Name}” · oryginał można przywrócić";
+            RenderCurrentPage();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception or ArgumentException or System.Text.Json.JsonException)
+        {
+            MessageBox.Show(this, ex.Message, "Blessed Optimizer — zasilanie", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        finally
+        {
+            _powerOperationBusy = false;
+        }
+    }
+
+    private async Task RestorePowerSettingAsync(PowerRestorePoint restorePoint, PowerSettingDescriptor descriptor)
+    {
+        if (_powerOperationBusy) return;
+        var message = $"Przywrócić zapisane oryginalne wartości dla „{descriptor.Name}”?\n\nZasilanie z sieci: {restorePoint.AcValue}\nBateria / UPS: {restorePoint.DcValue}\n\nTo zmieni tylko tę pozycję wskazanego planu. Windows poprosi o zgodę UAC.";
+        if (MessageBox.Show(this, message, "Blessed Optimizer — przywracanie", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
+            return;
+        _powerOperationBusy = true;
+        try
+        {
+            if (!await RunElevatedPowerHelperAsync(restorePoint.SchemeId, descriptor.Key, restorePoint.AcValue, restorePoint.DcValue))
+                return;
+            PowerSettingsService.RemoveRestorePoint(restorePoint.SchemeId, descriptor.Key);
+            FooterStatusText.Text = $"Przywrócono oryginalne wartości: {descriptor.Name}";
+            RenderCurrentPage();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception or ArgumentException or System.Text.Json.JsonException)
+        {
+            MessageBox.Show(this, ex.Message, "Blessed Optimizer — przywracanie", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        finally
+        {
+            _powerOperationBusy = false;
+        }
+    }
+
+    private async Task<bool> RunElevatedPowerHelperAsync(Guid schemeId, string settingKey, uint acValue, uint dcValue)
+    {
+        var executable = Environment.ProcessPath;
+        if (string.IsNullOrWhiteSpace(executable))
+            throw new InvalidOperationException("Nie udało się ustalić ścieżki programu do bezpiecznego monitowania UAC.");
+
+        var startInfo = new ProcessStartInfo(executable) { UseShellExecute = true, Verb = "runas" };
+        if (string.Equals(Path.GetFileNameWithoutExtension(executable), "dotnet", StringComparison.OrdinalIgnoreCase))
+        {
+            var assemblyPath = Assembly.GetEntryAssembly()?.Location;
+            if (string.IsNullOrWhiteSpace(assemblyPath))
+                throw new InvalidOperationException("Nie udało się ustalić ścieżki aplikacji do bezpiecznego monitowania UAC.");
+            startInfo.ArgumentList.Add(assemblyPath);
+        }
+        startInfo.ArgumentList.Add("--apply-power-setting");
+        startInfo.ArgumentList.Add(schemeId.ToString("D"));
+        startInfo.ArgumentList.Add(settingKey);
+        startInfo.ArgumentList.Add(acValue.ToString(CultureInfo.InvariantCulture));
+        startInfo.ArgumentList.Add(dcValue.ToString(CultureInfo.InvariantCulture));
+        string? userSid;
+        using (var identity = WindowsIdentity.GetCurrent())
+            userSid = identity.User?.Value;
+        if (string.IsNullOrWhiteSpace(userSid))
+            throw new InvalidOperationException("Nie udało się zweryfikować bieżącego konta Windows.");
+        startInfo.ArgumentList.Add(userSid);
+        try
+        {
+            using var helper = Process.Start(startInfo);
+            if (helper is null)
+                throw new InvalidOperationException("Windows nie uruchomił pomocnika UAC.");
+            await helper.WaitForExitAsync();
+            if (helper.ExitCode == 0)
+                return true;
+            FooterStatusText.Text = "Windows nie zastosował zmiany; sprawdź komunikat pomocnika.";
+            return false;
+        }
+        catch (System.ComponentModel.Win32Exception ex) when (ex.NativeErrorCode == 1223)
+        {
+            FooterStatusText.Text = "Anulowano UAC · ustawienie zasilania nie zostało zmienione";
+            return false;
+        }
+    }
+
+    private static string DescribePowerValue(PowerSettingDescriptor descriptor, uint value) =>
+        descriptor.Options.FirstOrDefault(option => option.Value == value)?.Label ??
+        (descriptor.Key == "processor-max" ? $"{value}%" : $"Wartość {value}");
 
     private UIElement BuildConnectionsPage()
     {
@@ -423,7 +860,7 @@ public partial class MainWindow : Window
         _watchTimer.Stop();
         if (_watchButton is not null) _watchButton.Content = "Włącz czuwanie";
         if (_monitoringStatus is not null) _monitoringStatus.Text = "Czuwanie wyłączone · nic nie jest monitorowane";
-        FooterStatusText.Text = "Tylko odczyt · Żadne procesy nie są zamykane";
+        FooterStatusText.Text = "Czuwanie zatrzymane · zmiany systemowe wymagają osobnej zgody";
         if (_cpuValue is not null) _cpuValue.Text = "—";
         if (_memoryValue is not null) _memoryValue.Text = "—";
         if (_cpuBar is not null) _cpuBar.Value = 0;
@@ -610,6 +1047,7 @@ public partial class MainWindow : Window
     private void Window_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
         _watchTimer.Stop();
+        _processTimer.Stop();
         _lifetime.Cancel();
     }
 }

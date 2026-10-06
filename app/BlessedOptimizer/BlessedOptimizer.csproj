@@ -12,7 +12,7 @@
     <FileVersion>1.0.0.0</FileVersion>
     <Company>Blessed Optimizer</Company>
     <Product>Blessed Optimizer</Product>
-    <Description>Read-only Windows diagnostics and user-guided optimization suggestions.</Description>
+    <Description>Local Windows diagnostics and user-consented reversible startup and power settings.</Description>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\BlessedOptimizer.ico</ApplicationIcon>
     <PublishSingleFile>true</PublishSingleFile>

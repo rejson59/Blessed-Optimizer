@@ -21,6 +21,23 @@ public partial class App : Application
             return;
         }
 
+        if (e.Args.Length > 0 && string.Equals(e.Args[0], "--apply-power-setting", StringComparison.Ordinal))
+        {
+            try
+            {
+                if (e.Args.Length != 6)
+                    throw new ArgumentException("Brakuje parametrów zmiany planu zasilania.");
+                PowerSettingsService.ApplyFromElevatedHelper(e.Args[1], e.Args[2], e.Args[3], e.Args[4], e.Args[5]);
+                Shutdown(0);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Nie zastosowano ustawienia zasilania.\n\n{ex.Message}", "Blessed Optimizer — UAC", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Shutdown(1);
+            }
+            return;
+        }
+
         var forcePortable = e.Args.Contains("--portable", StringComparer.OrdinalIgnoreCase);
         var skipUpdateCheck = e.Args.Contains("--skip-update-check", StringComparer.OrdinalIgnoreCase);
         DeviceSnapshot? installerSnapshot = null;
