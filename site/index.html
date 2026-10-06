@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b3770">
+  <meta name="description" content="Blessed Optimizer — przyjazny panel diagnostyczny Windows. Poznaj koncepcyjną makietę aplikacji i pobierz najnowszy instalator Windows (.exe).">
+  <title>Blessed Optimizer — błogosławieństwo dla Twojego PC</title>
+  <link rel="icon" type="image/png" href="assets/blessed-optimizer-logo-no-background.png">
+  <link rel="stylesheet" href="styles.css?v=blessed-wings-3">
+  <script src="script.js?v=blessed-wings-3" defer></script>
+</head>
+<body>
+  <div class="blessing-light" aria-hidden="true"><span class="light-beam"></span><span class="light-ring light-ring-one"></span><span class="light-ring light-ring-two"></span><i class="light-spark spark-a">✦</i><i class="light-spark spark-b">✧</i></div>
+  <a class="skip-link" href="#main">Przejdź do treści</a>
+
+  <header class="site-header">
+    <div class="header-inner wrap">
+      <a class="brand" href="#program" data-open-tab="about" aria-label="Blessed Optimizer — strona główna">
+        <img class="brand-logo" src="assets/blessed-optimizer-logo-no-background.png" alt="">
+        <span class="brand-wordmark">Blessed <span>OPTIMIZER</span></span>
+      </a>
+      <div class="site-tabs" role="tablist" aria-label="Główne sekcje strony">
+        <button class="site-tab is-active" id="tab-about" role="tab" type="button" aria-selected="true" aria-controls="panel-about" data-site-tab="about">O programie</button>
+        <button class="site-tab" id="tab-simulator" role="tab" type="button" aria-selected="false" aria-controls="panel-simulator" data-site-tab="simulator" tabindex="-1">Symulator</button>
+      </div>
+      <button class="button button-top" type="button" data-open-tab="simulator">Otwórz symulator <span aria-hidden="true">↗</span></button>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="tab-panel about-panel is-active" id="panel-about" role="tabpanel" aria-labelledby="tab-about" tabindex="0">
+      <section class="hero" id="program">
+        <div class="hero-bloom" aria-hidden="true"></div>
+        <div class="wrap hero-layout">
+          <div class="hero-copy reveal">
+            <p class="eyebrow"><span>✦</span> Błogosławieństwo dla Twojego PC</p>
+            <h1>Niech Twój komputer<br>złapie <em>drugi oddech.</em></h1>
+            <p class="hero-lede">Mniej chaosu w tle. Więcej lekkości na co dzień. Blessed Optimizer ma pomóc Ci odkryć potencjał Windowsa — spokojnie, zrozumiale i na Twoich zasadach.</p>
+            <div class="hero-actions">
+              <a class="button button-primary download-cta" href="https://github.com/rejson59/Blessed-Optimizer/releases/latest/download/BlessedOptimizer-Setup.exe"><span class="button-star" aria-hidden="true">✦</span> Pobierz Blessed Optimizer <span class="button-arrow" aria-hidden="true">↓</span></a>
+              <button class="button button-glass simulator-cta" type="button" data-open-tab="simulator">Poznaj symulator <span aria-hidden="true">↗</span></button>
+              <button class="button button-glass mobile-invite" type="button" id="share-link"><span aria-hidden="true">↗</span> Otwórz podgląd na komputerze</button>
+              <a class="button button-glass how-cta" href="#jak-dziala">Jak to działa <span aria-hidden="true">↓</span></a>
+            </div>
+            <p class="download-note">Windows 10/11 x64 · samodzielny plik .exe · bezpośrednie pobranie najnowszego wydania.</p>
+            <p class="hero-note"><span class="note-lock" aria-hidden="true">✧</span> Sama strona jest tylko podglądem — nie skanuje ani nie zmienia Windowsa.</p>
+            <div class="hero-promises">
+              <span><i class="promise-dot dot-blue"></i> Ty wybierasz</span>
+              <span><i class="promise-dot dot-gold"></i> Jasne wyjaśnienia</span>
+              <span><i class="promise-dot dot-lilac"></i> Możliwość cofnięcia</span>
+            </div>
+          </div>
+
+          <div class="hero-visual reveal reveal-delay">
+            <div class="halo-orbit" aria-hidden="true"></div>
+            <div class="dove-glow" aria-hidden="true"></div>
+            <img class="hero-dove" src="assets/blessed-optimizer-logo-no-background.png" alt="Gołąb — logo Blessed Optimizer">
+            <span class="dove-caption"><i>✦</i> Technologia z troską</span>
+            <div class="app-window glass-panel">
+              <div class="window-bar"><div class="window-dots" aria-hidden="true"><i></i><i></i><i></i></div><div class="window-brand"><span>✦</span> Blessed Optimizer <small>PODGLĄD</small></div><div class="window-controls" aria-hidden="true">−　□　×</div></div>
+              <div class="app-layout">
+                <aside class="app-sidebar">
+                  <div class="device-chip"><span class="device-avatar">B</span><span><strong>TWÓJ PC</strong><small>Windows 11</small></span></div>
+                  <nav class="app-nav" aria-label="Zakładki przykładowej aplikacji">
+                    <button type="button" class="app-nav-button is-active" data-app-view="overview" aria-current="page"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1.5"/><rect x="11" y="3" width="6" height="4" rx="1.2"/><rect x="11" y="9" width="6" height="8" rx="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5"/></svg><span>Przegląd</span></button>
+                    <button type="button" class="app-nav-button" data-app-view="gaming"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6.1 7h7.8a3 3 0 0 1 2.8 2l1 3.1a2 2 0 0 1-3.2 2.1l-2-1.5h-5l-2 1.5a2 2 0 0 1-3.2-2.1l1-3.1a3 3 0 0 1 2.8-2Z"/><path d="M6.5 9.2v3M5 10.7h3M13.4 10h.1M15.1 11.7h.1"/></svg><span>Strefa gracza</span></button>
+                    <button type="button" class="app-nav-button" data-app-view="diagnostics"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.8" cy="8.8" r="5.5"/><path d="m13 13 4 4M8.8 6v3l2 1"/></svg><span>Odkryj</span></button>
+                    <button type="button" class="app-nav-button" data-app-view="settings"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="2.6"/><path d="m16 11.6 1 .8-1.5 2.6-1.2-.5a6 6 0 0 1-1.4.8l-.2 1.3H7.3l-.2-1.3a6 6 0 0 1-1.4-.8l-1.2.5L3 12.4l1-.8a6 6 0 0 1 0-1.6l-1-.8 1.5-2.6 1.2.5a6 6 0 0 1 1.4-.8l.2-1.3h5.4l.2 1.3a6 6 0 0 1 1.4.8l1.2-.5 1.5 2.6-1 .8a6 6 0 0 1 0 1.6Z"/></svg><span>Ustawienia</span></button>
+                  </nav>
+                  <div class="sidebar-demo"><i></i> bezpieczny podgląd</div>
+                </aside>
+                <div class="app-main">
+                  <div class="app-pagebar"><div><p class="app-kicker">DOBRZE CIĘ WIDZIEĆ</p><h2 id="app-view-title">Twój przegląd</h2></div><button class="app-scan-button" type="button" id="audit-button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16 10a6 6 0 1 1-1.8-4.3M16 4v4h-4"/><path d="M10 6.5v3.7l2.2 1.2"/></svg><span>Krótki skan</span></button></div>
+                  <p class="scan-feedback" id="scan-feedback" role="status" aria-live="polite"></p>
+                  <div class="app-panel" id="app-panel" aria-live="polite"><noscript><p>Włącz JavaScript, by przetestować zakładki podglądu.</p></noscript></div>
+                  <div class="app-footnote"><span>✦</span> Ty prowadzisz · dane przykładowe</div>
+                </div>
+              </div>
+            </div>
+            <div class="float-chip float-chip-top"><span>✦</span><span><strong>Więcej lekkości</strong><small>zaczyna się od planu</small></span></div>
+            <div class="float-chip float-chip-bottom"><span class="float-check">✓</span><span><strong>Ty trzymasz ster</strong><small>każdy krok wyjaśniony</small></span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="how-section section-space" id="jak-dziala">
+        <div class="wrap">
+          <div class="section-title reveal"><span class="section-kicker"><i>✦</i> PROSTO I PO TWOJEMU</span><h2>Trzy kroki do<br><span>lżejszego Windowsa.</span></h2><p>Bez tajemnych trików. Bez zgadywania. Ty decydujesz, dokąd prowadzi Cię Blessed Optimizer.</p></div>
+          <div class="how-grid">
+            <article class="how-card reveal"><span class="how-num">01</span><span class="how-icon icon-blue">⌕</span><h3>Poznaj swój PC</h3><p>Przyjazny przegląd pokaże, co warto sprawdzić — bez straszenia i żargonu.</p></article>
+            <article class="how-card reveal reveal-delay-short"><span class="how-num">02</span><span class="how-icon icon-gold">✧</span><h3>Wybierz swój rytm</h3><p>Dopasuj ustawienia do gry, pracy albo dłuższego dnia poza domem.</p></article>
+            <article class="how-card reveal reveal-delay-medium"><span class="how-num">03</span><span class="how-icon icon-lilac">↶</span><h3>Sprawdź i cofnij</h3><p>Rzeczywisty efekt ma być pokazany jasno, a droga powrotu zawsze widoczna.</p></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="features-section section-space" id="funkcje">
+        <div class="wrap">
+          <div class="feature-header reveal"><div><span class="section-kicker"><i>✦</i> TWOJE CENTRUM KONTROLI</span><h2>Wszystko, czego potrzebuje<br><span>dobry dzień z PC.</span></h2></div><button class="button button-glass" type="button" data-open-tab="simulator">Przetestuj podgląd <span aria-hidden="true">↗</span></button></div>
+          <div class="feature-grid">
+            <article class="feature-card feature-card-game reveal"><span class="feature-icon icon-blue"><svg viewBox="0 0 24 24"><path d="M7.2 8h9.6a3.3 3.3 0 0 1 3.1 2.2l1.2 3.5a2.2 2.2 0 0 1-3.5 2.3l-2.2-1.7H8.6l-2.2 1.7a2.2 2.2 0 0 1-3.5-2.3l1.2-3.5A3.3 3.3 0 0 1 7.2 8Z"/><path d="M7.5 10v4M5.5 12h4M15.2 11.2h.1M17.2 13.2h.1"/></svg></span><span class="feature-tag">01 · STREFA GRACZA</span><h3>Gotowy na kolejny level?</h3><p>Profile do gier i jasny podgląd tego, co może się zmienić.</p><div class="game-pills"><span>Tryb gry</span><span>Autostart</span><span>Wydajność</span></div></article>
+            <article class="feature-card reveal reveal-delay-short"><span class="feature-icon icon-gold"><svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="7"/><path d="m16 16 4 4M10.8 7v4l2.4 1.2"/></svg></span><span class="feature-tag">02 · INTELIGENTNE PODPOWIEDZI</span><h3>Odkrywaj ukryte możliwości</h3><p>Odświeżanie ekranu, autostart i profil energii — wytłumaczone normalnym językiem.</p></article>
+            <article class="feature-card reveal"><span class="feature-icon icon-lilac"><svg viewBox="0 0 24 24"><path d="M4 18V8M10 18V5M16 18v-7M22 18H2"/><path d="m4 6 5-3 5 5 6-5"/></svg></span><span class="feature-tag">03 · PRZED / PO</span><h3>Wynik, który ma znaczenie</h3><p>Rzetelne porównanie tam, gdzie da się coś zmierzyć. Bez obietnic „+300% FPS”.</p></article>
+            <article class="feature-card reveal reveal-delay-short"><span class="feature-icon icon-peach"><svg viewBox="0 0 24 24"><path d="M4 8V3m0 5h5M5.3 7.2A8 8 0 1 1 4 12"/><path d="M12 7v5l3.2 1.8"/></svg></span><span class="feature-tag">04 · BEZPIECZEŃSTWO</span><h3>Spokój w pakiecie</h3><p>Przed ważną zmianą: plan, wyjaśnienie i możliwość powrotu do poprzedniego stanu.</p></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="safety-strip" id="bezpieczenstwo"><div class="wrap safety-strip-inner reveal"><span class="safety-symbol">✦</span><div><span class="section-kicker">BEZ CICHYCH ZMIAN</span><h2>Optymalizacja ma dawać ulgę,<br><span>nie niepokój.</span></h2><p>To Ty zatwierdzasz ważne działania. Ochrona Windows i aktualizacje zostają na swoim miejscu.</p></div><button class="button button-glass" type="button" data-open-tab="simulator">Sprawdź symulator <span aria-hidden="true">↗</span></button></div></section>
+
+      <section class="faq-section section-space" id="pytania"><div class="wrap faq-wrap"><div class="section-title reveal"><span class="section-kicker"><i>✦</i> DOBRZE WIEDZIEĆ</span><h2>Jasne odpowiedzi.<br><span>Bez drobnego druku.</span></h2></div><div class="faq-list reveal reveal-delay"><details class="faq-item" open><summary>Czy ta strona naprawdę optymalizuje mój komputer?<span>+</span></summary><p>Nie — to interaktywny prototyp. Nie skanuje urządzenia i nie zmienia Windows. Program desktopowy jest kolejnym etapem projektu.</p></details><details class="faq-item"><summary>Czy aplikacja zagwarantuje niższy ping lub więcej FPS?<span>+</span></summary><p>Nie da się obiecać tego każdemu. Ping zależy m.in. od sieci i serwera, a liczba klatek od komputera, gry i ustawień. Przyszły program ma pokazywać pomiar i jego ograniczenia.</p></details><details class="faq-item"><summary>Kiedy pojawi się aplikacja do pobrania?<span>+</span></summary><p>Na razie dopracowujemy stronę i podgląd. Aplikacja oraz instalator nie są jeszcze dostępne.</p></details></div></div></section>
+    </section>
+
+    <section class="tab-panel simulator-panel" id="panel-simulator" role="tabpanel" aria-labelledby="tab-simulator" tabindex="0" hidden>
+      <div class="simulator-hero">
+        <div class="wrap simulator-hero-inner">
+          <div class="simulator-copy reveal"><span class="section-kicker"><i>✦</i> BLESSED JEST OBOK</span><h1>Cześć, jestem<br><span>Blessed.</span></h1><p>Twój wierny pomocnik zza światów. Poprowadzę Cię prosto przez każdą kategorię, pokażę możliwości i wyjaśnię każdy wybór. W tym podglądzie niczego nie skanuję ani nie zmieniam.</p><div class="simulator-tags"><span><i>✓</i> Bez instalacji</span><span><i>✓</i> Ty decydujesz</span><span><i>✓</i> Zawsze możesz cofnąć</span></div></div>
+          <figure class="simulator-logo-card reveal reveal-delay"><img src="assets/blessed-optimizer-logo.png" alt="Logo Blessed Optimizer — biały gołąb z błękitnymi detalami na jasnym tle"><figcaption>TECHNOLOGIA Z TROSKĄ <span>✦</span></figcaption></figure>
+        </div>
+      </div>
+      <section class="program-preview-section" aria-labelledby="program-preview-heading">
+        <div class="wrap">
+          <div class="program-preview-heading reveal">
+            <div><span class="section-kicker"><i>✦</i> BLESSED OPTIMIZER · v1.0.0</span><h2 id="program-preview-heading">Zajrzyj do aplikacji,<br><span>zanim zaczniesz z niej korzystać.</span></h2><p>Przeklikaj koncepcyjną makietę interfejsu Blessed: Strefę gracza, Połączenia, Propozycje i Personalizację Windows.</p></div>
+            <span class="concept-badge"><i></i> PROJEKT WIZUALNY · NIE INSTALATOR</span>
+          </div>
+          <div class="program-window glass-panel reveal" role="region" aria-label="Interaktywna makieta okna aplikacji Blessed Optimizer">
+            <div class="program-titlebar">
+              <div class="program-title-brand"><img src="assets/blessed-optimizer-logo-no-background.png" alt=""><span><strong>Blessed Optimizer</strong><small>Podgląd aplikacji Windows</small></span></div>
+              <span class="program-window-status"><i></i> WERSJA KONCEPCYJNA</span>
+              <div class="program-window-controls" aria-hidden="true"><i>−</i><i>□</i><i>×</i></div>
+            </div>
+            <div class="program-window-layout">
+              <nav class="program-nav" role="tablist" aria-label="Kategorie aplikacji Blessed">
+                <button class="program-nav-button is-active" id="category-gaming" role="tab" aria-selected="true" aria-controls="program-view-content" type="button" data-program-view="gaming"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6.1 7h7.8a3 3 0 0 1 2.8 2l1 3.1a2 2 0 0 1-3.2 2.1l-2-1.5h-5l-2 1.5a2 2 0 0 1-3.2-2.1l1-3.1a3 3 0 0 1 2.8-2Z"/><path d="M6.5 9.2v3M5 10.7h3M13.4 10h.1M15.1 11.7h.1"/></svg>Strefa gracza</button>
+                <button class="program-nav-button" id="category-connections" role="tab" aria-selected="false" aria-controls="program-view-content" tabindex="-1" type="button" data-program-view="connections"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 7.5a12 12 0 0 1 16 0M5 10.5a7.5 7.5 0 0 1 10 0M8 13.5a3 3 0 0 1 4 0M10 16h.01"/></svg>Połączenia</button>
+                <button class="program-nav-button" id="category-proposals" role="tab" aria-selected="false" aria-controls="program-view-content" tabindex="-1" type="button" data-program-view="proposals"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m10 2 1.6 5.4L17 9l-5.4 1.6L10 16l-1.6-5.4L3 9l5.4-1.6L10 2Z"/><path d="m16 13 .8 2.2L19 16l-2.2.8L16 19l-.8-2.2L13 16l2.2-.8L16 13Z"/></svg>Propozycje</button>
+                <button class="program-nav-button" id="category-personalization" role="tab" aria-selected="false" aria-controls="program-view-content" tabindex="-1" type="button" data-program-view="personalization"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 4h12v12H4z"/><path d="M7 7h6M7 10h4M7 13h6"/></svg>Personalizacja Windows</button>
+              </nav>
+              <div class="program-workspace">
+                <div class="program-toolbar"><div><span class="program-kicker">TWÓJ PANEL · DANE DEMONSTRACYJNE</span><h3 id="program-view-title">Strefa gracza</h3></div><span class="program-online-pill"><i></i> Blessed jest gotowy</span></div>
+                <div class="program-blessed-guide"><div class="program-blessed-avatar"><img src="assets/blessed-optimizer-logo-no-background.png" alt=""><span>✦</span></div><div class="program-blessed-copy"><div><strong>Blessed</strong><small>Twój wierny pomocnik zza światów</small></div><p id="program-blessed-message">Polepszę działanie Twojego komputera — krok po kroku i tylko za Twoją zgodą. Zaczniemy od tego, co ma znaczenie podczas gry.</p></div><span class="blessed-guide-pill">Ty decydujesz</span></div>
+                <div class="program-crumb"><span>WYBRANA KATEGORIA</span><i>›</i><span id="program-crumb-title">STREFA GRACZA</span><span class="program-data-pill">MAKIETA · DEMO</span></div>
+                <div class="program-view-content" id="program-view-content" role="tabpanel" aria-labelledby="category-gaming" aria-live="polite"></div>
+                <div class="program-next-categories"><span class="program-next-label">POMYSŁY NA KOLEJNE AKTUALIZACJE</span><div><span class="future-category-pill">Prywatność</span><span class="future-category-pill">Kopie zapasowe</span><span class="future-category-pill">Konserwacja</span><span class="future-category-pill">Energia i bateria</span><span class="future-category-pill">Bezpieczeństwo</span></div></div>
+              </div>
+            </div>
+          </div>
+          <p class="program-window-caption"><span>✧</span> To interaktywna koncepcja wyglądu — aplikacja i instalator Windows nie są jeszcze dostępne. Przełączniki zmieniają wyłącznie tę makietę.</p>
+        </div>
+      </section>
+      <section class="simulator-section section-space" id="symulator">
+        <div class="wrap">
+          <div class="demo-note reveal"><span class="demo-note-icon">✧</span><p><strong>To tylko symulator.</strong> Liczby są przykładowe — ta strona nie czyta Twojego komputera, nie mierzy pingu ani nie zmienia ustawień systemowych.</p><span class="demo-tag">DANE DEMO</span></div>
+          <div class="simulator-card glass-panel reveal">
+            <div class="sim-controls"><div class="sim-heading"><span class="step-kicker">KROK 1 · KATEGORIA</span><h2>Wybierz, co Cię interesuje.</h2><p>Każda kategoria to wyłącznie bezpieczny podgląd.</p></div><div class="scenario-list" role="radiogroup" aria-label="Kategorie symulatora">
+              <button class="scenario-option is-selected" type="button" role="radio" aria-checked="true" data-scenario="gaming"><span class="scenario-icon scenario-blue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.2 8h9.6a3.3 3.3 0 0 1 3.1 2.2l1.2 3.5a2.2 2.2 0 0 1-3.5 2.3l-2.2-1.7H8.6l-2.2 1.7a2.2 2.2 0 0 1-3.5-2.3l1.2-3.5A3.3 3.3 0 0 1 7.2 8Z"/><path d="M7.5 10v4M5.5 12h4M15.2 11.2h.1M17.2 13.2h.1"/></svg></span><span class="scenario-copy"><strong>Strefa gracza</strong><small>Tryb czuwania i gra</small></span><span class="scenario-radio"></span></button>
+              <button class="scenario-option" type="button" role="radio" aria-checked="false" data-scenario="connections"><span class="scenario-icon scenario-gold"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 8a15 15 0 0 1 20 0M5 11a10.5 10.5 0 0 1 14 0m-11 3a6 6 0 0 1 8 0m-5 4h.01"/></svg></span><span class="scenario-copy"><strong>Połączenia</strong><small>Wi-Fi, Ethernet, Bluetooth</small></span><span class="scenario-radio"></span></button>
+              <button class="scenario-option" type="button" role="radio" aria-checked="false" data-scenario="proposals"><span class="scenario-icon scenario-lilac"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 2 7 7 3-7 2-2 7-2-7-7-2 7-3 2-7Z"/></svg></span><span class="scenario-copy"><strong>Propozycje</strong><small>Pomysły od Blessed</small></span><span class="scenario-radio"></span></button>
+              <button class="scenario-option" type="button" role="radio" aria-checked="false" data-scenario="personalization"><span class="scenario-icon scenario-blue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h5M8 16h8"/></svg></span><span class="scenario-copy"><strong>Personalizacja Windows</strong><small>Motyw i kolor akcentu</small></span><span class="scenario-radio"></span></button>
+            </div><div class="nerd-card"><span class="nerd-bubble">?</span><div><strong>Prosto dla każdego, ciekawie dla nerdów.</strong><p>Każda wskazówka ma prosty opis i techniczne rozwinięcie.</p><details><summary>Zobacz, jak to wyjaśnimy</summary><p>Przyszła aplikacja pokaże źródło ustawienia, zakres zmiany i sposób cofnięcia. Ta strona niczego nie zapisuje.</p></details></div></div></div>
+            <div class="sim-results-panel"><div class="sim-results-heading"><div><span class="step-kicker">KROK 2 · ODKRYJ</span><h2 id="simulation-title">Strefa gracza</h2></div><span class="simulation-state" id="simulation-state"><i></i> Gotowe</span></div><div class="results-list" id="simulation-results" aria-live="polite" aria-atomic="true"></div><div class="result-assurance"><span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5 16.5 5v4.4c0 3.6-2.5 6.4-6.5 7.8-4-1.4-6.5-4.2-6.5-7.8V5L10 2.5Z"/><path d="m7.2 9.8 1.8 1.8 3.8-4"/></svg> Żadnych zmian na Twoim PC</span><span>Wynik wyłącznie poglądowy</span></div><div class="sim-actions"><button class="button button-primary sim-run-button" id="run-simulation" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7.5 4.5 8 5.5-8 5.5v-11Z" fill="currentColor" stroke="none"/></svg> Pokaż przykład</button><button class="button button-undo" id="undo-simulation" type="button" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 8V3.5M4 8h4.5M4.7 7A6.5 6.5 0 1 1 4 11"/></svg> Cofnij podgląd</button></div><p class="simulation-feedback" id="simulation-feedback" role="status" aria-live="polite">Wybierz kategorię, aby zobaczyć przykładowy raport.</p></div>
+          </div>
+          <p class="sim-caption"><span>✦</span> Każdy komputer jest inny. Dobry raport pokaże Twój prawdziwy wynik — również wtedy, gdy nic się nie poprawiło.</p>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div class="wrap footer-inner"><a class="brand footer-brand" href="#program" data-open-tab="about"><img class="brand-logo" src="assets/blessed-optimizer-logo-no-background.png" alt=""><span class="brand-wordmark">Blessed <span>OPTIMIZER</span></span></a><p>Technologia z troską. <span>© <span id="current-year">2026</span> Blessed Optimizer</span></p><button class="back-to-top" type="button" data-open-tab="about">Na górę <span>↑</span></button></div></footer>
+  <div class="toast" id="site-toast" role="status" aria-live="polite"></div>
+
+  <template id="panel-overview"><div class="overview-grid"><article class="overview-score-card"><div class="score-ring" role="img" aria-label="Przykładowy wynik: 68 na 100"><div><strong>68</strong><small>/100</small></div></div><div class="score-copy"><span class="mini-label">TWÓJ PUNKT STARTU · DEMO</span><h3>Małe kroki, dobra zmiana.</h3><p>Wynik tylko na potrzeby podglądu.</p><div class="score-badges"><span class="badge badge-violet">4 wskazówki</span><span class="badge badge-dim">0 zmian</span></div></div></article><div class="overview-stat-stack"><div class="overview-stat"><span class="overview-stat-icon mint">ϟ</span><span><small>Profil energii</small><strong>Zrównoważony</strong></span><span class="stat-chevron">›</span></div><div class="overview-stat"><span class="overview-stat-icon violet">⌁</span><span><small>Ekran</small><strong>60 Hz · przykład</strong></span><span class="stat-chevron">›</span></div><div class="overview-stat"><span class="overview-stat-icon amber">↗</span><span><small>Autostart</small><strong>12 pozycji · demo</strong></span><span class="stat-chevron">›</span></div></div></div><section class="overview-suggestions"><div class="app-section-title"><h3>Miłe rzeczy do sprawdzenia</h3><span>PRZYKŁAD</span></div><div class="suggestion-row"><span class="suggestion-symbol symbol-violet">⌁</span><span><strong>Poznaj możliwości swojego ekranu</strong><small>Być może czeka na Ciebie płynniejszy obraz.</small></span><button type="button" class="mini-more" aria-label="Więcej o ekranie" data-toast="To tylko wskazówka demo. Ustawienie sprawdzisz w opcjach ekranu Windows.">?</button></div><div class="suggestion-row"><span class="suggestion-symbol symbol-mint">↗</span><span><strong>Zajrzyj do aplikacji startowych</strong><small>Wybierz, które chcesz mieć pod ręką.</small></span><button type="button" class="mini-more" aria-label="Więcej o autostarcie" data-toast="To tylko przykład. Makieta nie widzi aplikacji na Twoim komputerze.">?</button></div></section></template>
+  <template id="panel-gaming"><div class="app-view-intro"><span class="mini-label">STREFA GRACZA · PODGLĄD</span><h3>Wskocz do gry po swojemu.</h3><p>Najpierw zobacz opcje. W tym demo każdy przełącznik jest bezpieczny i lokalny.</p></div><div class="app-setting-list"><article class="app-setting-row"><div class="setting-symbol symbol-mint">⌘</div><div class="setting-copy"><div class="setting-titleline"><strong>Tryb gry</strong><span class="setting-state-text">Włączony w demo</span></div><p>Opcja Windows związana z rozgrywką.</p><details class="setting-help"><summary><span>?</span> Wyjaśnij</summary><div class="help-content"><p>Może wpływać na obsługę gry przez Windows. Efekt zależy od komputera.</p><details><summary>Dla nerdów</summary><p>Finalna aplikacja pokaże źródło i zakres zmiany. To demo niczego nie odczytuje.</p></details></div></details></div><button class="mock-switch is-on" type="button" role="switch" aria-checked="true" aria-label="Tryb gry w podglądzie"><span></span></button></article><article class="app-setting-row"><div class="setting-symbol symbol-violet">◉</div><div class="setting-copy"><div class="setting-titleline"><strong>Launchery w autostarcie</strong><span class="setting-state-text">Do sprawdzenia</span></div><p>Wybierz, co chcesz uruchamiać z systemem.</p><details class="setting-help"><summary><span>?</span> Wyjaśnij</summary><div class="help-content"><p>Zdecyduj, które launchery są Ci potrzebne od razu.</p><details><summary>Dla nerdów</summary><p>Wersja Windows pokaże nazwę wpisu i skutek wyłączenia.</p></details></div></details></div><button class="mock-switch" type="button" role="switch" aria-checked="false" aria-label="Launchery w autostarcie"><span></span></button></article><article class="app-setting-row"><div class="setting-symbol symbol-amber">ϟ</div><div class="setting-copy"><div class="setting-titleline"><strong>Profil energii</strong><span class="setting-state-text">Zrównoważony</span></div><p>Dopasuj wydajność do swojego rytmu.</p><details class="setting-help"><summary><span>?</span> Wyjaśnij</summary><div class="help-content"><p>Wyższa wydajność może zwiększyć zużycie energii i temperaturę.</p><details><summary>Dla nerdów</summary><p>Dostępne opcje zależą od sprzętu oraz wersji Windows.</p></details></div></details></div><button class="mock-switch" type="button" role="switch" aria-checked="false" aria-label="Profil energii"><span></span></button></article></div></template>
+  <template id="panel-diagnostics"><div class="app-view-intro"><span class="mini-label">ODKRYWANIE · PODGLĄD</span><h3>Każdy PC ma swoją historię.</h3><p>Oto kilka przyjaznych podpowiedzi, które mogłyby pomóc ją poznać.</p></div><div class="diagnostic-list"><article class="diagnostic-row"><span class="diag-status status-review">✧</span><span><strong>Możliwości Twojego ekranu</strong><small>Sprawdź obsługiwaną częstotliwość.</small></span><span class="diag-pill">WARTO ZERKNĄĆ</span></article><article class="diagnostic-row"><span class="diag-status status-check">✓</span><span><strong>Profil energii</strong><small>Znajdź balans mocy i czasu pracy na baterii.</small></span><span class="diag-pill">POZNAJ</span></article><article class="diagnostic-row"><span class="diag-status status-review">✧</span><span><strong>Aplikacje uruchamiane z systemem</strong><small>Zdecyduj, które mogą poczekać.</small></span><span class="diag-pill">WARTO ZERKNĄĆ</span></article><div class="diagnostic-disclaimer"><span>✦</span> Przykładowe wskazówki — prawdziwy audyt wymaga programu Windows.</div></div></template>
+  <template id="panel-settings"><div class="app-view-intro"><span class="mini-label">TWOJE USTAWIENIA · PODGLĄD</span><h3>Spokojnie. To Ty prowadzisz.</h3><p>Tak mogłyby wyglądać ważne preferencje przyszłej aplikacji.</p></div><div class="preference-list"><div class="preference-row"><span class="pref-symbol pref-green">◇</span><span><strong>Pytaj przed zmianą</strong><small>Przejrzystość na każdym kroku</small></span><span class="pref-enabled">ZAWSZE</span></div><div class="preference-row"><span class="pref-symbol pref-purple">↶</span><span><strong>Pokaż sposób cofnięcia</strong><small>Najpierw droga powrotu</small></span><span class="pref-enabled">WŁ.</span></div><div class="preference-row"><span class="pref-symbol pref-amber">✧</span><span><strong>Poziom wyjaśnień</strong><small>Prosto dla każdego, technicznie dla chętnych</small></span><span class="pref-enabled">PEŁNY</span></div><div class="settings-note"><span>✦</span><span><strong>Troska o Twój komputer</strong><small>Ochrona Windows i aktualizacje zostają na swoim miejscu.</small></span></div></div></template>
+
+
+  <template id="program-template-gaming">
+    <div class="program-category-heading"><span class="program-mini-pill"><i>✦</i> STREFA GRACZA · PODGLĄD</span><h4>Razem po spokojniejszą rozgrywkę.</h4><p>Przygotuj profil, sprawdź najważniejsze sygnały i wybierz sam, co zrobić. Żadnych obietnic „zero lagów”.</p></div>
+    <div class="gaming-layout">
+      <article class="standby-card"><div class="standby-header"><span class="standby-symbol">ϟ</span><span><small>WIERNY POMOCNIK W GRZE</small><strong>Tryb czuwania Blessed</strong></span><span class="program-status-pill status-warm">FUNKCJA PLANOWANA</span></div><p class="standby-description">W przyszłej aplikacji Blessed mógłby obserwować wybrane wskaźniki podczas gry i uprzedzać o podejrzanym obciążeniu. Sam monitoring nie gwarantuje braku przycięć.</p>
+        <div class="program-setting-row standby-toggle"><span class="program-setting-copy"><strong>Włącz tryb czuwania</strong><small>Włączasz tylko podgląd tej funkcji</small><em class="program-setting-state">Wyłączone w makiecie</em></span><button class="program-switch" type="button" role="switch" aria-checked="false" aria-label="Tryb czuwania Blessed w makiecie" data-program-switch="standby"><span></span></button></div>
+        <div class="monitor-pills"><span>Stabilność gry</span><span>Obciążenie · demo</span><span>Aplikacje do przeglądu</span></div>
+        <div class="standby-activity" id="standby-activity-card" data-state="off"><span class="standby-pulse"></span><span><strong>Podgląd czuwania</strong><small id="standby-activity-message">Włącz tryb, aby zobaczyć przykładowy monitoring.</small></span><span class="standby-activity-state" id="standby-activity-state">OCZEKUJE</span></div>
+        <details class="safety-details"><summary>Jak Blessed zadba o bezpieczeństwo?</summary><p>Docelowo tylko lokalny podgląd i aplikacje wcześniej wskazane przez Ciebie. Wstrzymanie czegokolwiek wymagałoby jasnej zgody; procesy systemowe, sterowniki, zabezpieczenia i aktualizacje nie byłyby samoczynnie zamykane.</p></details>
+        <p class="standby-footnote"><span>✦</span> Ta strona nie monitoruje gry i nie zamyka żadnych procesów.</p>
+      </article>
+      <div class="gaming-metrics"><article class="gaming-metric-card"><span class="metric-orbit">⌁</span><small>FPS / PING</small><strong>Nie mierzono</strong><span>Potrzebny prawdziwy test</span></article><article class="gaming-metric-card"><span class="metric-orbit metric-gold">◌</span><small>TRYB CZUWANIA</small><strong>Tylko demo</strong><span>Bez dostępu do komputera</span></article><button class="program-inline-cta" type="button" data-preview-to-sim>Zobacz raport demo <span aria-hidden="true">↘</span></button></div>
+    </div>
+  </template>
+
+  <template id="program-template-connections">
+    <div class="program-category-heading"><span class="program-mini-pill"><i>✦</i> POŁĄCZENIA · PODGLĄD</span><h4>Sprawdzę, co jest nie tak.</h4><p>Najpierw test i wyjaśnienie. Dopiero potem — jeśli zechcesz — rozmowa o możliwej naprawie.</p></div>
+    <div class="connection-type-pills" role="group" aria-label="Wybierz typ połączenia"><button class="connection-type-pill is-selected" type="button" aria-pressed="true" data-connection-type="wifi" data-connection-name="Wi-Fi" data-connection-description="Przykładowy widok sieci bezprzewodowej. Siła sygnału i ping nie są mierzone w tej makiecie." data-connection-state="Nie testowano · demo">Wi-Fi</button><button class="connection-type-pill" type="button" aria-pressed="false" data-connection-type="ethernet" data-connection-name="Ethernet" data-connection-description="Tu mogłyby się znaleźć stan adaptera i test połączenia przewodowego. Makieta nie zagląda do urządzeń sieciowych." data-connection-state="Nie testowano · demo">Ethernet</button><button class="connection-type-pill" type="button" aria-pressed="false" data-connection-type="bluetooth" data-connection-name="Bluetooth" data-connection-description="Przykładowy panel diagnostyczny Bluetooth — bez wykrywania ani parowania urządzeń." data-connection-state="Nie testowano · demo">Bluetooth</button></div>
+    <article class="connection-check-card"><div class="connection-card-heading"><span class="connection-symbol">⌁</span><div><span class="program-card-kicker">WYBRANE POŁĄCZENIE · DEMO</span><h5 id="connection-name">Wi-Fi</h5></div><span class="program-status-pill status-warm" id="connection-state">Nie testowano · demo</span></div><p id="connection-description">Przykładowy widok sieci bezprzewodowej. Siła sygnału i ping nie są mierzone w tej makiecie.</p><div class="connection-metrics"><div><small>OPÓŹNIENIE</small><strong>Nie zmierzono</strong></div><div><small>STABILNOŚĆ</small><strong>Wymaga testu</strong></div><div><small>ADAPTER</small><strong>Nie odczytano</strong></div></div><button class="program-inline-cta connection-test-button" type="button" data-program-audit data-progress-message="Blessed układa przykładowy test połączenia…" data-success-message="Gotowe — to przykładowy raport. Nie testowaliśmy ani nie zmienialiśmy Twojej sieci." data-finish-label="Uruchom test ponownie">Sprawdź przykładowe połączenie <span aria-hidden="true">↗</span></button><p class="program-audit-feedback" id="program-audit-feedback" role="status">Bez rzeczywistego pomiaru — wynik pozostaje pusty.</p><details class="safety-details"><summary>A co z naprawą sieci?</summary><p>Reset adaptera, DNS czy ustawień TCP może odłączyć Cię od sieci. Blessed najpierw wyjaśniłby ryzyko i zaproponował punkt powrotu; nic nie zmieniałby bez Twojego potwierdzenia.</p></details></article>
+  </template>
+
+  <template id="program-template-proposals">
+    <div class="program-category-heading"><span class="program-mini-pill"><i>✦</i> PROPOZYCJE BLESSED</span><h4>Małe rzeczy warte sprawdzenia.</h4><p>Nie lista nakazów — kilka pomysłów z wyjaśnieniem, możliwym zyskiem i ryzykiem.</p></div>
+    <div class="proposal-list"><article class="proposal-card"><div class="proposal-icon proposal-cyan">↗</div><div class="proposal-main"><div class="proposal-title-row"><h5>Przejrzyj aplikacje uruchamiane razem z Windowsem</h5><span class="proposal-priority">ŁATWE DO SPRAWDZENIA</span></div><p>Może skrócić listę rzeczy startujących z systemem, jeśli sam wybierzesz te, których nie potrzebujesz od razu.</p><details><summary>Dlaczego to proponuję?</summary><p><strong>Prosto:</strong> mniej aplikacji na starcie może oznaczać mniej pracy w tle. <strong>Technicznie:</strong> efekt zależy od wpisów autostartu, czasu uruchamiania i sprzętu — przed/po należy zmierzyć.</p></details></div></article><article class="proposal-card"><div class="proposal-icon proposal-gold">⌁</div><div class="proposal-main"><div class="proposal-title-row"><h5>Sprawdź częstotliwość odświeżania ekranu</h5><span class="proposal-priority">JEŚLI SPRZĘT POZWALA</span></div><p>Monitor może obsługiwać płynniejszy obraz niż obecnie ustawiony — ale nie każdy ekran ma taką możliwość.</p><details><summary>Rozwiń wyjaśnienie</summary><p><strong>Prosto:</strong> więcej herców daje płynniejszy ruch. <strong>Technicznie:</strong> dostępne tryby zależą od monitora, kabla, GPU i rozdzielczości.</p></details></div></article><article class="proposal-card"><div class="proposal-icon proposal-violet">ϟ</div><div class="proposal-main"><div class="proposal-title-row"><h5>Dopasuj profil energii do swojego dnia</h5><span class="proposal-priority">Z OPCJĄ COFNIĘCIA</span></div><p>Praca, granie i bateria mogą potrzebować różnych ustawień. Wybór należy do Ciebie.</p><details><summary>Co warto wiedzieć?</summary><p>Profil wydajności może wpływać na pobór energii, temperatury i hałas. Program powinien pokazać skutki uboczne i zapisać sposób powrotu.</p></details></div></article></div><div class="proposal-footer"><span>✦</span> Blessed niczego nie zastosuje w tle. Każda propozycja wymaga Twojej decyzji.</div>
+  </template>
+
+  <template id="program-template-personalization">
+    <div class="program-category-heading"><span class="program-mini-pill"><i>✦</i> PERSONALIZACJA WINDOWS</span><h4>Niech komputer będzie bardziej Twój.</h4><p>Odkrywaj ustawienia Windows i wygląd samego Blessed Optimizer — najpierw zobacz zmianę w podglądzie.</p></div>
+    <div class="personalization-layout"><div class="personalization-controls"><span class="program-card-kicker">CO CHCESZ PERSONALIZOWAĆ?</span><div class="theme-target-pills" role="group" aria-label="Wybierz miejsce personalizacji"><button class="theme-target-pill is-selected" type="button" aria-pressed="true" data-theme-target="windows">System Windows</button><button class="theme-target-pill" type="button" aria-pressed="false" data-theme-target="app">Wygląd Blessed</button></div><p class="theme-target-description" id="theme-target-description">Zmiany systemowe wymagają osobnego potwierdzenia w prawdziwym programie. Teraz oglądasz wyłącznie makietę.</p><span class="program-card-kicker theme-control-label">MOTYW PODGLĄDU</span><div class="theme-mode-pills" role="group" aria-label="Wybierz motyw"><button class="theme-mode-pill is-selected" type="button" aria-pressed="true" data-theme-mode="system">Systemowy</button><button class="theme-mode-pill" type="button" aria-pressed="false" data-theme-mode="light">Jasny</button><button class="theme-mode-pill" type="button" aria-pressed="false" data-theme-mode="dark">Ciemny</button></div><span class="program-card-kicker theme-control-label">KOLOR AKCENTU</span><div class="accent-pills" role="group" aria-label="Wybierz kolor akcentu"><button class="accent-pill accent-sky is-selected" type="button" aria-label="Błękitny akcent" aria-pressed="true" data-accent-choice="sky"></button><button class="accent-pill accent-gold" type="button" aria-label="Złoty akcent" aria-pressed="false" data-accent-choice="gold"></button><button class="accent-pill accent-violet" type="button" aria-label="Fioletowy akcent" aria-pressed="false" data-accent-choice="violet"></button><button class="accent-pill accent-mint" type="button" aria-label="Miętowy akcent" aria-pressed="false" data-accent-choice="mint"></button></div></div><article class="program-theme-preview" id="program-theme-preview" data-theme="system" data-accent="sky"><div class="theme-preview-heading"><span><small>PODGLĄD NA ŻYWO</small><strong id="program-theme-target-label">Motyw systemu Windows</strong></span><span class="theme-live-pill"><i></i> DEMO</span></div><div class="theme-preview-window"><div class="theme-preview-titlebar"><span class="theme-preview-appicon">✦</span><span>Blessed · ustawienia wyglądu</span><span class="theme-preview-dots">···</span></div><div class="theme-preview-body"><span class="theme-preview-kicker">TWÓJ MOTYW</span><h5>Twój komputer,<br>Twój kolor.</h5><p>Tak może wyglądać wybrany styl. Zmiana dotyczy wyłącznie tego podglądu.</p><span class="theme-preview-action">Akcent Blessed <i></i></span></div></div><p class="theme-preview-caption">System Windows · aplikacja · wszystko po Twojemu</p></article></div><p class="personalization-safety"><span>✧</span> Motyw nie zostanie zastosowany do Windowsa — to tylko interaktywny podgląd.</p>
+  </template>
+
+
+  <div class="cursor-wings" id="cursor-wings" aria-hidden="true">
+    <span class="cursor-aura"></span>
+    <svg class="cursor-wing-pair" viewBox="0 0 112 60">
+      <g class="wing-left">
+        <path class="wing-fill" d="M48 38 C40 33 31 27 23 19 C16 12 10 7 5 5 C7 15 13 23 22 29 C14 26 7 21 2 15 C3 26 10 34 20 38 C14 36 8 33 5 30 C8 41 17 47 29 48 C37 47 44 43 48 38 Z"/>
+        <path class="wing-feather wing-feather-one" d="M47 37 C35 28 19 14 5 5 C11 21 25 32 45 39 Z"/>
+        <path class="wing-feather wing-feather-two" d="M47 39 C34 35 17 26 2 15 C8 31 25 39 46 41 Z"/>
+        <path class="wing-feather wing-feather-three" d="M45 41 C34 46 17 40 5 30 C13 44 27 50 41 46 Z"/>
+        <path class="wing-line" d="M46 38 C33 29 19 16 7 7 M45 40 C32 36 17 27 4 17 M42 43 C31 46 19 40 7 32 M34 33 C29 30 24 26 20 22 M32 40 C25 38 19 35 13 31"/>
+      </g>
+      <g class="wing-right" transform="translate(112 0) scale(-1 1)">
+        <path class="wing-fill" d="M48 38 C40 33 31 27 23 19 C16 12 10 7 5 5 C7 15 13 23 22 29 C14 26 7 21 2 15 C3 26 10 34 20 38 C14 36 8 33 5 30 C8 41 17 47 29 48 C37 47 44 43 48 38 Z"/>
+        <path class="wing-feather wing-feather-one" d="M47 37 C35 28 19 14 5 5 C11 21 25 32 45 39 Z"/>
+        <path class="wing-feather wing-feather-two" d="M47 39 C34 35 17 26 2 15 C8 31 25 39 46 41 Z"/>
+        <path class="wing-feather wing-feather-three" d="M45 41 C34 46 17 40 5 30 C13 44 27 50 41 46 Z"/>
+        <path class="wing-line" d="M46 38 C33 29 19 16 7 7 M45 40 C32 36 17 27 4 17 M42 43 C31 46 19 40 7 32 M34 33 C29 30 24 26 20 22 M32 40 C25 38 19 35 13 31"/>
+      </g>
+    </svg>
+    <i class="cursor-spark cursor-spark-one">✦</i><i class="cursor-spark cursor-spark-two">✧</i><i class="cursor-spark cursor-spark-three">✦</i>
+  </div>
+</body>
+</html>
