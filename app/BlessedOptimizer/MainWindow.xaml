@@ -5,7 +5,9 @@
         Title="Blessed Optimizer" Width="1160" Height="790" MinWidth="940" MinHeight="680"
         WindowStartupLocation="CenterScreen" WindowStyle="None" ResizeMode="CanResize"
         Background="Transparent" Foreground="{DynamicResource TextPrimaryBrush}" FontFamily="Segoe UI"
-        Loaded="Window_Loaded" Closing="Window_Closing" StateChanged="Window_StateChanged">
+        Loaded="Window_Loaded" Closing="Window_Closing" StateChanged="Window_StateChanged"
+        SourceInitialized="Window_SourceInitialized" Activated="Window_Activated" Deactivated="Window_Deactivated"
+        MouseEnter="Window_MouseEnter" MouseLeave="Window_MouseLeave">
   <shell:WindowChrome.WindowChrome>
     <shell:WindowChrome CaptionHeight="60" ResizeBorderThickness="6" CornerRadius="16" GlassFrameThickness="0" UseAeroCaptionButtons="False" />
   </shell:WindowChrome.WindowChrome>
@@ -149,6 +151,49 @@
         <TextBlock x:Name="FooterStatusText" Text="Działa lokalnie · każda zmiana wymaga Twojej zgody" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" VerticalAlignment="Center" />
         <TextBlock x:Name="InstallModeText" Text="Instalacja dla bieżącego użytkownika" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" VerticalAlignment="Center" HorizontalAlignment="Right" DockPanel.Dock="Right" />
       </DockPanel>
+
+      <!-- This vector-only overlay is decorative and deliberately excluded from hit testing. -->
+      <Canvas x:Name="CursorWingsOverlay" Grid.Row="0" Grid.RowSpan="4" Panel.ZIndex="20"
+              IsHitTestVisible="False" Focusable="False" ClipToBounds="False" Visibility="Collapsed">
+        <Canvas x:Name="CursorWingsAnchor" Width="84" Height="50" IsHitTestVisible="False" ClipToBounds="False">
+          <Ellipse x:Name="CursorWingsAura" Width="84" Height="50" Canvas.Left="0" Canvas.Top="0" Opacity="0.3">
+            <Ellipse.Fill>
+              <RadialGradientBrush>
+                <GradientStop Color="#50C0EFFF" Offset="0" />
+                <GradientStop Color="#1E6FC4FA" Offset="0.48" />
+                <GradientStop Color="#006FC4FA" Offset="1" />
+              </RadialGradientBrush>
+            </Ellipse.Fill>
+            <Ellipse.Effect><BlurEffect Radius="5" /></Ellipse.Effect>
+          </Ellipse>
+          <Viewbox x:Name="CursorWingsGraphic" Canvas.Left="1" Canvas.Top="6" Width="82" Height="44" Stretch="Fill" Opacity="0.3" IsHitTestVisible="False">
+            <Canvas Width="112" Height="60" ClipToBounds="False" IsHitTestVisible="False">
+              <Canvas.Effect>
+                <DropShadowEffect Color="#FF001130" BlurRadius="6" ShadowDepth="3" Opacity="0.34" />
+              </Canvas.Effect>
+              <Path Data="M 48,38 C 40,33 31,27 23,19 C 16,12 10,7 5,5 C 7,15 13,23 22,29 C 14,26 7,21 2,15 C 3,26 10,34 20,38 C 14,36 8,33 5,30 C 8,41 17,47 29,48 C 37,47 44,43 48,38 Z"
+                    Fill="#E6DDF4FF" Stroke="#E0F8FEFF" StrokeThickness="1.1" StrokeLineJoin="Round" />
+              <Path Data="M 47,37 C 35,28 19,14 5,5 C 11,21 25,32 45,39 Z" Fill="#A8FFFFFF" />
+              <Path Data="M 47,39 C 34,35 17,26 2,15 C 8,31 25,39 46,41 Z" Fill="#55A5DDFF" />
+              <Path Data="M 45,41 C 34,46 17,40 5,30 C 13,44 27,50 41,46 Z" Fill="#CCF1FAFF" />
+              <Path Data="M 46,38 C 33,29 19,16 7,7 M 45,40 C 32,36 17,27 4,17 M 42,43 C 31,46 19,40 7,32 M 34,33 C 29,30 24,26 20,22 M 32,40 C 25,38 19,35 13,31"
+                    Fill="Transparent" Stroke="#845499C7" StrokeThickness="0.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
+              <Canvas Width="112" Height="60" ClipToBounds="False" IsHitTestVisible="False">
+                <Canvas.RenderTransform>
+                  <ScaleTransform ScaleX="-1" CenterX="56" />
+                </Canvas.RenderTransform>
+                <Path Data="M 48,38 C 40,33 31,27 23,19 C 16,12 10,7 5,5 C 7,15 13,23 22,29 C 14,26 7,21 2,15 C 3,26 10,34 20,38 C 14,36 8,33 5,30 C 8,41 17,47 29,48 C 37,47 44,43 48,38 Z"
+                      Fill="#E6DDF4FF" Stroke="#E0F8FEFF" StrokeThickness="1.1" StrokeLineJoin="Round" />
+                <Path Data="M 47,37 C 35,28 19,14 5,5 C 11,21 25,32 45,39 Z" Fill="#A8FFFFFF" />
+                <Path Data="M 47,39 C 34,35 17,26 2,15 C 8,31 25,39 46,41 Z" Fill="#55A5DDFF" />
+                <Path Data="M 45,41 C 34,46 17,40 5,30 C 13,44 27,50 41,46 Z" Fill="#CCF1FAFF" />
+                <Path Data="M 46,38 C 33,29 19,16 7,7 M 45,40 C 32,36 17,27 4,17 M 42,43 C 31,46 19,40 7,32 M 34,33 C 29,30 24,26 20,22 M 32,40 C 25,38 19,35 13,31"
+                      Fill="Transparent" Stroke="#845499C7" StrokeThickness="0.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
+              </Canvas>
+            </Canvas>
+          </Viewbox>
+        </Canvas>
+      </Canvas>
     </Grid>
   </Border>
 </Window>
