@@ -98,7 +98,7 @@
     function animateCursorWings() {
       currentX += (targetX - currentX) * 0.32;
       currentY += (targetY - currentY) * 0.32;
-      // Anchor the wing joint at the pointer; CSS fans the wings out to either side.
+      // Keep the wing pair centred on the pointer body, leaving the arrow tip clear.
       cursorWings.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
       if (Math.abs(targetX - currentX) > 0.15 || Math.abs(targetY - currentY) > 0.15) {
         cursorFrame = window.requestAnimationFrame(animateCursorWings);
