@@ -1,0 +1,11 @@
+# .NET build and publish outputs
+**/bin/
+**/obj/
+artifacts/
+.vs/
+*.user
+*.suo
+
+# Local preview / editor debris
+.DS_Store
+Thumbs.db
