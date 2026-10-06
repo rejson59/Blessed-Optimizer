@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -149,7 +148,10 @@ public static class UpdateService
             startInfo.ArgumentList.Add(stagedInstallerPath);
             startInfo.ArgumentList.Add(InstallService.InstalledExecutablePath);
             startInfo.ArgumentList.Add(expectedSha256);
-            Process.Start(startInfo) ?? throw new InvalidOperationException("Nie udało się uruchomić pomocnika aktualizacji.");
+            var helperProcess = Process.Start(startInfo);
+            if (helperProcess is null)
+                throw new InvalidOperationException("Nie udało się uruchomić pomocnika aktualizacji.");
+            helperProcess.Dispose();
         }
         catch
         {

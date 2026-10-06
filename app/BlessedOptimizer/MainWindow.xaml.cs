@@ -164,7 +164,7 @@ public partial class MainWindow : Window
         var adaptersCard = NewPanel();
         var heading = new DockPanel { LastChildFill = true, Margin = new Thickness(0, 0, 0, 12) };
         heading.Children.Add(Text("Karty sieciowe", 16, "TextPrimaryBrush", FontWeights.SemiBold));
-        var refresh = new Button { Content = "Odśwież listę", Style = (Style)FindResource("SecondaryButton"), Padding = new Thickness(11, 7) };
+        var refresh = new Button { Content = "Odśwież listę", Style = (Style)FindResource("SecondaryButton"), Padding = new Thickness(11, 7, 11, 7) };
         refresh.Click += (_, _) =>
         {
             var latestAdapters = SystemSnapshotService.ReadNetworkAdapters();
@@ -362,7 +362,7 @@ public partial class MainWindow : Window
         content.Children.Add(Text(body, 11, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 11), lineHeight: 18));
         if (settingsUri is not null)
         {
-            var button = new Button { Content = buttonText, Tag = settingsUri, Style = (Style)Application.Current.FindResource("SecondaryButton"), HorizontalAlignment = HorizontalAlignment.Left, Padding = new Thickness(12, 7) };
+            var button = new Button { Content = buttonText, Tag = settingsUri, Style = (Style)Application.Current.FindResource("SecondaryButton"), HorizontalAlignment = HorizontalAlignment.Left, Padding = new Thickness(12, 7, 12, 7) };
             button.Click += OpenSettingsButton_Click;
             content.Children.Add(button);
         }
@@ -378,7 +378,7 @@ public partial class MainWindow : Window
 
     private static Button ChoiceButton(string label, Action action)
     {
-        var button = new Button { Content = label, Style = (Style)Application.Current.FindResource("SecondaryButton"), Margin = new Thickness(0, 0, 8, 8), Padding = new Thickness(13, 8) };
+        var button = new Button { Content = label, Style = (Style)Application.Current.FindResource("SecondaryButton"), Margin = new Thickness(0, 0, 8, 8), Padding = new Thickness(13, 8, 13, 8) };
         button.Click += (_, _) => action();
         return button;
     }
@@ -389,7 +389,7 @@ public partial class MainWindow : Window
         preview.Children.Add(Text("PODGLĄD MOTYWU", 9, "AccentBrush", FontWeights.Bold));
         preview.Children.Add(Text("Twój komputer, Twój klimat.", 20, "TextPrimaryBrush", FontWeights.SemiBold, new Thickness(0, 9, 0, 0)));
         preview.Children.Add(Text("Kolorowe przyciski powyżej zmieniają tylko tę aplikację.", 11, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 0)));
-        var action = new Border { Padding = new Thickness(12, 8), Margin = new Thickness(0, 13, 0, 0), CornerRadius = new CornerRadius(10), HorizontalAlignment = HorizontalAlignment.Left };
+        var action = new Border { Padding = new Thickness(12, 8, 12, 8), Margin = new Thickness(0, 13, 0, 0), CornerRadius = new CornerRadius(10), HorizontalAlignment = HorizontalAlignment.Left };
         action.SetResourceReference(Border.BackgroundProperty, "AccentBrush");
         action.Child = Text("Akcent Blessed", 11, "AccentTextBrush", FontWeights.SemiBold);
         preview.Children.Add(action);
