@@ -2,10 +2,13 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Threading;
@@ -41,10 +44,59 @@ public partial class MainWindow : Window
     private IReadOnlyList<ProcessUsageSnapshot> _processRows = Array.Empty<ProcessUsageSnapshot>();
     private bool _processRefreshBusy;
     private bool _powerOperationBusy;
+    private HwndSource? _windowSource;
+    private readonly TranslateTransform _cursorWingsPosition = new();
+    private bool _mouseLeaveTrackingRequested;
+    private bool _mouseLeaveTrackingIsNonClient;
+
+    private const int WmMouseMove = 0x0200;
+    private const int WmNcMouseMove = 0x00A0;
+    private const int WmMouseLeave = 0x02A3;
+    private const int WmNcMouseLeave = 0x02A2;
+    private const uint TmeLeave = 0x00000002;
+    private const uint TmeNonClient = 0x00000010;
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct NativePoint
+    {
+        public int X;
+        public int Y;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct NativeRect
+    {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct NativeTrackMouseEvent
+    {
+        public uint Size;
+        public uint Flags;
+        public IntPtr Window;
+        public uint HoverTime;
+    }
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetCursorPos(out NativePoint point);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetWindowRect(IntPtr window, out NativeRect bounds);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool TrackMouseEvent(ref NativeTrackMouseEvent trackingEvent);
 
     public MainWindow(DeviceSnapshot? initialSnapshot, bool isPortable, bool skipUpdateCheck)
     {
         InitializeComponent();
+        CursorWingsAnchor.RenderTransform = _cursorWingsPosition;
         _snapshot = initialSnapshot;
         _isPortable = isPortable;
         _skipUpdateCheck = skipUpdateCheck;
@@ -60,8 +112,106 @@ public partial class MainWindow : Window
         RenderCurrentPage();
     }
 
+    private void Window_SourceInitialized(object? sender, EventArgs e)
+    {
+        _windowSource = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
+        _windowSource?.AddHook(WindowMessageHook);
+        UpdateCursorWings();
+    }
+
+    // Observe both client and non-client movement so WindowChrome's title bar stays in sync too.
+    private IntPtr WindowMessageHook(IntPtr hwnd, int message, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        switch (message)
+        {
+            case WmMouseMove:
+            case WmNcMouseMove:
+                if (!IsActive || WindowState == WindowState.Minimized)
+                {
+                    HideCursorWings();
+                    break;
+                }
+                RequestMouseLeaveTracking(hwnd, message == WmNcMouseMove);
+                UpdateCursorWings();
+                break;
+
+            case WmMouseLeave:
+            case WmNcMouseLeave:
+                _mouseLeaveTrackingRequested = false;
+                UpdateCursorWings();
+                break;
+        }
+
+        return IntPtr.Zero;
+    }
+
+    private void RequestMouseLeaveTracking(IntPtr hwnd, bool nonClient)
+    {
+        if (_mouseLeaveTrackingRequested && _mouseLeaveTrackingIsNonClient == nonClient)
+            return;
+
+        var trackingEvent = new NativeTrackMouseEvent
+        {
+            Size = (uint)Marshal.SizeOf<NativeTrackMouseEvent>(),
+            Flags = TmeLeave | (nonClient ? TmeNonClient : 0),
+            Window = hwnd,
+            HoverTime = 0
+        };
+        _mouseLeaveTrackingRequested = TrackMouseEvent(ref trackingEvent);
+        _mouseLeaveTrackingIsNonClient = nonClient;
+    }
+
+    private bool UpdateCursorWings()
+    {
+        if (_windowSource is null || !IsLoaded || !IsActive || WindowState == WindowState.Minimized ||
+            !GetCursorPos(out var pointer) || !GetWindowRect(_windowSource.Handle, out var bounds) ||
+            pointer.X < bounds.Left || pointer.X >= bounds.Right || pointer.Y < bounds.Top || pointer.Y >= bounds.Bottom)
+        {
+            HideCursorWings();
+            return false;
+        }
+
+        Point position;
+        try
+        {
+            position = CursorWingsOverlay.PointFromScreen(new Point(pointer.X, pointer.Y));
+        }
+        catch (InvalidOperationException)
+        {
+            HideCursorWings();
+            return false;
+        }
+
+        if (!double.IsFinite(position.X) || !double.IsFinite(position.Y))
+        {
+            HideCursorWings();
+            return false;
+        }
+
+        // Match the site's viewBox offsets; render-transform updates avoid a layout pass and keep the native arrow tip clear.
+        _cursorWingsPosition.X = position.X - 34;
+        _cursorWingsPosition.Y = position.Y - 20;
+        CursorWingsOverlay.Visibility = Visibility.Visible;
+        return true;
+    }
+
+    private void HideCursorWings() => CursorWingsOverlay.Visibility = Visibility.Collapsed;
+
+    private void Window_Activated(object? sender, EventArgs e) => UpdateCursorWings();
+
+    private void Window_Deactivated(object? sender, EventArgs e)
+    {
+        _mouseLeaveTrackingRequested = false;
+        HideCursorWings();
+    }
+
+    private void Window_MouseEnter(object sender, MouseEventArgs e) => UpdateCursorWings();
+
+    private void Window_MouseLeave(object sender, MouseEventArgs e) => UpdateCursorWings();
+
     private async void Window_Loaded(object sender, RoutedEventArgs e)
     {
+        UpdateCursorWings();
         if (_snapshot is null)
         {
             FooterStatusText.Text = "Odczytuję podstawowe parametry urządzenia lokalnie…";
@@ -1110,10 +1260,17 @@ public partial class MainWindow : Window
         WindowMaximizeButton.ToolTip = maximized ? "Przywróć" : "Maksymalizuj";
         WindowFrame.Margin = maximized ? new Thickness(0) : new Thickness(6);
         WindowFrame.CornerRadius = maximized ? new CornerRadius(0) : new CornerRadius(18);
+        UpdateCursorWings();
     }
 
     private void Window_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
+        HideCursorWings();
+        if (_windowSource is not null)
+        {
+            _windowSource.RemoveHook(WindowMessageHook);
+            _windowSource = null;
+        }
         _watchTimer.Stop();
         _processTimer.Stop();
         _lifetime.Cancel();

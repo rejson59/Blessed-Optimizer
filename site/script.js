@@ -148,52 +148,32 @@
   });
   selectSiteTab(window.location.hash === '#symulator' ? 'simulator' : 'about', { scroll: false });
 
-  // Keep the operating-system pointer visible; Blessed's wings float beside it.
+  // Keep the native operating-system pointer visible and update the wing position in the same event.
+  // The decorative wings are available only for a fine, hover-capable pointer; touch and reduced-motion
+  // users keep the site's unchanged behavior and never get an animated cursor overlay.
   const cursorWings = document.getElementById('cursor-wings');
   const finePointer = window.matchMedia?.('(hover: hover) and (pointer: fine)');
   const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   if (cursorWings && finePointer?.matches && !reducedMotion) {
-    let targetX = 0;
-    let targetY = 0;
-    let currentX = 0;
-    let currentY = 0;
-    let hasPointerPosition = false;
-    let cursorFrame = 0;
     let blessingTimer = 0;
-
-    function animateCursorWings() {
-      currentX += (targetX - currentX) * 0.32;
-      currentY += (targetY - currentY) * 0.32;
-      // Keep the wing pair centred on the pointer body, leaving the arrow tip clear.
-      cursorWings.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
-      if (Math.abs(targetX - currentX) > 0.15 || Math.abs(targetY - currentY) > 0.15) {
-        cursorFrame = window.requestAnimationFrame(animateCursorWings);
-      } else {
-        cursorFrame = 0;
-      }
-    }
 
     document.addEventListener('pointermove', (event) => {
       if (event.pointerType && event.pointerType !== 'mouse') return;
-      targetX = event.clientX;
-      targetY = event.clientY;
-      if (!hasPointerPosition) {
-        currentX = targetX;
-        currentY = targetY;
-        hasPointerPosition = true;
-      }
+      // No interpolation or animation frame: anchor directly to the latest pointer coordinates.
+      cursorWings.style.transform = `translate3d(${event.clientX}px, ${event.clientY}px, 0)`;
       cursorWings.classList.add('is-visible');
       const target = event.target instanceof Element ? event.target : null;
       const isInteractive = Boolean(target?.closest('a,button,[role="button"],[role="switch"],summary,input,select,textarea'));
       cursorWings.classList.toggle('is-hovering', isInteractive);
-      if (!cursorFrame) cursorFrame = window.requestAnimationFrame(animateCursorWings);
     });
 
     document.addEventListener('pointerdown', (event) => {
       if (event.pointerType && event.pointerType !== 'mouse') return;
       cursorWings.classList.add('is-pressing');
       cursorWings.classList.remove('is-blessing');
-      window.requestAnimationFrame(() => cursorWings.classList.add('is-blessing'));
+      // Restart only the decorative click sparkle; pointer placement never waits for a frame.
+      void cursorWings.offsetWidth;
+      cursorWings.classList.add('is-blessing');
       window.clearTimeout(blessingTimer);
       blessingTimer = window.setTimeout(() => cursorWings.classList.remove('is-blessing'), 700);
     });

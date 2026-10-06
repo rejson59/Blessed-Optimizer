@@ -31,17 +31,17 @@
 @media(max-width:365px){.brand-wordmark{display:none}.hero h1{font-size:42px}.site-tab{padding-inline:8px;font-size:6.5px}.app-layout{grid-template-columns:39px minmax(0,1fr)}.app-main{padding-inline:5px}.scenario-copy strong{font-size:4.5px}.sim-controls{padding-inline:8px}.sim-results-panel{padding-inline:7px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.js-ready .reveal{opacity:1;transform:none}}
 
-/* The native arrow stays visible in the gap between feathered wings. */
-.cursor-wings{position:fixed;z-index:200;top:0;left:0;width:0;height:0;opacity:0;pointer-events:none;will-change:transform,opacity;transition:opacity .18s ease}
+/* Pointer coordinates are applied directly by script.js; this transparent layer never eases its position. The native arrow stays visible in the feathered center gap. */
+.cursor-wings{position:fixed;z-index:40;top:0;left:0;width:0;height:0;opacity:0;pointer-events:none;will-change:transform,opacity;transition:opacity .18s ease}
 .cursor-wings.is-visible{opacity:1}
-.cursor-aura{position:absolute;top:-20px;left:-34px;width:84px;height:50px;border-radius:50%;background:radial-gradient(ellipse,rgba(192,239,255,.29),rgba(111,196,250,.12) 48%,transparent 76%);filter:blur(5px);transform:scale(.82);transition:transform .4s var(--ease),opacity .35s ease;opacity:.7}
-.cursor-wing-pair{position:absolute;top:-13.86px;left:-33px;width:82px;height:44px;overflow:visible;filter:drop-shadow(0 3px 5px rgba(0,17,48,.34)) drop-shadow(0 0 6px rgba(149,230,255,.36));transform-origin:41px 27.86px;transform:rotate(-3deg) scale(.9);transition:transform .4s var(--ease),filter .35s ease;animation:wing-float 3.6s ease-in-out infinite}
+.cursor-aura{position:absolute;top:-20px;left:-34px;width:84px;height:50px;border-radius:50%;background:radial-gradient(ellipse,rgba(192,239,255,.29),rgba(111,196,250,.12) 48%,transparent 76%);filter:blur(5px);transform:scale(.82);transition:opacity .35s ease;opacity:.3}
+.cursor-wing-pair{position:absolute;top:-13.86px;left:-33px;width:82px;height:44px;overflow:visible;filter:drop-shadow(0 3px 5px rgba(0,17,48,.34)) drop-shadow(0 0 6px rgba(149,230,255,.36));transform-origin:41px 27.86px;transform:rotate(-3deg) scale(.9);opacity:.3;transition:filter .35s ease}
 .wing-fill{fill:rgba(221,244,255,.9);stroke:rgba(248,254,255,.88);stroke-width:1;stroke-linejoin:round}.wing-feather-one{fill:rgba(255,255,255,.66)}.wing-feather-two{fill:rgba(165,221,255,.33)}.wing-feather-three{fill:rgba(241,250,255,.8)}.wing-line{fill:none;stroke:rgba(84,153,199,.52);stroke-width:.8;stroke-linecap:round;stroke-linejoin:round}
 .cursor-spark{position:absolute;z-index:2;color:#ffe5a1;font-size:9px;font-style:normal;opacity:0;text-shadow:0 0 9px rgba(255,227,162,.95)}
 .cursor-spark-one{top:-12px;left:42px}.cursor-spark-two{top:-5px;left:-37px;color:#a9eaff;font-size:10px}.cursor-spark-three{top:-27px;left:7px;font-size:7px}
-.cursor-wings.is-hovering .cursor-aura{opacity:1;transform:scale(1.12)}.cursor-wings.is-hovering .cursor-wing-pair{transform:rotate(0) scale(1.03);filter:drop-shadow(0 4px 7px rgba(0,17,48,.38)) drop-shadow(0 0 10px rgba(149,230,255,.6))}
+.cursor-wings.is-hovering .cursor-aura{opacity:.45;transform:scale(1.12)}.cursor-wings.is-hovering .cursor-wing-pair{transform:rotate(0) scale(1.03);filter:drop-shadow(0 4px 7px rgba(0,17,48,.38)) drop-shadow(0 0 10px rgba(149,230,255,.6))}
 .cursor-wings.is-pressing .cursor-wing-pair{transform:rotate(7deg) scale(.78)}.cursor-wings.is-pressing .cursor-aura{transform:scale(.7)}.cursor-wings.is-blessing .cursor-spark{animation:cursor-sparkle .62s var(--ease) both}.cursor-wings.is-blessing .cursor-spark-two{animation-delay:.06s}.cursor-wings.is-blessing .cursor-spark-three{animation-delay:.12s}
-@keyframes wing-float{0%,100%{translate:0 0;rotate:-2deg}50%{translate:0 -2px;rotate:2deg}}
+
 @keyframes cursor-sparkle{0%{opacity:0;transform:translate(0,0) scale(.5) rotate(-20deg)}25%{opacity:1}100%{opacity:0;transform:translate(8px,-13px) scale(1.3) rotate(35deg)}}
 
 /* Interactive preview of the Windows app layout, presented inside a desktop window frame. */
