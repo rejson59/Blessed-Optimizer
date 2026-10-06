@@ -1,11 +1,12 @@
-# Blessed Optimizer · strona i aplikacja Windows v1.0.0
+# Blessed Optimizer · strona i aplikacja Windows v1.0.2
 
-Responsywna, polskojęzyczna strona projektu z osobnymi zakładkami „O programie” i „Symulator”, niebieskim gradientem, szklistymi panelami oraz gołębiem Blessed. Strona zawiera koncepcyjną makietę aplikacji — nie wykonuje diagnostyki urządzenia.
+Responsywna, polskojęzyczna strona projektu z osobnymi zakładkami „O programie” i „Symulator”, niebieskim gradientem, szklistymi panelami oraz gołębiem Blessed. Interaktywny podgląd odwzorowuje układ rzeczywistej aplikacji Windows; liczby i odczyty na stronie są demonstracyjne, a witryna nie diagnozuje urządzenia.
 
-W katalogu `app/BlessedOptimizer/` znajduje się pierwsza natywna aplikacja Windows. Jej numer wersji to **1.0.0**. Projekt jest przygotowany do zbudowania przez GitHub Actions jako jeden samodzielny plik `.exe`; publiczny plik do pobrania pojawi się w GitHub Releases po opublikowaniu tagu `v1.0.0`.
+W katalogu `app/BlessedOptimizer/` znajduje się pierwsza natywna aplikacja Windows. Jej numer wersji to **1.0.2**. GitHub Actions buduje ją jako jeden samodzielny plik `.exe`; samo pomyślne zbudowanie nie publikuje jednak wydania. Instalator staje się publicznie dostępny dopiero po opublikowaniu GitHub Release z tagiem `v1.0.2`.
 
-## Co robi aplikacja v1.0.0
+## Co robi aplikacja v1.0.2
 
+- **Interfejs:** cztery główne kategorie — Strefa gracza, Połączenia, Propozycje i Personalizacja Windows — oraz osobna grupa dodatkowych narzędzi: Procesy, Autostart i Zasilanie. Układ odpowiada interaktywnemu podglądowi na stronie.
 - **Instalator w tym samym pliku `.exe`:** instalacja tylko dla bieżącego użytkownika do `%LOCALAPPDATA%\Programs\BlessedOptimizer`, skrót w menu Start i opcjonalny skrót na pulpicie. Bez uprawnień administratora, autostartu ani automatycznego zamykania aplikacji.
 - **Lokalny przegląd urządzenia:** Windows, nazwa procesora, liczba logicznych wątków, pamięć RAM, nazwa karty graficznej, wolne miejsce na dysku systemowym i widoczne karty sieciowe. Te odczyty nie są wysyłane do usługi Blessed.
 - **Procesy:** tabela lokalnych procesów z PID, szacowanym użyciem CPU (z kolejnych próbek), pamięcią roboczą i czasem uruchomienia; wyszukiwanie po nazwie lub PID i odświeżanie co 2 sekundy tylko na otwartej karcie. Jest to podgląd — aplikacja nie kończy procesów ani nie zmienia ich priorytetów. Dostęp do chronionych procesów może być ograniczony przez Windows.
@@ -21,7 +22,7 @@ Instalator odczytuje parametry lokalnie, by pokazać dopasowane ciekawostki. Nie
 
 ## Pobieranie i wydanie
 
-Przycisk pobierania na stronie prowadzi bezpośrednio do `https://github.com/rejson59/Blessed-Optimizer/releases/latest/download/BlessedOptimizer-Setup.exe`, więc przeglądarka pobiera najnowszy opublikowany instalator, a nie otwiera listy wydań. Ten stały adres zacznie działać po opublikowaniu pierwszego wydania. Workflow `.github/workflows/windows-release.yml` publikuje `BlessedOptimizer-Setup.exe`, `SHA256SUMS.txt` i manifest updatera po wypchnięciu tagu `vMAJOR.MINOR.PATCH` albo ręcznym uruchomieniu workflow z `main` i podaniem np. `v1.0.0`. Build uruchamia też na Windows read-only smoke checks dla API zasilania, enumeracji procesów i odczytu autostartu; nie zapisuje ustawień systemu. Pull request i zmiany na `main` udostępniają artefakt Actions.
+Przycisk na stronie sprawdza najnowsze publiczne wydanie przez GitHub API. Bezpośrednie pobieranie włącza się tylko wtedy, gdy wydanie zawiera `BlessedOptimizer-Setup.exe`; w przeciwnym razie przycisk prowadzi do listy Releases, zamiast do niedziałającego adresu i błędu 404. Workflow `.github/workflows/windows-release.yml` publikuje `BlessedOptimizer-Setup.exe`, `SHA256SUMS.txt` i manifest updatera po wypchnięciu tagu `vMAJOR.MINOR.PATCH` albo ręcznym uruchomieniu workflow z `main` i podaniem np. `v1.0.2`. Build uruchamia też na Windows read-only smoke checks dla API zasilania, enumeracji procesów i odczytu autostartu; nie zapisuje ustawień systemu. Pull request i zmiany na `main` udostępniają artefakt Actions, ale nie tworzą publicznego Release.
 
 Build jest **Windows x64** i zawiera .NET, więc użytkownik nie musi instalować osobnego runtime’u. To jeden plik dla Windows 10/11 x64; Windows 11 na ARM może uruchomić go przez emulację x64, ale nie jest to natywny build ARM64. Plik nie jest podpisany certyfikatem code-signing — Windows SmartScreen może wyświetlić ostrzeżenie.
 
