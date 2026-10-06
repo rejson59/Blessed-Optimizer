@@ -16,6 +16,72 @@
   const year = document.getElementById('current-year');
   if (year) year.textContent = String(new Date().getFullYear());
 
+  // Only offer a direct download when GitHub confirms the latest release has the installer.
+  // The releases page is a safe fallback, so an unpublished release never produces a 404.
+  const downloadCta = document.getElementById('download-cta');
+  const downloadLabel = document.getElementById('download-label');
+  const downloadNote = document.getElementById('download-note');
+  const releasesPageUrl = 'https://github.com/rejson59/Blessed-Optimizer/releases';
+  const latestReleaseApiUrl = 'https://api.github.com/repos/rejson59/Blessed-Optimizer/releases/latest';
+  const installerAssetName = 'BlessedOptimizer-Setup.exe';
+
+  function showReleasePage(message) {
+    if (downloadCta) downloadCta.href = releasesPageUrl;
+    if (downloadLabel) downloadLabel.textContent = 'Sprawdź wydania';
+    if (downloadNote) downloadNote.textContent = message;
+  }
+
+  if (downloadCta && downloadLabel && downloadNote) {
+    showReleasePage('Sprawdzam dostępność instalatora. Jeśli go nie ma, przycisk otworzy stronę GitHub Releases.');
+    const releaseCheckController = new AbortController();
+    const releaseCheckTimeout = window.setTimeout(() => releaseCheckController.abort(), 7000);
+    fetch(latestReleaseApiUrl, {
+      headers: { Accept: 'application/vnd.github+json' },
+      cache: 'no-store',
+      signal: releaseCheckController.signal
+    })
+      .then((response) => {
+        if (!response.ok) {
+          const error = new Error(response.status === 404 ? 'no-release' : 'release-check-failed');
+          throw error;
+        }
+        return response.json();
+      })
+      .then((release) => {
+        const installer = Array.isArray(release.assets)
+          ? release.assets.find((asset) => asset.name === installerAssetName)
+          : null;
+        let assetUrl;
+        try {
+          assetUrl = new URL(installer?.browser_download_url);
+        } catch (_error) {
+          assetUrl = null;
+        }
+
+        const isTrustedInstallerUrl = assetUrl
+          && assetUrl.protocol === 'https:'
+          && assetUrl.hostname === 'github.com'
+          && assetUrl.pathname.startsWith('/rejson59/Blessed-Optimizer/releases/download/')
+          && assetUrl.pathname.endsWith(`/${installerAssetName}`);
+
+        if (!isTrustedInstallerUrl) {
+          showReleasePage('Nie znaleziono instalatora w najnowszym wydaniu. Otwórz GitHub Releases, aby sprawdzić dostępne pliki.');
+          return;
+        }
+
+        downloadCta.href = assetUrl.href;
+        downloadLabel.textContent = 'Pobierz Blessed Optimizer';
+        downloadNote.textContent = 'Windows 10/11 x64 · samodzielny plik .exe · bezpośrednie pobranie najnowszego wydania.';
+      })
+      .catch((error) => {
+        const message = error?.message === 'no-release'
+          ? 'Nie ma jeszcze publicznego wydania z instalatorem. Przycisk otworzy stronę GitHub Releases.'
+          : 'Nie udało się potwierdzić dostępności instalatora. Przycisk otworzy stronę GitHub Releases.';
+        showReleasePage(message);
+      })
+      .finally(() => window.clearTimeout(releaseCheckTimeout));
+  }
+
   // The two top-level sections behave as accessible tabs and can be linked directly.
   const siteTabButtons = Array.from(document.querySelectorAll('[data-site-tab]'));
   const tabPanels = {

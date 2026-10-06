@@ -4,11 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b3770">
-  <meta name="description" content="Blessed Optimizer — przyjazny panel diagnostyczny Windows. Poznaj koncepcyjną makietę aplikacji i pobierz najnowszy instalator Windows (.exe).">
+  <meta name="description" content="Blessed Optimizer — przyjazny panel diagnostyczny Windows. Poznaj koncepcyjną makietę aplikacji i sprawdź dostępność instalatora Windows (.exe).">
   <title>Blessed Optimizer — błogosławieństwo dla Twojego PC</title>
   <link rel="icon" type="image/png" href="assets/blessed-optimizer-logo-no-background.png">
-  <link rel="stylesheet" href="styles.css?v=blessed-wings-3">
-  <script src="script.js?v=blessed-wings-3" defer></script>
+  <link rel="stylesheet" href="styles.css?v=blessed-wings-4">
+  <script src="script.js?v=blessed-wings-4" defer></script>
 </head>
 <body>
   <div class="blessing-light" aria-hidden="true"><span class="light-beam"></span><span class="light-ring light-ring-one"></span><span class="light-ring light-ring-two"></span><i class="light-spark spark-a">✦</i><i class="light-spark spark-b">✧</i></div>
@@ -38,12 +38,12 @@
             <h1>Niech Twój komputer<br>złapie <em>drugi oddech.</em></h1>
             <p class="hero-lede">Mniej chaosu w tle. Więcej lekkości na co dzień. Blessed Optimizer ma pomóc Ci odkryć potencjał Windowsa — spokojnie, zrozumiale i na Twoich zasadach.</p>
             <div class="hero-actions">
-              <a class="button button-primary download-cta" href="https://github.com/rejson59/Blessed-Optimizer/releases/latest/download/BlessedOptimizer-Setup.exe"><span class="button-star" aria-hidden="true">✦</span> Pobierz Blessed Optimizer <span class="button-arrow" aria-hidden="true">↓</span></a>
+              <a class="button button-primary download-cta" id="download-cta" href="https://github.com/rejson59/Blessed-Optimizer/releases" aria-describedby="download-note"><span class="button-star" aria-hidden="true">✦</span> <span id="download-label">Sprawdź wydania</span> <span class="button-arrow" aria-hidden="true">↓</span></a>
               <button class="button button-glass simulator-cta" type="button" data-open-tab="simulator">Poznaj symulator <span aria-hidden="true">↗</span></button>
               <button class="button button-glass mobile-invite" type="button" id="share-link"><span aria-hidden="true">↗</span> Otwórz podgląd na komputerze</button>
               <a class="button button-glass how-cta" href="#jak-dziala">Jak to działa <span aria-hidden="true">↓</span></a>
             </div>
-            <p class="download-note">Windows 10/11 x64 · samodzielny plik .exe · bezpośrednie pobranie najnowszego wydania.</p>
+            <p class="download-note" id="download-note" role="status" aria-live="polite">Jeśli wydanie jest opublikowane, przycisk pobierze instalator. W przeciwnym razie otworzy stronę GitHub Releases.</p>
             <p class="hero-note"><span class="note-lock" aria-hidden="true">✧</span> Sama strona jest tylko podglądem — nie skanuje ani nie zmienia Windowsa.</p>
             <div class="hero-promises">
               <span><i class="promise-dot dot-blue"></i> Ty wybierasz</span>
@@ -109,7 +109,7 @@
 
       <section class="safety-strip" id="bezpieczenstwo"><div class="wrap safety-strip-inner reveal"><span class="safety-symbol">✦</span><div><span class="section-kicker">BEZ CICHYCH ZMIAN</span><h2>Optymalizacja ma dawać ulgę,<br><span>nie niepokój.</span></h2><p>To Ty zatwierdzasz ważne działania. Ochrona Windows i aktualizacje zostają na swoim miejscu.</p></div><button class="button button-glass" type="button" data-open-tab="simulator">Sprawdź symulator <span aria-hidden="true">↗</span></button></div></section>
 
-      <section class="faq-section section-space" id="pytania"><div class="wrap faq-wrap"><div class="section-title reveal"><span class="section-kicker"><i>✦</i> DOBRZE WIEDZIEĆ</span><h2>Jasne odpowiedzi.<br><span>Bez drobnego druku.</span></h2></div><div class="faq-list reveal reveal-delay"><details class="faq-item" open><summary>Czy ta strona naprawdę optymalizuje mój komputer?<span>+</span></summary><p>Nie — to interaktywny prototyp. Nie skanuje urządzenia i nie zmienia Windows. Program desktopowy jest kolejnym etapem projektu.</p></details><details class="faq-item"><summary>Czy aplikacja zagwarantuje niższy ping lub więcej FPS?<span>+</span></summary><p>Nie da się obiecać tego każdemu. Ping zależy m.in. od sieci i serwera, a liczba klatek od komputera, gry i ustawień. Przyszły program ma pokazywać pomiar i jego ograniczenia.</p></details><details class="faq-item"><summary>Kiedy pojawi się aplikacja do pobrania?<span>+</span></summary><p>Na razie dopracowujemy stronę i podgląd. Aplikacja oraz instalator nie są jeszcze dostępne.</p></details></div></div></section>
+      <section class="faq-section section-space" id="pytania"><div class="wrap faq-wrap"><div class="section-title reveal"><span class="section-kicker"><i>✦</i> DOBRZE WIEDZIEĆ</span><h2>Jasne odpowiedzi.<br><span>Bez drobnego druku.</span></h2></div><div class="faq-list reveal reveal-delay"><details class="faq-item" open><summary>Czy ta strona naprawdę optymalizuje mój komputer?<span>+</span></summary><p>Nie — to interaktywny prototyp. Sama strona nie skanuje urządzenia ani nie zmienia Windows. Aplikacja Windows jest osobnym programem, a jej instalator pobierzesz z przycisku u góry, gdy będzie dostępny w GitHub Releases.</p></details><details class="faq-item"><summary>Czy aplikacja zagwarantuje niższy ping lub więcej FPS?<span>+</span></summary><p>Nie da się obiecać tego każdemu. Ping zależy m.in. od sieci i serwera, a liczba klatek od komputera, gry i ustawień. Aplikacja nie mierzy FPS; test ping uruchamiasz osobno, na własne żądanie.</p></details><details class="faq-item"><summary>Gdzie pobiorę aplikację?<span>+</span></summary><p>Użyj przycisku u góry strony. Jeśli najnowsze wydanie GitHub zawiera instalator, przycisk pobierze plik .exe; w przeciwnym razie otworzy listę wydań zamiast prowadzić do niedziałającego linku.</p></details></div></div></section>
     </section>
 
     <section class="tab-panel simulator-panel" id="panel-simulator" role="tabpanel" aria-labelledby="tab-simulator" tabindex="0" hidden>
@@ -147,7 +147,7 @@
               </div>
             </div>
           </div>
-          <p class="program-window-caption"><span>✧</span> To interaktywna koncepcja wyglądu — aplikacja i instalator Windows nie są jeszcze dostępne. Przełączniki zmieniają wyłącznie tę makietę.</p>
+          <p class="program-window-caption"><span>✧</span> To interaktywna makieta wyglądu; jej przełączniki zmieniają wyłącznie podgląd. Aplikacja Windows jest osobnym programem — sprawdź dostępność instalatora przyciskiem u góry strony.</p>
         </div>
       </section>
       <section class="simulator-section section-space" id="symulator">
