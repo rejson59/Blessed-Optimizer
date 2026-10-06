@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
     inputs:
       publish_version:
-        description: "Opcjonalny tag wydania (np. v1.0.0). Publikuj tylko z gałęzi main."
+        description: "Opcjonalny tag wydania (np. v1.0.1). Publikuj tylko z gałęzi main."
         required: false
         type: string
         default: ""
@@ -63,7 +63,7 @@ jobs:
           $tag = $env:RELEASE_TAG
           $isVersionedRelease = ($env:GITHUB_REF -like "refs/tags/*") -or -not [string]::IsNullOrWhiteSpace($env:RELEASE_VERSION)
           if ($isVersionedRelease -and $tag -notmatch '^v\d+\.\d+\.\d+$') {
-            throw "Release tags must use the vMAJOR.MINOR.PATCH format, e.g. v1.0.0."
+            throw "Release tags must use the vMAJOR.MINOR.PATCH format, e.g. v1.0.1."
           }
           if ($isVersionedRelease) {
             [xml]$project = Get-Content "app/BlessedOptimizer/BlessedOptimizer.csproj" -Raw

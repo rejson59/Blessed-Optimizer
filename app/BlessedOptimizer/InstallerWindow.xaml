@@ -21,7 +21,7 @@
       </Border>
       <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="16,0,0,0">
         <TextBlock Text="Blessed Optimizer" FontSize="24" FontWeight="Bold" />
-        <TextBlock Text="Instalator i aplikacja · wersja 1.0.0" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" Margin="0,4,0,0" />
+        <TextBlock Text="Instalator i aplikacja · wersja 1.0.1" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" Margin="0,4,0,0" />
       </StackPanel>
       <Border Grid.Column="2" VerticalAlignment="Top" Padding="10,6" CornerRadius="999" Background="#203D5B" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
         <TextBlock Text="BEZ UPRAWNIEŃ ADMINA" Foreground="{DynamicResource GoldBrush}" FontSize="9" FontWeight="Bold" />

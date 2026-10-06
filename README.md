@@ -1,10 +1,10 @@
-# Blessed Optimizer · strona i aplikacja Windows v1.0.0
+# Blessed Optimizer · strona i aplikacja Windows v1.0.1
 
 Responsywna, polskojęzyczna strona projektu z osobnymi zakładkami „O programie” i „Symulator”, niebieskim gradientem, szklistymi panelami oraz gołębiem Blessed. Strona zawiera koncepcyjną makietę aplikacji — nie wykonuje diagnostyki urządzenia.
 
-W katalogu `app/BlessedOptimizer/` znajduje się pierwsza natywna aplikacja Windows. Jej numer wersji to **1.0.0**. GitHub Actions buduje ją jako jeden samodzielny plik `.exe`; samo pomyślne zbudowanie nie publikuje jednak wydania. Instalator staje się publicznie dostępny dopiero po opublikowaniu GitHub Release z tagiem `v1.0.0`.
+W katalogu `app/BlessedOptimizer/` znajduje się pierwsza natywna aplikacja Windows. Jej numer wersji to **1.0.1**. GitHub Actions buduje ją jako jeden samodzielny plik `.exe`; samo pomyślne zbudowanie nie publikuje jednak wydania. Instalator staje się publicznie dostępny dopiero po opublikowaniu GitHub Release z tagiem `v1.0.1`.
 
-## Co robi aplikacja v1.0.0
+## Co robi aplikacja v1.0.1
 
 - **Instalator w tym samym pliku `.exe`:** instalacja tylko dla bieżącego użytkownika do `%LOCALAPPDATA%\Programs\BlessedOptimizer`, skrót w menu Start i opcjonalny skrót na pulpicie. Bez uprawnień administratora, autostartu ani automatycznego zamykania aplikacji.
 - **Lokalny przegląd urządzenia:** Windows, nazwa procesora, liczba logicznych wątków, pamięć RAM, nazwa karty graficznej, wolne miejsce na dysku systemowym i widoczne karty sieciowe. Te odczyty nie są wysyłane do usługi Blessed.
@@ -21,7 +21,7 @@ Instalator odczytuje parametry lokalnie, by pokazać dopasowane ciekawostki. Nie
 
 ## Pobieranie i wydanie
 
-Przycisk na stronie sprawdza najnowsze publiczne wydanie przez GitHub API. Bezpośrednie pobieranie włącza się tylko wtedy, gdy wydanie zawiera `BlessedOptimizer-Setup.exe`; w przeciwnym razie przycisk prowadzi do listy Releases, zamiast do niedziałającego adresu i błędu 404. Workflow `.github/workflows/windows-release.yml` publikuje `BlessedOptimizer-Setup.exe`, `SHA256SUMS.txt` i manifest updatera po wypchnięciu tagu `vMAJOR.MINOR.PATCH` albo ręcznym uruchomieniu workflow z `main` i podaniem np. `v1.0.0`. Build uruchamia też na Windows read-only smoke checks dla API zasilania, enumeracji procesów i odczytu autostartu; nie zapisuje ustawień systemu. Pull request i zmiany na `main` udostępniają artefakt Actions, ale nie tworzą publicznego Release.
+Przycisk na stronie sprawdza najnowsze publiczne wydanie przez GitHub API. Bezpośrednie pobieranie włącza się tylko wtedy, gdy wydanie zawiera `BlessedOptimizer-Setup.exe`; w przeciwnym razie przycisk prowadzi do listy Releases, zamiast do niedziałającego adresu i błędu 404. Workflow `.github/workflows/windows-release.yml` publikuje `BlessedOptimizer-Setup.exe`, `SHA256SUMS.txt` i manifest updatera po wypchnięciu tagu `vMAJOR.MINOR.PATCH` albo ręcznym uruchomieniu workflow z `main` i podaniem np. `v1.0.1`. Build uruchamia też na Windows read-only smoke checks dla API zasilania, enumeracji procesów i odczytu autostartu; nie zapisuje ustawień systemu. Pull request i zmiany na `main` udostępniają artefakt Actions, ale nie tworzą publicznego Release.
 
 Build jest **Windows x64** i zawiera .NET, więc użytkownik nie musi instalować osobnego runtime’u. To jeden plik dla Windows 10/11 x64; Windows 11 na ARM może uruchomić go przez emulację x64, ale nie jest to natywny build ARM64. Plik nie jest podpisany certyfikatem code-signing — Windows SmartScreen może wyświetlić ostrzeżenie.
 

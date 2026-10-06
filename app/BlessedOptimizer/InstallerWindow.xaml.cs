@@ -46,11 +46,14 @@ public partial class InstallerWindow : Window
     private async void Install_Click(object sender, RoutedEventArgs e)
     {
         if (_busy) return;
+        // Read WPF control state on the UI thread; only pass the plain value to the worker.
+        var createDesktopShortcut = DesktopShortcutCheck.IsChecked == true;
         _busy = true;
         SetProgress(8, "Przygotowuję bezpieczną instalację dla bieżącego użytkownika…");
         InstallButton.IsEnabled = false;
         PortableButton.IsEnabled = false;
         ExistingButton.IsEnabled = false;
+        DesktopShortcutCheck.IsEnabled = false;
         _progressDoveRotation.BeginAnimation(RotateTransform.AngleProperty, new DoubleAnimation(-5, 5, TimeSpan.FromSeconds(0.45))
         {
             AutoReverse = true,
@@ -75,7 +78,7 @@ public partial class InstallerWindow : Window
             DetectedSummary.Text = $"{Snapshot.ProcessorName} · {Snapshot.LogicalProcessorCount} wątków · {Snapshot.TotalMemoryGb:0.#} GB RAM · {Snapshot.GraphicsAdapters}";
 
             SetProgress(58, "Kopiuję Blessed do folderu Twojego profilu…");
-            await Task.Run(() => InstallService.InstallOrUpdate(sourcePath, DesktopShortcutCheck.IsChecked == true));
+            await Task.Run(() => InstallService.InstallOrUpdate(sourcePath, createDesktopShortcut));
             SetProgress(92, "Tworzę skrót w menu Start…");
             await Task.Delay(250);
             SetProgress(100, "Gotowe. Uruchamiam Blessed Optimizer…");
@@ -93,6 +96,7 @@ public partial class InstallerWindow : Window
             InstallButton.IsEnabled = true;
             PortableButton.IsEnabled = true;
             ExistingButton.IsEnabled = _alreadyInstalled;
+            DesktopShortcutCheck.IsEnabled = true;
             SetProgress(0, "Instalacja nie została dokończona. Twoje ustawienia Windows nie zostały zmienione.");
             MessageBox.Show(this, ex.Message, "Blessed Optimizer — instalacja", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
