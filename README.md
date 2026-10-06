@@ -18,7 +18,7 @@ Instalator odczytuje parametry lokalnie, by pokazać dopasowane ciekawostki. Nie
 
 ## Pobieranie i wydanie
 
-Strona kieruje do [GitHub Releases](https://github.com/rejson59/Blessed-Optimizer/releases). Workflow `.github/workflows/windows-release.yml` publikuje samodzielny plik `BlessedOptimizer-Setup.exe`, `SHA256SUMS.txt` i manifest updatera po wypchnięciu tagu `vMAJOR.MINOR.PATCH` albo ręcznym uruchomieniu workflow z `main` i podaniem np. `v1.0.0`. Pull request i zmiany na `main` uruchamiają kompilację kontrolną oraz udostępniają artefakt Actions.
+Przycisk pobierania na stronie prowadzi bezpośrednio do `https://github.com/rejson59/Blessed-Optimizer/releases/latest/download/BlessedOptimizer-Setup.exe`, więc przeglądarka pobiera najnowszy opublikowany instalator, a nie otwiera listy wydań. Ten stały adres zacznie działać po opublikowaniu pierwszego wydania. Workflow `.github/workflows/windows-release.yml` publikuje `BlessedOptimizer-Setup.exe`, `SHA256SUMS.txt` i manifest updatera po wypchnięciu tagu `vMAJOR.MINOR.PATCH` albo ręcznym uruchomieniu workflow z `main` i podaniem np. `v1.0.0`. Pull request i zmiany na `main` uruchamiają kompilację kontrolną oraz udostępniają artefakt Actions.
 
 Build jest **Windows x64** i zawiera .NET, więc użytkownik nie musi instalować osobnego runtime’u. To jeden plik dla Windows 10/11 x64; Windows 11 na ARM może uruchomić go przez emulację x64, ale nie jest to natywny build ARM64. Plik nie jest podpisany certyfikatem code-signing — Windows SmartScreen może wyświetlić ostrzeżenie.
 
