@@ -71,7 +71,8 @@
 
         downloadCta.href = assetUrl.href;
         downloadLabel.textContent = 'Pobierz Blessed Optimizer';
-        downloadNote.textContent = 'Windows 10/11 x64 · samodzielny plik .exe · bezpośrednie pobranie najnowszego wydania.';
+        const versionTag = typeof release.tag_name === 'string' && release.tag_name ? release.tag_name : 'najnowsza';
+        downloadNote.textContent = `Windows 10/11 x64 · samodzielny plik .exe · wersja ${versionTag} — zawsze najnowsze wydanie.`;
       })
       .catch((error) => {
         const message = error?.message === 'no-release'
