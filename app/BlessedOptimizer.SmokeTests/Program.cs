@@ -48,6 +48,10 @@ var recycleScan = MaintenanceService.ScanRecycleBin();
 if (recycleScan.FileCount < 0 || recycleScan.SizeMb < 0)
     throw new InvalidOperationException("Skan koszy zwrócił ujemny wynik.");
 
+var appxPackages = await AppxInventoryService.ReadUserPackagesAsync(TimeSpan.FromSeconds(30), CancellationToken.None);
+if (appxPackages.Any(package => string.IsNullOrWhiteSpace(package.Name) || string.IsNullOrWhiteSpace(package.PackageFullName)))
+    throw new InvalidOperationException("Lista aplikacji AppX zawiera pozycję bez nazwy lub pełnej nazwy pakietu.");
+
 var rebootPending = SecurityDiagnostics.IsUpdateRebootPending();
 var lastUpdate = SecurityDiagnostics.TryGetLastUpdateInstallDate();
 if (lastUpdate > DateTime.Now)
@@ -63,4 +67,4 @@ if (mutedReport.Findings.Any(finding => mutedProfile.MutedFindingIds.Contains(fi
     throw new InvalidOperationException("Wyciszona sprawa nie może pojawić się w raporcie.");
 
 Console.WriteLine($"Blessed watch smoke checks passed: findings={report.Findings.Count}, problems={report.ProblemCount}, tempFiles={tempScan.FileCount}, display={(display is null ? "n/a" : $"{display.CurrentHz}/{display.MaximumHz} Hz")}.");
-Console.WriteLine($"Security read-only smoke checks passed: rebootPending={rebootPending}, lastUpdate={(lastUpdate?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) ?? "n/a")}, defender={(defender is null ? "n/a" : $"realTime={defender.RealTimeProtectionEnabled}, signature={(defender.SignatureUpdatedAt?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) ?? "n/a")}")}, disabledFirewallProfiles={disabledFirewallProfiles.Count}, timeSyncDisabled={timeSyncDisabled}, recycleBinFiles={recycleScan.FileCount}, recycleBinMb={recycleScan.SizeMb:0}, mutedFindings={mutedReport.Findings.Count}.");
+Console.WriteLine($"Security read-only smoke checks passed: rebootPending={rebootPending}, lastUpdate={(lastUpdate?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) ?? "n/a")}, defender={(defender is null ? "n/a" : $"realTime={defender.RealTimeProtectionEnabled}, signature={(defender.SignatureUpdatedAt?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) ?? "n/a")}")}, disabledFirewallProfiles={disabledFirewallProfiles.Count}, timeSyncDisabled={timeSyncDisabled}, recycleBinFiles={recycleScan.FileCount}, recycleBinMb={recycleScan.SizeMb:0}, mutedFindings={mutedReport.Findings.Count}, appxPackages={appxPackages.Count}.");

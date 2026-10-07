@@ -37,6 +37,7 @@ public partial class MainWindow : Window
     private TextBlock? _careStatusText;
     private StackPanel? _careFindingsHost;
     private Button? _careScanButton;
+    private Button? _oneClickButton;
     private DeviceSnapshot? _snapshot;
     private string _currentPage = "care";
     private bool _monitoring;
@@ -268,6 +269,7 @@ public partial class MainWindow : Window
             nameof(CareNavButton) => "care",
             nameof(ProcessesNavButton) => "processes",
             nameof(StartupNavButton) => "startup",
+            nameof(CleanupNavButton) => "cleanup",
             nameof(PowerNavButton) => "power",
             nameof(ConnectionsNavButton) => "connections",
             nameof(ProposalsNavButton) => "proposals",
@@ -292,6 +294,7 @@ public partial class MainWindow : Window
         GamingNavButton.Tag = _currentPage == "gaming" ? "active" : null;
         ProcessesNavButton.Tag = _currentPage == "processes" ? "active" : null;
         StartupNavButton.Tag = _currentPage == "startup" ? "active" : null;
+        CleanupNavButton.Tag = _currentPage == "cleanup" ? "active" : null;
         PowerNavButton.Tag = _currentPage == "power" ? "active" : null;
         ConnectionsNavButton.Tag = _currentPage == "connections" ? "active" : null;
         ProposalsNavButton.Tag = _currentPage == "proposals" ? "active" : null;
@@ -309,6 +312,7 @@ public partial class MainWindow : Window
             "gaming" => BuildGamingPage(),
             "processes" => BuildProcessesPage(),
             "startup" => BuildStartupPage(),
+            "cleanup" => BuildCleanupPage(),
             "power" => BuildPowerPage(),
             "connections" => BuildConnectionsPage(),
             "proposals" => BuildProposalsPage(),
@@ -383,6 +387,7 @@ public partial class MainWindow : Window
             "history" => (Title: "Historia", Crumb: "HISTORIA", Message: "Ostatnie przeglądy są zapisywane wyłącznie na tym komputerze."),
             "processes" => (Title: "Procesy", Crumb: "PROCESY", Message: "Pokażę zużycie CPU i pamięci przez każdy proces — czytelnie i na żywo."),
             "startup" => (Title: "Autostart", Crumb: "AUTOSTART", Message: "Przejrzyj wpisy autostartu swojego konta. Każda zmiana ma zapisaną kopię do przywrócenia."),
+            "cleanup" => (Title: "Porządki", Crumb: "PORZĄDKI", Message: "Przejrzyj aplikacje swojego konta i odinstaluj te, których nie używasz. Aplikacje wracają przez Microsoft Store."),
             "power" => (Title: "Zasilanie", Crumb: "ZASILANIE", Message: "Dostrój plan zasilania. Każdą zmianę potwierdzasz Ty i zawsze możesz ją cofnąć."),
             _ => (Title: "Blessed czuwa", Crumb: "BLESSED CZUWA", Message: _lastReport is null
                 ? "Robię przegląd Twojego komputera i zaraz powiem, czym się zająć."
@@ -628,6 +633,144 @@ public partial class MainWindow : Window
         {
             MessageBox.Show(this, ex.Message, "Blessed Optimizer — autostart", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
+    }
+
+    private UIElement BuildCleanupPage()
+    {
+        var page = NewPage("PORZĄDKI · KONTO UŻYTKOWNIKA", "Aplikacje, których nie używasz, też zajmują miejsce.", iconKey: "IconBroom", description:
+            "Lista aplikacji z Microsoft Store przypisanych do Twojego konta. Odinstalowanie dotyczy tylko bieżącego użytkownika — aplikację wgrasz z powrotem przez Store w każdej chwili.");
+        var host = new StackPanel();
+        page.Children.Add(WrapPanel(host));
+        host.Children.Add(Text("Wczytuję listę aplikacji bieżącego użytkownika…", 11, "TextSecondaryBrush"));
+        _ = LoadCleanupPageAsync(host);
+        return page;
+    }
+
+    private async Task LoadCleanupPageAsync(StackPanel host)
+    {
+        IReadOnlyList<AppxPackage> packages;
+        try
+        {
+            packages = await AppxInventoryService.ReadUserPackagesAsync(TimeSpan.FromSeconds(45), _lifetime.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
+        {
+            host.Children.Clear();
+            host.Children.Add(Text($"Nie udało się odczytać listy aplikacji: {ex.Message}", 11, "TextSecondaryBrush"));
+            return;
+        }
+
+        host.Children.Clear();
+        if (packages.Count == 0)
+        {
+            host.Children.Add(Text("Nie znaleziono aplikacji przypisanych do Twojego konta.", 11, "TextSecondaryBrush"));
+            return;
+        }
+
+        var boxes = new List<CheckBox>();
+        var toolbar = new DockPanel { LastChildFill = false, Margin = new Thickness(0, 0, 0, 10) };
+        var counter = Text($"{packages.Count} aplikacji", 11, "TextSecondaryBrush", FontWeights.SemiBold);
+        counter.VerticalAlignment = VerticalAlignment.Center;
+        toolbar.Children.Add(counter);
+        var selectAll = new Button { Content = "Zaznacz wszystkie", Style = (Style)FindResource("SecondaryButton"), Padding = new Thickness(11, 7, 11, 7), Margin = new Thickness(12, 0, 0, 0) };
+        var selectNone = new Button { Content = "Odznacz wszystkie", Style = (Style)FindResource("SecondaryButton"), Padding = new Thickness(11, 7, 11, 7), Margin = new Thickness(8, 0, 0, 0) };
+        DockPanel.SetDock(selectAll, Dock.Right);
+        DockPanel.SetDock(selectNone, Dock.Right);
+        toolbar.Children.Add(selectAll);
+        toolbar.Children.Add(selectNone);
+        host.Children.Add(toolbar);
+
+        foreach (var package in packages.OrderBy(package => package.Name, StringComparer.CurrentCultureIgnoreCase))
+        {
+            var box = new CheckBox
+            {
+                Tag = package,
+                Content = string.IsNullOrWhiteSpace(package.Version) ? package.Name : $"{package.Name}  ·  {package.Version}",
+                FontSize = 11,
+                Margin = new Thickness(0, 0, 0, 6)
+            };
+            box.SetResourceReference(Control.ForegroundProperty, "TextPrimaryBrush");
+            boxes.Add(box);
+            host.Children.Add(box);
+        }
+
+        void RefreshCounter() => counter.Text = $"{boxes.Count(box => box.IsChecked == true)} z {packages.Count} zaznaczonych";
+        selectAll.Click += (_, _) => { foreach (var box in boxes) box.IsChecked = true; RefreshCounter(); };
+        selectNone.Click += (_, _) => { foreach (var box in boxes) box.IsChecked = false; RefreshCounter(); };
+        foreach (var box in boxes)
+        {
+            box.Checked += (_, _) => RefreshCounter();
+            box.Unchecked += (_, _) => RefreshCounter();
+        }
+
+        var uninstall = new Button
+        {
+            Content = ButtonContent("IconBroom", "Odinstaluj zaznaczone", "AccentTextBrush"),
+            Style = (Style)FindResource("PrimaryButton"),
+            HorizontalAlignment = HorizontalAlignment.Left,
+            Margin = new Thickness(0, 8, 0, 0),
+            Padding = new Thickness(13, 8, 13, 8)
+        };
+        uninstall.Click += async (_, _) =>
+        {
+            var selected = boxes
+                .Where(box => box.IsChecked == true)
+                .Select(box => (AppxPackage)box.Tag!)
+                .ToArray();
+            await RunAppxRemovalAsync(selected);
+        };
+        host.Children.Add(uninstall);
+
+        var note = NewPanel();
+        note.Children.Add(PanelHeading("IconShield", "Zakres zmian", fontSize: 12));
+        note.Children.Add(Text("Blessed odinstalowuje wyłącznie aplikacje bieżącego konta (AppX). Nie usuwa aplikacji systemowych, innych użytkowników, usług ani plików poza rejestracją aplikacji. Odinstalowaną aplikację wgrasz z powrotem przez Microsoft Store. Każda pozycja wymaga Twojej zgody przed odinstalowaniem.", 10, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 0)));
+        host.Children.Add(WrapPanel(note));
+    }
+
+    private async Task RunAppxRemovalAsync(IReadOnlyList<AppxPackage> selected)
+    {
+        if (selected.Count == 0)
+        {
+            MessageBox.Show(this, "Zaznacz najpierw aplikacje, które chcesz odinstalować.", "Blessed Optimizer — porządki", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var preview = string.Join("\n", selected.Take(8).Select(package => $"• {package.Name}"));
+        if (selected.Count > 8)
+            preview += $"\n• …i jeszcze {selected.Count - 8} aplikacji";
+        var choice = MessageBox.Show(this,
+            $"Odinstalować {selected.Count} aplikacji bieżącego konta?\n\n{preview}\n\nOdinstalowanie usuwa aplikację tylko z Twojego konta — wgrasz ją z powrotem przez Microsoft Store. Aplikacje systemowe pozostają nietknięte.",
+            "Blessed Optimizer — potwierdź odinstalowanie",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning,
+            MessageBoxResult.No);
+        if (choice != MessageBoxResult.Yes)
+            return;
+
+        FooterStatusText.Text = $"Odinstalowuję {selected.Count} aplikacji…";
+        var failed = await AppxInventoryService.RemovePackagesAsync(
+            selected.Select(package => package.PackageFullName),
+            progress: null,
+            _lifetime.Token);
+        _watchService.InvalidateAppxScan();
+        _profile.HandledCount++;
+        BlessedProfileStore.Save(_profile);
+
+        var removedCount = selected.Count - failed.Count;
+        FooterStatusText.Text = failed.Count == 0
+            ? $"Odinstalowano {removedCount} aplikacji"
+            : $"Odinstalowano {removedCount} aplikacji · {failed.Count} wymagało ręcznej uwagi";
+        MessageBox.Show(this,
+            failed.Count == 0
+                ? $"Gotowe. Odinstalowano {removedCount} aplikacji z Twojego konta. Wgrasz je z powrotem przez Microsoft Store, kiedy zechcesz."
+                : $"Odinstalowano {removedCount} aplikacji. Nie udało się odinstalować {failed.Count} — mogą być używane przez system lub inną sesję.",
+            "Blessed Optimizer — porządki", MessageBoxButton.OK,
+            failed.Count == 0 ? MessageBoxImage.Information : MessageBoxImage.Warning);
+        RenderCurrentPage();
     }
 
     private UIElement BuildPowerPage()
@@ -1012,6 +1155,17 @@ public partial class MainWindow : Window
         _careScanButton.Click += async (_, _) => await RunWatchAsync(auto: false);
         DockPanel.SetDock(_careScanButton, Dock.Right);
         statusBar.Children.Add(_careScanButton);
+        _oneClickButton = new Button
+        {
+            Content = ButtonContent("IconBroom", "Zrób wszystko za mnie", "AccentTextBrush"),
+            Style = (Style)FindResource("PrimaryButton"),
+            Margin = new Thickness(12, 0, 0, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+            Visibility = Visibility.Collapsed
+        };
+        _oneClickButton.Click += async (_, _) => await RunOneClickOptimizeAsync();
+        DockPanel.SetDock(_oneClickButton, Dock.Right);
+        statusBar.Children.Add(_oneClickButton);
         status.Children.Add(statusBar);
         status.Children.Add(BuildCareSummaryRow());
         page.Children.Add(WrapPanel(status));
@@ -1298,6 +1452,8 @@ public partial class MainWindow : Window
     {
         if (_careFindingsHost is null) return;
         _careFindingsHost.Children.Clear();
+        if (_oneClickButton is not null)
+            _oneClickButton.Visibility = _lastReport is { ProblemCount: > 0 } ? Visibility.Visible : Visibility.Collapsed;
         if (_lastReport is null)
         {
             _careFindingsHost.Children.Add(Text("Robię pierwszy przegląd Twojego komputera…", 11, "TextSecondaryBrush"));
@@ -1433,6 +1589,7 @@ public partial class MainWindow : Window
         "time-sync-off" => "IconClock",
         "hiberfile-size" => "IconMoon",
         "recycle-bin" => "IconTrash",
+        "appx-crowd" => "IconBroom",
         "all-clear" => "IconCheck",
         _ => "IconSpark"
     };
@@ -1644,6 +1801,214 @@ public partial class MainWindow : Window
                 "Blessed Optimizer — kosz", MessageBoxButton.OK, MessageBoxImage.Warning);
             SetCareStatus("Nie udało się opróżnić wszystkich koszy.");
         }
+    }
+
+    private async Task RunOneClickOptimizeAsync()
+    {
+        if (_careBusy || _lastReport is null)
+            return;
+        _careBusy = true;
+        if (_careScanButton is not null) _careScanButton.IsEnabled = false;
+        if (_oneClickButton is not null) _oneClickButton.IsEnabled = false;
+        SetScanningIndicator(true);
+        try
+        {
+            SetCareStatus("Jeszcze raz sprawdzam, co mogę zrobić jednym kliknięciem…");
+            _carePerformance.Read();
+            await Task.Delay(TimeSpan.FromMilliseconds(700), _lifetime.Token);
+            var usage = _carePerformance.Read();
+            _lastReport = await _watchService.InspectAsync(_snapshot, _profile, usage, _lifetime.Token);
+            RenderFindings();
+            if (_lastReport is not { } report || report.Findings.Count == 0)
+            {
+                SetCareStatus(DescribeWatchStatus());
+                MessageBox.Show(this,
+                    "Przeskanowałem komputer jeszcze raz i nie znalazłem nic do zrobienia — jest już ustawiony tak, jak trzeba.",
+                    "Blessed Optimizer — wszystko gotowe", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var autoFindings = BlessedWatchService.AutoApplicableFindings(report);
+            var wantsTemp = autoFindings.Any(finding => finding.ActionTarget == "temp-cleanup");
+            var wantsRecycle = autoFindings.Any(finding => finding.ActionTarget == "recycle-bin-empty");
+            var powerFinding = report.Findings.FirstOrDefault(finding => BlessedWatchService.IsOneClickPowerFixApplicable(finding, _profile));
+            PowerPlanSnapshot? plan = null;
+            PowerSettingState? processorState = null;
+            if (powerFinding is not null)
+            {
+                try
+                {
+                    plan = PowerSettingsService.ReadActivePlan();
+                    processorState = plan.Settings.FirstOrDefault(state => string.Equals(state.Descriptor.Key, "processor-max", StringComparison.Ordinal));
+                    if (processorState is null || processorState.AcValue >= 100)
+                    {
+                        plan = null;
+                        processorState = null;
+                    }
+                }
+                catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or UnauthorizedAccessException)
+                {
+                    plan = null;
+                    processorState = null;
+                }
+            }
+
+            var manualFindings = report.Findings
+                .Where(finding => finding.Action != FindingAction.None && !autoFindings.Contains(finding) && finding != powerFinding)
+                .ToArray();
+
+            TempScanResult? tempPreview = null;
+            if (wantsTemp)
+            {
+                try
+                {
+                    tempPreview = await MaintenanceService.ScanTempAsync(TimeSpan.FromDays(2), _lifetime.Token);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+                {
+                    tempPreview = null;
+                }
+            }
+            RecycleBinScan? recyclePreview = null;
+            if (wantsRecycle)
+            {
+                try
+                {
+                    recyclePreview = await Task.Run(() => MaintenanceService.ScanRecycleBin(), _lifetime.Token);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+                {
+                    recyclePreview = null;
+                }
+            }
+
+            var planText = new System.Text.StringBuilder();
+            planText.Append("Plan „jednym kliknięciem” — Blessed zrobi za Ciebie:\n\n");
+            var plannedAny = false;
+            if (tempPreview is { FileCount: > 0 } && tempPreview.SizeMb > 0)
+            {
+                plannedAny = true;
+                planText.Append($"• Posprzątam pliki tymczasowe: około {tempPreview.SizeMb:0} MB w {tempPreview.FileCount:N0} plikach starszych niż 2 dni\n");
+            }
+            if (recyclePreview is { FileCount: > 0 } && recyclePreview.SizeMb > 0)
+            {
+                plannedAny = true;
+                planText.Append($"• Opróżnię wszystkie kosze: około {recyclePreview.SizeMb / 1024:0.#} GB — UWAGA: usunięcie z kosza jest trwałe i nieodwracalne\n");
+            }
+            if (processorState is not null && plan is not null)
+            {
+                plannedAny = true;
+                planText.Append($"• Podniosę limit procesora przy zasilaniu z sieci do 100% w planie „{plan.SchemeName}” (na baterii bez zmian; oryginalne wartości zapiszę do przywrócenia)\n• Dla tej zmiany Windows poprosi o zgodę administratora (UAC) — możesz odmówić\n");
+            }
+            if (!plannedAny && manualFindings.Length == 0)
+            {
+                SetCareStatus(DescribeWatchStatus());
+                MessageBox.Show(this,
+                    "Przeskanowałem komputer jeszcze raz — wszystko, co mogę bezpiecznie zrobić, jest już zrobione.",
+                    "Blessed Optimizer — wszystko gotowe", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            if (manualFindings.Length > 0)
+            {
+                planText.Append($"\nResztę ({manualFindings.Length}) załatwisz osobnymi przyciskami na liście poniżej:\n");
+                foreach (var finding in manualFindings)
+                    planText.Append($"• {finding.Title}\n");
+            }
+            planText.Append("\nKontynuować?");
+            var choice = MessageBox.Show(this, planText.ToString(), "Blessed Optimizer — zrób wszystko za mnie", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No);
+            if (choice != MessageBoxResult.Yes)
+            {
+                SetCareStatus("Anulowałeś — nic nie zmieniłem.");
+                return;
+            }
+
+            var done = new List<string>();
+            var skipped = new List<string>();
+            if (tempPreview is { FileCount: > 0 } && tempPreview.SizeMb > 0)
+            {
+                SetCareStatus("Sprzątam pliki tymczasowe…");
+                try
+                {
+                    var clean = await MaintenanceService.CleanTempAsync(TimeSpan.FromDays(2), _lifetime.Token);
+                    _watchService.InvalidateTempScan();
+                    _profile.LastCleanupAt = DateTimeOffset.Now;
+                    _profile.TotalFreedMb += clean.FreedMb;
+                    _profile.HandledCount++;
+                    done.Add($"posprzątałem {clean.FreedMb:0} MB w {clean.DeletedFiles} plikach tymczasowych");
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+                {
+                    skipped.Add($"część plików tymczasowych była zajęta ({ex.Message}) — dokończę przy następnym przeglądzie");
+                }
+            }
+            if (recyclePreview is { FileCount: > 0 } && recyclePreview.SizeMb > 0)
+            {
+                SetCareStatus("Opróżniam kosze…");
+                var emptied = await Task.Run(() => MaintenanceService.EmptyRecycleBin(), _lifetime.Token);
+                if (emptied)
+                {
+                    _profile.TotalFreedMb += recyclePreview.SizeMb;
+                    _profile.HandledCount++;
+                    done.Add($"opróżniłem kosze — odzyskałeś około {recyclePreview.SizeMb / 1024:0.#} GB");
+                }
+                else
+                {
+                    skipped.Add("Windows nie pozwolił opróżnić wszystkich koszy");
+                }
+            }
+            if (processorState is not null && plan is not null)
+            {
+                SetCareStatus("Ustawiam procesor na 100% przy zasilaniu z sieci…");
+                try
+                {
+                    PowerSettingsService.SaveOriginalIfNeeded(processorState, plan.SchemeId);
+                    var applied = await RunElevatedPowerHelperAsync(plan.SchemeId, processorState.Descriptor.Key, 100, processorState.DcValue);
+                    if (applied)
+                    {
+                        _profile.HandledCount++;
+                        done.Add($"procesor w planie „{plan.SchemeName}” pracuje na 100% przy zasilaniu z sieci (oryginał zapisany)");
+                    }
+                    else
+                    {
+                        skipped.Add("zmiana planu zasilania została anulowana lub odrzucona przez Windows (UAC)");
+                    }
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception or ArgumentException or System.Text.Json.JsonException)
+                {
+                    skipped.Add($"nie udało się zmienić planu zasilania: {ex.Message}");
+                }
+            }
+            BlessedProfileStore.Save(_profile);
+
+            var summary = new System.Text.StringBuilder();
+            summary.Append(done.Count > 0 ? "Gotowe — oto co zrobiłem:\n\n" : "Nie zmieniłem nic — oto dlaczego:\n\n");
+            foreach (var line in done)
+                summary.Append($"✓ {line}\n");
+            foreach (var line in skipped)
+                summary.Append($"• {line}\n");
+            if (manualFindings.Length > 0)
+                summary.Append($"\nNa liście poniżej czeka jeszcze {manualFindings.Length} spraw do załatwienia osobnymi przyciskami.");
+            MessageBox.Show(this, summary.ToString(), "Blessed Optimizer — jednym kliknięciem", MessageBoxButton.OK, MessageBoxImage.Information);
+            FooterStatusText.Text = done.Count > 0
+                ? $"Jednym kliknięciem: {string.Join(" · ", done)}"
+                : "Jednym kliknięciem nic nie zmieniłem.";
+        }
+        catch (OperationCanceledException)
+        {
+            // The window is closing.
+        }
+        catch (Exception ex)
+        {
+            SetCareStatus($"Optymalizacja przerwana: {ex.Message}");
+        }
+        finally
+        {
+            _careBusy = false;
+            SetScanningIndicator(false);
+            if (_careScanButton is not null) _careScanButton.IsEnabled = true;
+            if (_oneClickButton is not null) _oneClickButton.IsEnabled = true;
+        }
+        await RunWatchAsync(auto: false);
     }
 
     private void SetCareStatus(string message)

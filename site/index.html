@@ -18,7 +18,7 @@
   <meta name="twitter:description" content="Lokalny pomocnik Windowsa: sam sprawdza komputer, wyłapuje rzeczy, o których system milczy, i proponuje gotowe rozwiązanie jednym kliknięciem. Bez telemetrii.">
   <meta name="twitter:image" content="https://rejson59.github.io/Blessed-Optimizer/assets/blessed-optimizer-logo.png">
   <link rel="icon" type="image/png" href="assets/blessed-optimizer-logo-no-background.png">
-  <link rel="stylesheet" href="styles.css?v=blessed-wings-9">
+  <link rel="stylesheet" href="styles.css?v=blessed-wings-10">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -33,7 +33,7 @@
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "PLN" }
   }
   </script>
-  <script src="script.js?v=blessed-wings-9" defer></script>
+  <script src="script.js?v=blessed-wings-10" defer></script>
 </head>
 <body>
   <div class="blessing-light" aria-hidden="true"><span class="light-beam"></span><span class="light-ring light-ring-one"></span><span class="light-ring light-ring-two"></span><i class="light-spark spark-a">✦</i><i class="light-spark spark-b">✧</i></div>
@@ -48,7 +48,6 @@
       <div class="site-tabs" role="tablist" aria-label="Główne sekcje strony">
         <button class="site-tab is-active" id="tab-about" role="tab" type="button" aria-selected="true" aria-controls="panel-about" data-site-tab="about">O programie</button>
         <button class="site-tab" id="tab-simulator" role="tab" type="button" aria-selected="false" aria-controls="panel-simulator" data-site-tab="simulator" tabindex="-1">Symulator</button>
-        <a class="site-tab site-tab-link" href="changelog.html">Zmiany</a>
       </div>
       <button class="button button-top" type="button" data-open-tab="simulator">Otwórz symulator <span aria-hidden="true">↗</span></button>
     </div>
@@ -158,66 +157,392 @@
     <section class="tab-panel simulator-panel" id="panel-simulator" role="tabpanel" aria-labelledby="tab-simulator" tabindex="0" hidden>
       <div class="simulator-hero">
         <div class="wrap simulator-hero-inner">
-          <div class="simulator-copy reveal"><span class="section-kicker"><i>✦</i> BLESSED JEST OBOK</span><h1>Cześć, jestem<br><span>Blessed.</span></h1><p>Twój wierny pomocnik zza światów. Sam sprawdzam Twój komputer, sam znajduję to, co go spowalnia, i sam się tym zajmuję — wystarczy, że klikniesz „zrób to za mnie”.</p><div class="simulator-tags"><span><i>✓</i> Sprawdza co 3 minuty</span><span><i>✓</i> Sam znajduje problemy</span><span><i>✓</i> Zawsze możesz cofnąć</span></div></div>
+          <div class="simulator-copy reveal"><span class="section-kicker"><i>✦</i> BLESSED JEST OBOK</span><h1>Zobacz aplikację<br><span>taką, jaką zobaczysz u siebie.</span></h1><p>Symulator pokazuje wierny wygląd Blessed Optimizer 1.2.0 — dokładnie to samo okno, menu i ekrany, które zainstalujesz. Kliknij po makiecie: przełączysz strony i wypróbujesz „Zrób wszystko za mnie” oraz „Porządki”.</p><div class="simulator-tags"><span><i>✓</i> Wygląd 1:1 jak w aplikacji</span><span><i>✓</i> Wszystkie ekrany z menu</span><span><i>✓</i> Bez zmian na Twoim PC</span></div></div>
           <figure class="simulator-logo-card reveal reveal-delay"><img src="assets/blessed-optimizer-logo.png" alt="Logo Blessed Optimizer — biały gołąb z błękitnymi detalami na jasnym tle"><figcaption>TECHNOLOGIA Z TROSKĄ <span>✦</span></figcaption></figure>
         </div>
       </div>
-      <section class="program-preview-section" aria-labelledby="program-preview-heading">
+      <section class="mock-preview-section" aria-labelledby="mock-preview-heading">
         <div class="wrap">
-          <div class="program-preview-heading reveal">
-            <div><span class="section-kicker"><i>✦</i> BLESSED OPTIMIZER · v1.1.0</span><h2 id="program-preview-heading">Zajrzyj do aplikacji,<br><span>zanim zaczniesz z niej korzystać.</span></h2><p>Aplikacja 1.1.0 porządkuje funkcje w bocznym menu: opiekę, wydajność, diagnostykę, ustawienia Windows i preferencje. Tutaj zobaczysz przykładowe ekrany; prawdziwe dane pokaże program po instalacji.</p></div>
-            <span class="concept-badge"><i></i> PODGLĄD INTERFEJSU · DANE DEMO</span>
+          <div class="mock-preview-heading reveal">
+            <div><span class="section-kicker"><i>✦</i> BLESSED OPTIMIZER · v1.2.0</span><h2 id="mock-preview-heading">Wygląda dokładnie<br><span>tak samo po instalacji.</span></h2><p>To makieta okna aplikacji w wersji 1.2.0 — te same kolory, to samo menu i te same ekrany. Wszystkie dane są przykładowe; prawdziwe pokaże program na Twoim komputerze.</p></div>
+            <span class="concept-badge"><i></i> WYGLĄD 1:1 · DANE DEMO</span>
           </div>
-          <div class="program-window glass-panel reveal" role="region" aria-label="Interaktywny podgląd układu aplikacji Blessed Optimizer">
-            <div class="program-titlebar">
-              <div class="program-title-brand"><img src="assets/blessed-optimizer-logo-no-background.png" alt=""><span><strong>Blessed Optimizer</strong><small>Aplikacja Windows · v1.1.0</small></span></div>
-              <span class="program-window-status"><i></i> UKŁAD APLIKACJI · DANE DEMO</span>
-              <div class="program-window-controls" aria-hidden="true"><i>−</i><i>□</i><i>×</i></div>
+          <div class="mock-window reveal" id="mock-window" role="region" aria-label="Makieta okna aplikacji Blessed Optimizer" data-mock-theme="dark" data-mock-accent="sky">
+            <div class="mock-titlebar">
+              <div class="mock-title-brand">
+                <span class="mock-title-logo"><img src="assets/blessed-optimizer-logo-no-background.png" alt=""></span>
+                <span class="mock-title-copy"><strong>Blessed Optimizer</strong><small>Blessed pilnuje Twojego Windowsa</small></span>
+              </div>
+              <div class="mock-title-updates"><span class="mock-title-updates-label">AKTUALIZACJE</span><span class="mock-title-updates-value">Masz aktualną wersję 1.2.0</span></div>
+              <button class="mock-title-check" type="button" data-toast="W aplikacji ten przycisk sprawdza wydania na GitHub. Tutaj nic nie pobiera.">Sprawdź</button>
+              <span class="mock-title-version">v1.2.0</span>
+              <div class="mock-title-controls" aria-hidden="true"><i>−</i><i>□</i><i>×</i></div>
             </div>
-            <div class="program-window-layout">
-              <nav class="program-nav" role="tablist" aria-label="Kategorie aplikacji Blessed">
-                <span class="program-nav-group-label" aria-hidden="true">GŁÓWNE</span>
-                <button class="program-nav-button is-active" id="category-gaming" role="tab" aria-selected="true" aria-controls="program-view-content" type="button" data-program-view="gaming"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6.1 7h7.8a3 3 0 0 1 2.8 2l1 3.1a2 2 0 0 1-3.2 2.1l-2-1.5h-5l-2 1.5a2 2 0 0 1-3.2-2.1l1-3.1a3 3 0 0 1 2.8-2Z"/><path d="M6.5 9.2v3M5 10.7h3M13.4 10h.1M15.1 11.7h.1"/></svg>Strefa gracza</button>
-                <button class="program-nav-button" id="category-connections" role="tab" aria-selected="false" aria-controls="program-view-content" tabindex="-1" type="button" data-program-view="connections"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 7.5a12 12 0 0 1 16 0M5 10.5a7.5 7.5 0 0 1 10 0M8 13.5a3 3 0 0 1 4 0M10 16h.01"/></svg>Połączenia</button>
-                <button class="program-nav-button" id="category-proposals" role="tab" aria-selected="false" aria-controls="program-view-content" tabindex="-1" type="button" data-program-view="proposals"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m10 2 1.6 5.4L17 9l-5.4 1.6L10 16l-1.6-5.4L3 9l5.4-1.6L10 2Z"/><path d="m16 13 .8 2.2L19 16l-2.2.8L16 19l-.8-2.2L13 16l2.2-.8L16 13Z"/></svg>Propozycje</button>
-                <button class="program-nav-button" id="category-personalization" role="tab" aria-selected="false" aria-controls="program-view-content" tabindex="-1" type="button" data-program-view="personalization"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 4h12v12H4z"/><path d="M7 7h6M7 10h4M7 13h6"/></svg>Personalizacja Windows</button>
-                <span class="program-nav-divider" aria-hidden="true"></span>
-                <span class="program-nav-group-label" aria-hidden="true">DODATKOWE</span>
-                <button class="program-nav-button program-nav-tool" id="category-processes" role="tab" aria-selected="false" aria-controls="program-view-content" tabindex="-1" type="button" data-program-view="processes"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 3h12v14H4zM7 6h6M7 9h6M7 12h4"/></svg>Procesy</button>
-                <button class="program-nav-button program-nav-tool" id="category-startup" role="tab" aria-selected="false" aria-controls="program-view-content" tabindex="-1" type="button" data-program-view="startup"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16.2 8A6.5 6.5 0 1 0 17 11M16 3v5h-5M10 6v5l3 2"/></svg>Autostart</button>
-                <button class="program-nav-button program-nav-tool" id="category-power" role="tab" aria-selected="false" aria-controls="program-view-content" tabindex="-1" type="button" data-program-view="power"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m11.5 1-8 10h5l-1 8 9-11h-5l.5-7Z"/></svg>Zasilanie</button>
+            <div class="mock-layout">
+              <nav class="mock-sidebar" role="tablist" aria-label="Nawigacja aplikacji Blessed">
+                <div class="mock-sidebar-head"><span class="mock-sidebar-head-title">NAWIGACJA</span><span class="mock-sidebar-head-sub">Wybierz, czym się zająć</span></div>
+                <span class="mock-nav-group">OPIEKA</span>
+                <button class="mock-nav-button is-active" id="mock-nav-care" role="tab" aria-selected="true" type="button" data-mock-view="care"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5 16.5 5v4.4c0 3.6-2.5 6.4-6.5 7.8-4-1.4-6.5-4.2-6.5-7.8V5L10 2.5Z"/><path d="m7.2 9.8 1.8 1.8 3.8-4"/></svg>Blessed czuwa<span class="mock-nav-badge" id="mock-care-badge">2</span></button>
+                <span class="mock-nav-group">WYDAJNOŚĆ</span>
+                <button class="mock-nav-button" id="mock-nav-gaming" role="tab" aria-selected="false" tabindex="-1" type="button" data-mock-view="gaming"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6.1 7h7.8a3 3 0 0 1 2.8 2l1 3.1a2 2 0 0 1-3.2 2.1l-2-1.5h-5l-2 1.5a2 2 0 0 1-3.2-2.1l1-3.1a3 3 0 0 1 2.8-2Z"/><path d="M6.5 9.2v3M5 10.7h3M13.4 10h.1M15.1 11.7h.1"/></svg>Strefa gracza</button>
+                <button class="mock-nav-button" id="mock-nav-processes" role="tab" aria-selected="false" tabindex="-1" type="button" data-mock-view="processes"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5h9M7 10h9M7 15h6M4 5h.01M4 10h.01M4 15h.01"/></svg>Procesy</button>
+                <span class="mock-nav-group">DIAGNOSTYKA</span>
+                <button class="mock-nav-button" id="mock-nav-connections" role="tab" aria-selected="false" tabindex="-1" type="button" data-mock-view="connections"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 7.5a12 12 0 0 1 16 0M5 10.5a7.5 7.5 0 0 1 10 0M8 13.5a3 3 0 0 1 4 0M10 16h.01"/></svg>Połączenia</button>
+                <button class="mock-nav-button" id="mock-nav-proposals" role="tab" aria-selected="false" tabindex="-1" type="button" data-mock-view="proposals"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m10 2 1.6 5.4L17 9l-5.4 1.6L10 16l-1.6-5.4L3 9l5.4-1.6L10 2Z"/><path d="m16 13 .8 2.2L19 16l-2.2.8L16 19l-.8-2.2L13 16l2.2-.8L16 13Z"/></svg>Propozycje</button>
+                <button class="mock-nav-button" id="mock-nav-history" role="tab" aria-selected="false" tabindex="-1" type="button" data-mock-view="history"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3a7 7 0 1 1 0 14 7 7 0 0 1 0-14Z"/><path d="M10 6.5V10l2.5 1.5"/></svg>Historia</button>
+                <span class="mock-nav-group">WINDOWS I BLESSED</span>
+                <button class="mock-nav-button" id="mock-nav-startup" role="tab" aria-selected="false" tabindex="-1" type="button" data-mock-view="startup"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16.2 8A6.5 6.5 0 1 0 17 11M16 3v5h-5M10 6v5l3 2"/></svg>Autostart</button>
+                <button class="mock-nav-button" id="mock-nav-cleanup" role="tab" aria-selected="false" tabindex="-1" type="button" data-mock-view="cleanup"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M17 3l-6.5 6.5"/><path d="M10.5 9.5 5 15c-1.2 1.2-1.8 2.6-1.5 4 1.4.3 2.8-.3 4-1.5l5.5-5.5"/><path d="m8 12 2.5 2.5M6.5 13.5 9 16"/></svg>Porządki</button>
+                <button class="mock-nav-button" id="mock-nav-power" role="tab" aria-selected="false" tabindex="-1" type="button" data-mock-view="power"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m11.5 1-8 10h5l-1 8 9-11h-5l.5-7Z"/></svg>Zasilanie</button>
+                <button class="mock-nav-button" id="mock-nav-personalization" role="tab" aria-selected="false" tabindex="-1" type="button" data-mock-view="personalization"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3a7 7 0 1 0 .01 0M6.5 8h.01M10 6h.01M13.5 8h.01M7.5 12h.01"/></svg>Wygląd</button>
+                <button class="mock-nav-button" id="mock-nav-settings" role="tab" aria-selected="false" tabindex="-1" type="button" data-mock-view="settings"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 6.5A3.5 3.5 0 1 1 10 13.5 3.5 3.5 0 0 1 10 6.5Z"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.3 4.3l1.4 1.4M14.3 14.3l1.4 1.4M15.7 4.3l-1.4 1.4M5.7 14.3l-1.4 1.4"/></svg>Ustawienia</button>
+                <div class="mock-sidebar-local"><i></i><span><strong>DANE LOKALNE</strong><small>Bez telemetrii</small></span></div>
               </nav>
-              <div class="program-workspace">
-                <div class="program-toolbar"><div><span class="program-kicker">TWÓJ PANEL · DANE DEMONSTRACYJNE</span><h3 id="program-view-title">Strefa gracza</h3></div><span class="program-online-pill"><i></i> Blessed jest gotowy</span></div>
-                <div class="program-blessed-guide"><div class="program-blessed-avatar"><img src="assets/blessed-optimizer-logo-no-background.png" alt=""><span>✦</span></div><div class="program-blessed-copy"><div><strong>Blessed</strong><small>Twój wierny pomocnik zza światów</small></div><p id="program-blessed-message">Polepszę działanie Twojego komputera — krok po kroku i tylko za Twoją zgodą. Zaczniemy od tego, co ma znaczenie podczas gry.</p></div><span class="blessed-guide-pill">Ty decydujesz</span></div>
-                <div class="program-crumb"><span>WYBRANA KATEGORIA</span><i>›</i><span id="program-crumb-title">STREFA GRACZA</span><span class="program-data-pill">PODGLĄD · DANE DEMO</span></div>
-                <div class="program-view-content" id="program-view-content" role="tabpanel" aria-labelledby="category-gaming" aria-live="polite"></div>
-                <div class="program-next-categories"><span class="program-next-label">POMYSŁY NA KOLEJNE AKTUALIZACJE</span><div><span class="future-category-pill">Prywatność</span><span class="future-category-pill">Kopie zapasowe</span><span class="future-category-pill">Konserwacja</span><span class="future-category-pill">Bezpieczeństwo</span></div></div>
+              <div class="mock-workspace">
+                <div class="mock-toolbar">
+                  <div><span class="mock-kicker">TWÓJ PANEL · DANE NA ŻYWO</span><h3 id="mock-view-title">Blessed czuwa</h3></div>
+                  <span class="mock-status-pill" id="mock-status-pill"><i></i> <span id="mock-status-pill-text">Blessed jest gotowy</span></span>
+                </div>
+                <div class="mock-guide">
+                  <span class="mock-guide-avatar"><img src="assets/blessed-optimizer-logo-no-background.png" alt=""><i>✦</i></span>
+                  <span class="mock-guide-copy"><strong>Blessed</strong><small>Twój wierny pomocnik zza światów</small><p id="mock-guide-message">Znalazłem 2 rzeczy warte zajęcia się.</p></span>
+                  <span class="mock-guide-badge">BLESSED OGARNIA</span>
+                </div>
+                <div class="mock-crumb"><span>WYBRANA KATEGORIA</span><i>›</i><span id="mock-view-crumb">BLESSED CZUWA</span><span class="mock-crumb-pill">LOKALNIE · BEZ TELEMETRII</span></div>
+                <div class="mock-page" id="mock-page" role="tabpanel" aria-labelledby="mock-nav-care" aria-live="polite"></div>
               </div>
             </div>
+            <div class="mock-footer"><span><i>✦</i> Wszystko liczone lokalnie · bez telemetrii</span><span>Instalacja dla bieżącego użytkownika</span></div>
           </div>
-          <p class="program-window-caption"><span>✧</span> To uproszczony symulator funkcji. W aplikacji 1.1.0 opcje są ułożone w bocznym menu, a przełączniki i liczby tutaj są demonstracyjne — rzeczywiste dane odczytuje zainstalowany program.</p>
+          <p class="mock-window-caption"><span>✧</span> Makieta odwzorowuje wygląd aplikacji 1.2.0 — kolory, menu i układ ekranów. Dane są demonstracyjne: strona nie czyta Twojego komputera ani nie zmienia ustawień.</p>
         </div>
       </section>
       <section class="simulator-section section-space" id="symulator">
         <div class="wrap">
-          <div class="demo-note reveal"><span class="demo-note-icon">✧</span><p><strong>To tylko symulator.</strong> Liczby są przykładowe — ta strona nie czyta Twojego komputera, nie mierzy pingu ani nie zmienia ustawień systemowych.</p><span class="demo-tag">DANE DEMO</span></div>
-          <div class="simulator-card glass-panel reveal">
-            <div class="sim-controls"><div class="sim-heading"><span class="step-kicker">KROK 1 · KATEGORIA</span><h2>Wybierz, co Cię interesuje.</h2><p>Każda kategoria to wyłącznie bezpieczny podgląd.</p></div><div class="scenario-list" role="radiogroup" aria-label="Kategorie symulatora">
-              <button class="scenario-option is-selected" type="button" role="radio" aria-checked="true" data-scenario="gaming"><span class="scenario-icon scenario-blue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.2 8h9.6a3.3 3.3 0 0 1 3.1 2.2l1.2 3.5a2.2 2.2 0 0 1-3.5 2.3l-2.2-1.7H8.6l-2.2 1.7a2.2 2.2 0 0 1-3.5-2.3l1.2-3.5A3.3 3.3 0 0 1 7.2 8Z"/><path d="M7.5 10v4M5.5 12h4M15.2 11.2h.1M17.2 13.2h.1"/></svg></span><span class="scenario-copy"><strong>Strefa gracza</strong><small>Tryb czuwania i gra</small></span><span class="scenario-radio"></span></button>
-              <button class="scenario-option" type="button" role="radio" aria-checked="false" data-scenario="connections"><span class="scenario-icon scenario-gold"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 8a15 15 0 0 1 20 0M5 11a10.5 10.5 0 0 1 14 0m-11 3a6 6 0 0 1 8 0m-5 4h.01"/></svg></span><span class="scenario-copy"><strong>Połączenia</strong><small>Wi-Fi, Ethernet, Bluetooth</small></span><span class="scenario-radio"></span></button>
-              <button class="scenario-option" type="button" role="radio" aria-checked="false" data-scenario="proposals"><span class="scenario-icon scenario-lilac"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 2 7 7 3-7 2-2 7-2-7-7-2 7-3 2-7Z"/></svg></span><span class="scenario-copy"><strong>Propozycje</strong><small>Pomysły od Blessed</small></span><span class="scenario-radio"></span></button>
-              <button class="scenario-option" type="button" role="radio" aria-checked="false" data-scenario="personalization"><span class="scenario-icon scenario-blue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h5M8 16h8"/></svg></span><span class="scenario-copy"><strong>Personalizacja Windows</strong><small>Motyw i kolor akcentu</small></span><span class="scenario-radio"></span></button>
-            </div><div class="nerd-card"><span class="nerd-bubble">?</span><div><strong>Prosto dla każdego, ciekawie dla nerdów.</strong><p>Każda wskazówka ma prosty opis i techniczne rozwinięcie.</p><details><summary>Zobacz, jak to wyjaśnimy</summary><p>Aplikacja pokazuje źródło ustawienia, dokładny zakres zmiany i sposób jej cofnięcia.</p></details></div></div></div>
-            <div class="sim-results-panel"><div class="sim-results-heading"><div><span class="step-kicker">KROK 2 · ODKRYJ</span><h2 id="simulation-title">Strefa gracza</h2></div><span class="simulation-state" id="simulation-state"><i></i> Gotowe</span></div><div class="results-list" id="simulation-results" aria-live="polite" aria-atomic="true"></div><div class="result-assurance"><span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5 16.5 5v4.4c0 3.6-2.5 6.4-6.5 7.8-4-1.4-6.5-4.2-6.5-7.8V5L10 2.5Z"/><path d="m7.2 9.8 1.8 1.8 3.8-4"/></svg> Żadnych zmian na Twoim PC</span><span>Przykładowy raport</span></div><div class="sim-actions"><button class="button button-primary sim-run-button" id="run-simulation" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7.5 4.5 8 5.5-8 5.5v-11Z" fill="currentColor" stroke="none"/></svg> Pokaż przykład</button><button class="button button-undo" id="undo-simulation" type="button" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 8V3.5M4 8h4.5M4.7 7A6.5 6.5 0 1 1 4 11"/></svg> Cofnij podgląd</button></div><p class="simulation-feedback" id="simulation-feedback" role="status" aria-live="polite">Wybierz kategorię, aby zobaczyć przykładowy raport.</p></div>
+          <div class="demo-note reveal"><span class="demo-note-icon">✧</span><p><strong>To tylko makieta.</strong> Liczby są przykładowe — ta strona nie czyta Twojego komputera, nie mierzy pingu ani nie zmienia ustawień systemowych.</p><span class="demo-tag">DANE DEMO</span></div>
+          <div class="mock-try-card glass-panel reveal">
+            <div class="mock-try-head"><span class="mock-try-kicker">WYPRÓBUJ W MAKICIE</span><h2>Kliknij i zobacz, jak działa.</h2><p>Każdy ekran makiety jest interaktywny — bez instalacji i bez ryzyka dla Twojego komputera.</p></div>
+            <div class="mock-try-list">
+              <button class="mock-try-item" type="button" data-mock-goto="care"><span class="mock-try-icon">✦</span><span><strong>„Zrób wszystko za mnie”</strong><small>Plan, zgoda i wykonanie jednym kliknięciem — zobaczysz, co Blessed zrobiłby na Twoim komputerze.</small></span><i>›</i></button>
+              <button class="mock-try-item" type="button" data-mock-goto="cleanup"><span class="mock-try-icon">🧹</span><span><strong>Porządki</strong><small>Lista aplikacji z Twojego konta, zaznaczanie i odinstalowywanie z potwierdzeniem.</small></span><i>›</i></button>
+              <button class="mock-try-item" type="button" data-mock-goto="power"><span class="mock-try-icon">ϟ</span><span><strong>Zasilanie</strong><small>Aktywny plan, suwak limitu procesora i przycisk „Przywróć oryginał”.</small></span><i>›</i></button>
+              <button class="mock-try-item" type="button" data-mock-goto="gaming"><span class="mock-try-icon">⌁</span><span><strong>Strefa gracza</strong><small>Czuwanie CPU i RAM — włączasz jednym kliknięciem, jak w aplikacji.</small></span><i>›</i></button>
+              <button class="mock-try-item" type="button" data-mock-goto="startup"><span class="mock-try-icon">↻</span><span><strong>Autostart</strong><small>Przełączniki wpisów z dopiskiem „kopia do przywrócenia”.</small></span><i>›</i></button>
+              <button class="mock-try-item" type="button" data-mock-goto="settings"><span class="mock-try-icon">⚙</span><span><strong>Ustawienia</strong><small>Priorytety, automatyzacje i wyciszone sprawy — wszystko lokalnie.</small></span><i>›</i></button>
+            </div>
           </div>
-          <p class="sim-caption"><span>✦</span> Każdy komputer jest inny. Dobry raport pokaże Twój prawdziwy wynik — również wtedy, gdy nic się nie poprawiło.</p>
         </div>
       </section>
+
+      <template id="mock-template-care">
+        <div class="mock-page-head"><span class="mock-page-kicker">BLESSED CZUWA</span><h4>Zajmę się tym za Ciebie.</h4><p>Sam sprawdzam dysk, pamięć, autostart, ekran, baterię, zasilanie, aktualizacje i ochronę co 3 minuty, gdy Blessed jest otwarty. Pilnuję, żeby procesor i pamięć były gotowe na grę, zanim ją odpalisz.</p></div>
+        <div class="mock-panel mock-care-status">
+          <div class="mock-care-status-bar">
+            <div class="mock-care-status-copy"><span class="mock-mini-label">STAN OPIEKI</span><strong class="mock-care-status-text" id="mock-care-status">Znalazłem 2 rzeczy warte zajęcia się. · przegląd o 14:32</strong></div>
+            <button class="mock-button mock-button-primary" type="button" id="mock-oneclick-button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M17 3l-6.5 6.5"/><path d="M10.5 9.5 5 15c-1.2 1.2-1.8 2.6-1.5 4 1.4.3 2.8-.3 4-1.5l5.5-5.5"/><path d="m8 12 2.5 2.5M6.5 13.5 9 16"/></svg> Zrób wszystko za mnie</button>
+            <button class="mock-button mock-button-primary" type="button" id="mock-scan"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 4 4"/></svg> Sprawdź teraz</button>
+          </div>
+          <div class="mock-spec-row">
+            <div class="mock-spec"><small>OSTATNI PRZEGLĄD</small><strong id="mock-spec-time">14:32</strong></div>
+            <div class="mock-spec"><small>ZWOLNIŁEM DLA CIEBIE</small><strong id="mock-spec-freed">1,2 GB</strong></div>
+            <div class="mock-spec"><small>CZUWANIE</small><strong>Co 3 minuty · program otwarty</strong></div>
+          </div>
+        </div>
+        <div class="mock-panel">
+          <span class="mock-mini-label">CO ZNALAZŁEM</span>
+          <div class="mock-findings" id="mock-findings">
+            <article class="mock-finding" data-finding="temp-files" data-severity="info">
+              <span class="mock-severity mock-severity-info"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10M8.5 9v4M11.5 9v4"/></svg></span>
+              <div class="mock-finding-body">
+                <span class="mock-finding-tag" style="--sev:#69B9F5">DROBIAZG</span>
+                <strong>2,8 GB starych plików tymczasowych</strong>
+                <p>Zostały po instalatorach i aktualizacjach. Posprzątam je za Twoją zgodą — pliki używane przez programy zostawię.</p>
+                <button class="mock-button mock-button-primary" type="button" data-toast="W aplikacji Blessed najpierw pokazuje podgląd z liczbą plików, a potem sprząta.">Posprzątam za Ciebie</button>
+              </div>
+              <button class="mock-finding-mute" type="button" aria-label="Wycisz tę sprawę" data-mock-mute>✕</button>
+            </article>
+            <article class="mock-finding" data-finding="recycle-bin" data-severity="warning">
+              <span class="mock-severity mock-severity-warning"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10M8.5 9v4M11.5 9v4"/></svg></span>
+              <div class="mock-finding-body">
+                <span class="mock-finding-tag" style="--sev:#E5BC67">WARTO ZROBIĆ</span>
+                <strong>W koszach leży 9,2 GB</strong>
+                <p>Na dyskach nazbierało się 18 412 plików w koszu — to dokładnie to, co robi przycisk „Opróżnij kosz”, tylko z Twoim wyraźnym potwierdzeniem. Pliki znikają trwale.</p>
+                <button class="mock-button mock-button-primary" type="button" data-toast="W aplikacji zobaczysz podgląd rozmiaru, potwierdzisz ostrzeżenie, a potem kosze będą puste.">Opróżnię kosz</button>
+              </div>
+              <button class="mock-finding-mute" type="button" aria-label="Wycisz tę sprawę" data-mock-mute>✕</button>
+            </article>
+            <article class="mock-finding" data-finding="power-cpu-limit" data-severity="warning">
+              <span class="mock-severity mock-severity-warning"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m11.5 1-8 10h5l-1 8 9-11h-5l.5-7Z"/></svg></span>
+              <div class="mock-finding-body">
+                <span class="mock-finding-tag" style="--sev:#E5BC67">WARTO ZROBIĆ</span>
+                <strong>Plan „Wysoka wydajność” trzyma procesor na 70%</strong>
+                <p>Przy zasilaniu z gniazdka nie ma powodu, żeby oddawać moc, za którą zapłaciłeś. Podniosę limit do 100% — oryginalne wartości zapiszę, żeby dało się wrócić.</p>
+                <button class="mock-button mock-button-secondary" type="button" data-mock-goto="power">Zajmij się zasilaniem</button>
+              </div>
+              <button class="mock-finding-mute" type="button" aria-label="Wycisz tę sprawę" data-mock-mute>✕</button>
+            </article>
+            <article class="mock-finding" data-finding="appx-crowd" data-severity="info">
+              <span class="mock-severity mock-severity-info"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M17 3l-6.5 6.5"/><path d="M10.5 9.5 5 15c-1.2 1.2-1.8 2.6-1.5 4 1.4.3 2.8-.3 4-1.5l5.5-5.5"/><path d="m8 12 2.5 2.5M6.5 13.5 9 16"/></svg></span>
+              <div class="mock-finding-body">
+                <span class="mock-finding-tag" style="--sev:#69B9F5">DROBIAZG</span>
+                <strong>Masz 34 aplikacje z Microsoft Store</strong>
+                <p>Część aplikacji mogła zostać po próbowaniu — zajmują miejsce i aktualizują się w tle. Przejrzyj listę i odinstaluj to, czego nie używasz; każdą aplikację wgrasz z powrotem przez Microsoft Store.</p>
+                <button class="mock-button mock-button-secondary" type="button" data-mock-goto="cleanup">Przejrzyj aplikacje</button>
+              </div>
+              <button class="mock-finding-mute" type="button" aria-label="Wycisz tę sprawę" data-mock-mute>✕</button>
+            </article>
+          </div>
+          <div class="mock-oneclick" id="mock-oneclick" hidden>
+            <div class="mock-oneclick-plan" id="mock-oneclick-plan">
+              <span class="mock-mini-label">PLAN „JEDNYM KLIKNIĘCIEM” — BLESSED ZROBI ZA CIEBIE</span>
+              <ul>
+                <li>Posprzątam pliki tymczasowe: około 2,8 GB w 412 plikach starszych niż 2 dni</li>
+                <li>Opróżnię wszystkie kosze: około 9,2 GB — UWAGA: usunięcie z kosza jest trwałe i nieodwracalne</li>
+                <li>Podniosę limit procesora przy zasilaniu z sieci do 100% w planie „Wysoka wydajność” (na baterii bez zmian; oryginalne wartości zapiszę do przywrócenia)</li>
+                <li>Dla tej zmiany Windows poprosi o zgodę administratora (UAC) — możesz odmówić</li>
+              </ul>
+              <p class="mock-oneclick-manual">Resztę (1) załatwisz osobnymi przyciskami na liście powyżej: <strong>Masz 34 aplikacje z Microsoft Store</strong></p>
+              <div class="mock-oneclick-actions">
+                <button class="mock-button mock-button-primary" type="button" id="mock-plan-run">Tak, wykonaj plan</button>
+                <button class="mock-button mock-button-secondary" type="button" id="mock-plan-cancel">Anuluj</button>
+              </div>
+            </div>
+            <div class="mock-oneclick-progress" id="mock-oneclick-progress" hidden>
+              <span class="mock-mini-label">WYKONUJĘ PLAN</span>
+              <ul id="mock-oneclick-steps">
+                <li data-step="temp">Sprzątam pliki tymczasowe…</li>
+                <li data-step="recycle">Opróżniam kosze…</li>
+                <li data-step="power">Ustawiam procesor na 100% przy zasilaniu z sieci… (UAC)</li>
+              </ul>
+            </div>
+            <div class="mock-oneclick-results" id="mock-oneclick-results" hidden>
+              <span class="mock-mini-label">GOTOWE — OTO CO ZROBIŁEM</span>
+              <ul>
+                <li>✓ posprzątałem 2,8 GB w 412 plikach tymczasowych</li>
+                <li>✓ opróżniłem kosze — odzyskałeś około 9,2 GB</li>
+                <li>✓ procesor w planie „Wysoka wydajność” pracuje na 100% przy zasilaniu z sieci (oryginał zapisany)</li>
+              </ul>
+              <p class="mock-oneclick-manual">Na liście powyżej czeka jeszcze 1 sprawa do załatwienia osobnym przyciskiem.</p>
+              <div class="mock-oneclick-actions"><button class="mock-button mock-button-primary" type="button" id="mock-plan-done">Gotowe</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="mock-panel">
+          <strong class="mock-panel-title">Twój profil i automatyzacje</strong>
+          <p>Priorytet: Granie i maksymalna płynność. W ustawieniach zdecydujesz też, czy Blessed może sprzątać pliki tymczasowe automatycznie.</p>
+          <button class="mock-button mock-button-secondary" type="button" data-mock-goto="settings">Otwórz ustawienia Blessed</button>
+        </div>
+      </template>
+
+      <template id="mock-template-gaming">
+        <div class="mock-page-head"><span class="mock-page-kicker">STREFA GRACZA · DANE LOKALNE</span><h4>Razem po spokojniejszą rozgrywkę.</h4><p>Monitoruj użycie procesora i pamięci podczas gry. Czuwanie włączasz i zatrzymujesz jednym kliknięciem.</p></div>
+        <div class="mock-panel">
+          <strong class="mock-panel-title">Tryb czuwania Blessed</strong>
+          <p>Pomiar startuje dopiero po Twoim kliknięciu i odświeża się co 2 sekundy. Zatrzymaj go w dowolnym momencie.</p>
+          <div class="mock-setting-row">
+            <span class="mock-setting-copy"><strong>Włącz czuwanie</strong><small>Włączasz tylko podgląd tej funkcji</small><em class="mock-setting-state" data-watch-state>Wyłączone w makiecie</em></span>
+            <button class="mock-switch" type="button" role="switch" aria-checked="false" aria-label="Włącz czuwanie w makiecie" data-mock-watch><span></span></button>
+          </div>
+          <div class="mock-meters">
+            <div class="mock-meter"><div class="mock-meter-head"><small>UŻYCIE CPU · CAŁY SYSTEM</small><strong data-meter="cpu">—</strong></div><div class="mock-meter-track"><span data-meter-bar="cpu" style="width:0%"></span></div></div>
+            <div class="mock-meter"><div class="mock-meter-head"><small>ZAJĘTA PAMIĘĆ RAM</small><strong data-meter="ram">—</strong></div><div class="mock-meter-track"><span data-meter-bar="ram" style="width:0%"></span></div></div>
+          </div>
+          <p class="mock-footnote"><span>✦</span> Czuwanie mierzy tylko CPU i RAM. Nie mierzy FPS ani nie rozpoznaje gry — i niczego nie zamyka.</p>
+        </div>
+      </template>
+
+      <template id="mock-template-processes">
+        <div class="mock-page-head"><span class="mock-page-kicker">PROCESY</span><h4>Zobacz, co naprawdę zajmuje zasoby.</h4><p>Podgląd CPU, pamięci i czasu uruchomienia każdego procesu. Lista odświeża się co 2 sekundy, gdy ta karta jest otwarta.</p></div>
+        <div class="mock-panel">
+          <div class="mock-list-toolbar">
+            <input class="mock-search" type="search" placeholder="Filtruj po nazwie procesu lub PID" aria-label="Filtruj procesy">
+            <span class="mock-list-status">128 procesów · odczyt lokalny 14:32:05 · CPU liczone z próbek co 2 s</span>
+          </div>
+          <div class="mock-table" role="table" aria-label="Lista procesów">
+            <div class="mock-table-row mock-table-head" role="row"><span>Proces</span><span>PID</span><span>CPU</span><span>RAM</span><span>Uruchomiono</span></div>
+            <div class="mock-table-row" role="row"><span>explorer.exe</span><span>1840</span><span>0,4%</span><span>142 MB</span><span>14:02</span></div>
+            <div class="mock-table-row" role="row"><span>chrome.exe</span><span>5208</span><span>1,2%</span><span>684 MB</span><span>13:47</span></div>
+            <div class="mock-table-row" role="row"><span>BlessedOptimizer.exe</span><span>7412</span><span>0,1%</span><span>96 MB</span><span>14:31</span></div>
+            <div class="mock-table-row" role="row"><span>svchost.exe</span><span>1204</span><span>0,0%</span><span>58 MB</span><span>14:01</span></div>
+            <div class="mock-table-row" role="row"><span>System</span><span>4</span><span>0,1%</span><span>96 MB</span><span>14:01</span></div>
+          </div>
+          <p class="mock-footnote"><span>✦</span> Podgląd jest tylko do czytania — aplikacja nie zamyka żadnych procesów sama.</p>
+        </div>
+      </template>
+
+      <template id="mock-template-connections">
+        <div class="mock-page-head"><span class="mock-page-kicker">POŁĄCZENIA · DANE LOKALNE</span><h4>Sprawdzę, co jest nie tak.</h4><p>Lista kart pochodzi bezpośrednio z Windows: Wi-Fi, Ethernet oraz Bluetooth PAN, jeśli system wystawia go jako adapter sieciowy. Test ping wysyła jedno zapytanie do 1.1.1.1 po kliknięciu.</p></div>
+        <div class="mock-panel">
+          <div class="mock-list-toolbar"><strong class="mock-panel-title">Karty sieciowe</strong><button class="mock-button mock-button-secondary" type="button" data-toast="W aplikacji lista kart odświeża się lokalnie — makieta pokazuje przykład.">Odśwież listę</button></div>
+          <div class="mock-adapter"><i class="mock-adapter-dot is-on"></i><span><strong>Wi-Fi — Intel AX201</strong><small>Połączona · Wi-Fi 5 GHz · 866 Mb/s</small></span><span class="mock-status-pill status-ready">POŁĄCZONA</span></div>
+          <div class="mock-adapter"><i class="mock-adapter-dot"></i><span><strong>Ethernet — Realtek PCIe</strong><small>Kabel odłączony</small></span><span class="mock-status-pill">ODŁĄCZONA</span></div>
+          <div class="mock-adapter"><i class="mock-adapter-dot"></i><span><strong>Bluetooth PAN</strong><small>Nie wystawia się jako adapter sieciowy</small></span><span class="mock-status-pill">BRAK</span></div>
+        </div>
+        <div class="mock-panel">
+          <strong class="mock-panel-title">Test ping</strong>
+          <p>Wykonuję 10 krótkich prób do 1.1.1.1 i podaję średnie opóźnienie, jego wahania oraz utracone odpowiedzi. Ping może być blokowany przez zaporę; ustawienia sieci pozostają bez zmian.</p>
+          <div class="mock-ping-row">
+            <span class="mock-ping-result" id="mock-ping-result">Test nie został uruchomiony.</span>
+            <button class="mock-button mock-button-primary" type="button" id="mock-ping">Sprawdź ping</button>
+          </div>
+        </div>
+      </template>
+
+      <template id="mock-template-proposals">
+        <div class="mock-page-head"><span class="mock-page-kicker">PROPOZYCJE BLESSED</span><h4>Małe rzeczy warte sprawdzenia.</h4><p>Poniższe przyciski prowadzą prosto do właściwej strony Ustawień Windows. Nic nie dzieje się w tle — decyzja należy do Ciebie.</p></div>
+        <div class="mock-panel">
+          <div class="mock-proposal"><span class="mock-proposal-icon">↗</span><div><strong>Niewiele wolnego miejsca na dysku systemowym</strong><p>Pozostało około 14 GB. Przejrzyj duże pliki w Ustawieniach Windows i zwolnij miejsce po swojemu.</p><button class="mock-button mock-button-secondary" type="button" data-toast="W aplikacji ten przycisk otwiera Ustawienia Windows (ms-settings:storagesense).">Otwórz Czujnik pamięci</button></div></div>
+          <div class="mock-proposal"><span class="mock-proposal-icon">⌁</span><div><strong>Sprawdź częstotliwość odświeżania ekranu</strong><p>Twój monitor może dawać płynniejszy obraz niż ustawiony obecnie. Blessed pokaże dostępne tryby.</p><button class="mock-button mock-button-secondary" type="button" data-toast="W aplikacji ten przycisk otwiera Ustawienia Windows (ms-settings:display).">Otwórz ustawienia ekranu</button></div></div>
+          <div class="mock-proposal"><span class="mock-proposal-icon">↻</span><div><strong>Przejrzyj aplikacje uruchamiane z Windowsem</strong><p>Skróć listę programów startujących z systemem — zostaw tylko te, których potrzebujesz od razu.</p><button class="mock-button mock-button-secondary" type="button" data-mock-goto="startup">Przejdź do Autostartu</button></div></div>
+        </div>
+      </template>
+
+      <template id="mock-template-history">
+        <div class="mock-page-head"><span class="mock-page-kicker">HISTORIA LOKALNA</span><h4>Zobacz, co zmieniało się z czasem.</h4><p>Blessed przechowuje podsumowania ostatnich 30 dni wyłącznie na tym komputerze. Zapis obejmuje użycie CPU i RAM oraz liczbę znalezionych spraw.</p></div>
+        <div class="mock-spec-row">
+          <div class="mock-spec"><small>ZAPISANE PRZEGLĄDY</small><strong>30</strong></div>
+          <div class="mock-spec"><small>Z PRZYPOMNIENIAMI</small><strong>12</strong></div>
+          <div class="mock-spec"><small>ŚREDNIE CPU</small><strong>18%</strong></div>
+          <div class="mock-spec"><small>ŚREDNIE UŻYCIE RAM</small><strong>54%</strong></div>
+        </div>
+        <div class="mock-panel">
+          <div class="mock-list-toolbar"><strong class="mock-panel-title">Ostatnie przeglądy</strong><button class="mock-button mock-button-secondary" type="button" data-toast="W aplikacji historia kasuje się lokalnie, po Twoim potwierdzeniu.">Wyczyść historię</button></div>
+          <div class="mock-history-row"><span>14:32</span><span>CPU 12%</span><span>RAM 51%</span><span class="mock-status-pill status-ready">CZYSTO</span></div>
+          <div class="mock-history-row"><span>11:29</span><span>CPU 34%</span><span>RAM 58%</span><span class="mock-status-pill status-warm">2 SPRAWY</span></div>
+          <div class="mock-history-row"><span>08:15</span><span>CPU 9%</span><span>RAM 47%</span><span class="mock-status-pill status-ready">CZYSTO</span></div>
+          <div class="mock-history-row"><span>wczoraj 19:03</span><span>CPU 61%</span><span>RAM 72%</span><span class="mock-status-pill status-warm">3 SPRAWY</span></div>
+        </div>
+      </template>
+
+      <template id="mock-template-startup">
+        <div class="mock-page-head"><span class="mock-page-kicker">AUTOSTART</span><h4>Wybierz, co startuje razem z Windowsem.</h4><p>Lista obejmuje wpisy Run i RunOnce Twojego konta. Wyłączenie zapisuje kopię i usuwa samą rejestrację autostartu — każdą pozycję przywrócisz jednym kliknięciem.</p></div>
+        <div class="mock-panel">
+          <div class="mock-list-toolbar"><strong class="mock-panel-title">Pozycje bieżącego konta</strong><button class="mock-button mock-button-secondary" type="button" data-toast="W aplikacji lista wpisów odświeża się lokalnie.">Odśwież</button></div>
+          <div class="mock-startup-row"><span><strong>OneDrive</strong><small>HKCU\…\Run · wpis bieżącego użytkownika</small></span><button class="mock-switch is-on" type="button" role="switch" aria-checked="true" aria-label="OneDrive w autostarcie"><span></span></button></div>
+          <div class="mock-startup-row"><span><strong>Microsoft Teams</strong><small>HKCU\…\Run · kopia zapisana przy wyłączeniu</small></span><button class="mock-switch is-on" type="button" role="switch" aria-checked="true" aria-label="Microsoft Teams w autostarcie"><span></span></button></div>
+          <div class="mock-startup-row"><span><strong>Spotify</strong><small>HKCU\…\RunOnce · możliwe przywrócenie</small></span><button class="mock-switch" type="button" role="switch" aria-checked="false" aria-label="Spotify w autostarcie"><span></span></button></div>
+          <p class="mock-footnote"><span>✦</span> Każda zmiana wymaga osobnego potwierdzenia, a wyłączony wpis zachowuje kopię do przywrócenia.</p>
+        </div>
+      </template>
+
+      <template id="mock-template-cleanup">
+        <div class="mock-page-head"><span class="mock-page-kicker">PORZĄDKI · KONTO UŻYTKOWNIKA</span><h4>Aplikacje, których nie używasz, też zajmują miejsce.</h4><p>Lista aplikacji z Microsoft Store przypisanych do Twojego konta. Odinstalowanie dotyczy tylko bieżącego użytkownika — aplikację wgrasz z powrotem przez Store w każdej chwili.</p></div>
+        <div class="mock-panel">
+          <div class="mock-list-toolbar">
+            <span class="mock-list-status" id="mock-cleanup-counter">34 aplikacje · 0 zaznaczonych</span>
+            <span><button class="mock-button mock-button-secondary" type="button" data-mock-check-all>Zaznacz wszystkie</button> <button class="mock-button mock-button-secondary" type="button" data-mock-check-none>Odznacz wszystkie</button></span>
+          </div>
+          <div class="mock-appx-list" id="mock-appx-list">
+            <label class="mock-appx"><input type="checkbox" data-mock-appx><span><strong>Microsoft.WindowsCalculator</strong><small>11.2505.12.0</small></span></label>
+            <label class="mock-appx"><input type="checkbox" data-mock-appx><span><strong>Microsoft.Paint</strong><small>11.2509.40.0</small></span></label>
+            <label class="mock-appx"><input type="checkbox" data-mock-appx><span><strong>Microsoft.ScreenSketch</strong><small>11.2504.21.0</small></span></label>
+            <label class="mock-appx"><input type="checkbox" data-mock-appx><span><strong>Microsoft.Todos</strong><small>2.96.4102.0</small></span></label>
+            <label class="mock-appx"><input type="checkbox" data-mock-appx><span><strong>Microsoft.GetHelp</strong><small>10.2308.101.0</small></span></label>
+            <label class="mock-appx"><input type="checkbox" data-mock-appx><span><strong>Microsoft.549365A5B9F5_cw5n1h2txyewy</strong><small>1.96.3102.0</small></span></label>
+          </div>
+          <button class="mock-button mock-button-primary" type="button" id="mock-uninstall">Odinstaluj zaznaczone</button>
+          <div class="mock-cleanup-confirm" id="mock-cleanup-confirm" hidden>
+            <p id="mock-cleanup-confirm-text">Odinstalować zaznaczone aplikacje bieżącego konta?</p>
+            <div class="mock-oneclick-actions"><button class="mock-button mock-button-primary" type="button" id="mock-cleanup-run">Tak, odinstaluj</button> <button class="mock-button mock-button-secondary" type="button" id="mock-cleanup-cancel">Anuluj</button></div>
+          </div>
+          <p class="mock-cleanup-summary" id="mock-cleanup-summary" hidden></p>
+        </div>
+        <div class="mock-panel mock-scope-note">
+          <strong class="mock-panel-title">Zakres zmian</strong>
+          <p>Blessed odinstalowuje wyłącznie aplikacje bieżącego konta (AppX). Nie usuwa aplikacji systemowych, innych użytkowników, usług ani plików poza rejestracją aplikacji. Odinstalowaną aplikację wgrasz z powrotem przez Microsoft Store. Każda pozycja wymaga Twojej zgody przed odinstalowaniem.</p>
+        </div>
+      </template>
+
+      <template id="mock-template-power">
+        <div class="mock-page-head"><span class="mock-page-kicker">UKRYTE OPCJE ZASILANIA</span><h4>Ustawienia planu bez polowania po Panelu sterowania.</h4><p>Odczytuję prawdziwe wartości aktywnego planu Windows. Zmiany dotyczą osobno zasilania z sieci i baterii, są poprzedzone wyjaśnieniem i zgodą oraz mają zapisaną kopię do cofnięcia.</p></div>
+        <div class="mock-panel">
+          <strong class="mock-panel-title">Aktywny plan: Wysoka wydajność</strong>
+          <p class="mock-plan-guid">GUID planu: 8c5e7fda-e8bf-4a96-9a85-a6e23a8f635c</p>
+          <p class="mock-plan-note">Zapis ustawień systemowych potwierdzasz w monicie UAC. Limity temperatury, taktowanie i zabezpieczenia pozostają nietknięte.</p>
+        </div>
+        <div class="mock-panel">
+          <strong class="mock-panel-title">Maksymalny stan procesora</strong>
+          <p>Określa górny limit pracy procesora w procentach. Wyższa wartość na zasilaniu z sieci daje pełną moc; na baterii niższa oszczędza energię.</p>
+          <div class="mock-power-controls">
+            <label><small>Zasilanie z sieci</small><select class="mock-select" id="mock-power-ac" aria-label="Limit procesora przy zasilaniu z sieci"><option>50%</option><option>60%</option><option selected>70% · bieżąca wartość</option><option>80%</option><option>90%</option><option>100%</option></select></label>
+            <label><small>Bateria / UPS</small><select class="mock-select" id="mock-power-dc" aria-label="Limit procesora na baterii"><option>50%</option><option>60%</option><option>70%</option><option>80%</option><option selected>95% · bieżąca wartość</option><option>100%</option></select></label>
+          </div>
+          <div class="mock-oneclick-actions">
+            <button class="mock-button mock-button-primary" type="button" id="mock-apply-power">Zastosuj z potwierdzeniem</button>
+            <button class="mock-button mock-button-secondary" type="button" data-toast="W aplikacji oryginalne wartości są zapisane lokalnie — przywrócisz je jednym kliknięciem.">Przywróć oryginał</button>
+          </div>
+          <p class="mock-power-now">Teraz · sieć: <strong id="mock-power-now-ac">70%</strong> &nbsp;|&nbsp; bateria: <strong id="mock-power-now-dc">95%</strong></p>
+          <p class="mock-power-feedback" id="mock-power-feedback" role="status"></p>
+        </div>
+      </template>
+
+      <template id="mock-template-personalization">
+        <div class="mock-page-head"><span class="mock-page-kicker">PERSONALIZACJA WINDOWS</span><h4>Niech komputer będzie bardziej Twój.</h4><p>Motyw i akcent zmieniają wygląd Blessed Optimizer od razu. Ustawienia systemowe Windows otwierasz osobno.</p></div>
+        <div class="mock-pers-grid">
+          <div class="mock-panel">
+            <strong class="mock-panel-title">Wygląd samego programu</strong>
+            <p>Wybierz motyw aplikacji. Zmiana obowiązuje tylko w bieżącej sesji.</p>
+            <span class="mock-mini-label">MOTYW</span>
+            <div class="mock-pill-row">
+              <button class="mock-pill is-selected" type="button" data-mock-theme="dark">Ciemny</button>
+              <button class="mock-pill" type="button" data-mock-theme="light">Jasny</button>
+            </div>
+            <span class="mock-mini-label">KOLOR AKCENTU</span>
+            <div class="mock-pill-row">
+              <button class="mock-pill is-selected" type="button" data-mock-accent="sky">Błękit</button>
+              <button class="mock-pill" type="button" data-mock-accent="gold">Złoto</button>
+              <button class="mock-pill" type="button" data-mock-accent="violet">Fiolet</button>
+              <button class="mock-pill" type="button" data-mock-accent="mint">Mięta</button>
+            </div>
+            <p class="mock-footnote"><span>✦</span> Podgląd działa na żywo — kliknij kolor i zobacz, jak zmienia się całe okno makiety.</p>
+          </div>
+          <div class="mock-panel">
+            <strong class="mock-panel-title">Podgląd ustawień Windows</strong>
+            <p>Prawdziwe ustawienia systemowe pozostają bez zmian. Jeśli chcesz je obejrzeć, otwórz Ustawienia Windows samodzielnie.</p>
+            <button class="mock-button mock-button-secondary" type="button" data-toast="W aplikacji ten przycisk otwiera Ustawienia Windows (ms-settings:personalization).">Otwórz ustawienia personalizacji Windows</button>
+          </div>
+        </div>
+        <div class="mock-panel mock-scope-note">
+          <strong class="mock-panel-title">Twoje wybory nie opuszczają aplikacji</strong>
+          <p>Cała diagnostyka działa lokalnie. Żadne odczyty ani ustawienia wyglądu nie opuszczają Twojego komputera.</p>
+        </div>
+      </template>
+
+      <template id="mock-template-settings">
+        <div class="mock-page-head"><span class="mock-page-kicker">USTAWIENIA BLESSED</span><h4>Dopasuj pomoc do siebie.</h4><p>Wybierz, na czym najbardziej Ci zależy, i osobno zdecyduj o automatycznych działaniach. Zmiany w Windows nadal wymagają Twojego potwierdzenia.</p></div>
+        <div class="mock-panel">
+          <span class="mock-mini-label">PRIORYTET BLESSED</span>
+          <strong class="mock-panel-title">Twój priorytet: <span id="mock-priority-label">Granie i maksymalna płynność</span></strong>
+          <p id="mock-priority-promise">Pilnuję, żeby procesor i pamięć były gotowe na grę, zanim ją odpalisz.</p>
+          <div class="mock-pill-row">
+            <button class="mock-pill is-selected" type="button" data-mock-priority="gaming">Granie</button>
+            <button class="mock-pill" type="button" data-mock-priority="work">Praca</button>
+            <button class="mock-pill" type="button" data-mock-priority="battery">Bateria</button>
+            <button class="mock-pill" type="button" data-mock-priority="quiet">Cisza</button>
+          </div>
+          <p class="mock-footnote"><span>✦</span> Priorytet zmienia kolejność i treść podpowiedzi. Nie zmienia samodzielnie ustawień Windows.</p>
+        </div>
+        <div class="mock-panel">
+          <span class="mock-mini-label">AUTOMATYCZNE DZIAŁANIA</span>
+          <strong class="mock-panel-title">Ty wybierasz, co może wydarzyć się bez kolejnego kliknięcia.</strong>
+          <div class="mock-setting-row"><span class="mock-setting-copy"><strong>Sprawdzaj komputer co 3 minuty, gdy Blessed jest otwarty</strong></span><button class="mock-switch is-on" type="button" role="switch" aria-checked="true" aria-label="Sprawdzaj komputer co 3 minuty"><span></span></button></div>
+          <div class="mock-setting-row"><span class="mock-setting-copy"><strong>Automatycznie sprzątaj stare pliki tymczasowe</strong><small>Wymaga osobnej zgody — w makiecie zostaje wyłączone</small></span><button class="mock-switch" type="button" role="switch" aria-checked="false" aria-label="Automatycznie sprzątaj stare pliki tymczasowe" disabled><span></span></button></div>
+          <p class="mock-footnote"><span>✦</span> Sprzątanie dotyczy plików starszych niż 2 dni, uruchamia się dopiero po zebraniu co najmniej 1 GB i pomija pliki używane przez inne programy. Usuniętych plików nie da się przywrócić.</p>
+        </div>
+        <div class="mock-panel">
+          <span class="mock-mini-label">WYCISZONE SPRAWY</span>
+          <strong class="mock-panel-title">Nie wyciszyłeś jeszcze żadnej sprawy.</strong>
+          <p>Wyciszona spraw znika z przeglądu, ale Blessed nadal ją sprawdza. Kliknięcie „✕” na karcie wycisza ją na stałe — aż ją przywrócisz.</p>
+        </div>
+        <div class="mock-panel mock-scope-note">
+          <strong class="mock-panel-title">Prywatność i kontrola</strong>
+          <p>Ustawienia profilu i historia przeglądów są przechowywane lokalnie w Twoim profilu Windows. Blessed nie wysyła ich do serwera. Sprawdzenie aktualizacji jest oddzielne i łączy się z GitHub.</p>
+        </div>
+      </template>
     </section>
   </main>
 
-  <footer class="site-footer"><div class="wrap footer-inner"><a class="brand footer-brand" href="#program" data-open-tab="about"><img class="brand-logo" src="assets/blessed-optimizer-logo-no-background.png" alt=""><span class="brand-wordmark">Blessed <span>OPTIMIZER</span></span></a><p>Technologia z troską. <span>© <span id="current-year">2026</span> Blessed Optimizer</span> · <a class="footer-link" href="changelog.html">Dziennik zmian</a></p><button class="back-to-top" type="button" data-open-tab="about">Na górę <span>↑</span></button></div></footer>
+  <footer class="site-footer"><div class="wrap footer-inner"><a class="brand footer-brand" href="#program" data-open-tab="about"><img class="brand-logo" src="assets/blessed-optimizer-logo-no-background.png" alt=""><span class="brand-wordmark">Blessed <span>OPTIMIZER</span></span></a><p>Technologia z troską. <span>© <span id="current-year">2026</span> Blessed Optimizer</span></p><button class="back-to-top" type="button" data-open-tab="about">Na górę <span>↑</span></button></div></footer>
   <div class="toast" id="site-toast" role="status" aria-live="polite"></div>
 
   <template id="panel-care"><div class="app-view-intro"><span class="mini-label">BLESSED CZUWA · PODGLĄD</span><h3>Sprawdziłem wszystko. Mam pięć spraw.</h3><p>Przegląd uruchamiam co 3 minuty, gdy aplikacja jest otwarta. Przy każdej rzeczy mówię, co mogę zrobić za Ciebie.</p></div><div class="diagnostic-list"><article class="diagnostic-row"><span class="diag-status status-review">✦</span><span><strong>Ekran pracuje na 60 z 144 Hz</strong><small>Windows zostawił niższy tryb po aktualizacji sterownika.</small></span><span class="diag-pill">ZAJMĘ SIĘ TYM</span></article><article class="diagnostic-row"><span class="diag-status status-review">⎇</span><span><strong>2,8 GB plików tymczasowych</strong><small>Zostały po instalatorach. Sprzątam po Twojej zgodzie; pliki w użyciu zostawiam.</small></span><span class="diag-pill">ZA ZGODĄ</span></article><article class="diagnostic-row"><span class="diag-status status-review">↻</span><span><strong>Aktualizacje czekają na restart</strong><small>Pobrane łatki dokończą się instalować przy ponownym uruchomieniu.</small></span><span class="diag-pill">WARTO ZROBIĆ</span></article><article class="diagnostic-row"><span class="diag-status status-review">✧</span><span><strong>Definicje antywirusa mają 6 dni</strong><small>Ochrona działa, ale baza zagrożeń jest nieaktualna.</small></span><span class="diag-pill">WARTO ZERKNĄĆ</span></article><article class="diagnostic-row"><span class="diag-status status-check">ϟ</span><span><strong>Plan zasilania trzyma procesor na 70%</strong><small>Przy gniazdku nie ma powodu oddawać mocy.</small></span><span class="diag-pill">PODNIOSĘ</span></article><article class="diagnostic-row"><span class="diag-status status-check">✓</span><span><strong>Dysk, pamięć i autostart w porządku</strong><small>Sprawdzone minutę temu.</small></span><span class="diag-pill">CZYSTO</span></article><div class="diagnostic-disclaimer"><span>✦</span> Tak wygląda przegląd w aplikacji. Na Twoim komputerze Blessed pokaże prawdziwe wyniki.</div></div></template>
@@ -225,52 +550,6 @@
   <template id="panel-gaming"><div class="app-view-intro"><span class="mini-label">STREFA GRACZA · PODGLĄD</span><h3>Wskocz do gry po swojemu.</h3><p>Najpierw zobacz opcje, potem decyduj. Każdy przełącznik działa lokalnie.</p></div><div class="app-setting-list"><article class="app-setting-row"><div class="setting-symbol symbol-mint">⌘</div><div class="setting-copy"><div class="setting-titleline"><strong>Tryb gry</strong><span class="setting-state-text">Włączony w demo</span></div><p>Opcja Windows związana z rozgrywką.</p><details class="setting-help"><summary><span>?</span> Wyjaśnij</summary><div class="help-content"><p>Windows traktuje aktywną grę priorytetowo i wycisza zbędne zadania w tle.</p><details><summary>Dla nerdów</summary><p>Aplikacja pokazuje źródło i dokładny zakres każdej zmiany.</p></details></div></details></div><button class="mock-switch is-on" type="button" role="switch" aria-checked="true" aria-label="Tryb gry w podglądzie"><span></span></button></article><article class="app-setting-row"><div class="setting-symbol symbol-violet">◉</div><div class="setting-copy"><div class="setting-titleline"><strong>Launchery w autostarcie</strong><span class="setting-state-text">Do sprawdzenia</span></div><p>Wybierz, co chcesz uruchamiać z systemem.</p><details class="setting-help"><summary><span>?</span> Wyjaśnij</summary><div class="help-content"><p>Zdecyduj, które launchery są Ci potrzebne od razu.</p><details><summary>Dla nerdów</summary><p>Aplikacja pokazuje nazwę wpisu i skutek jego wyłączenia.</p></details></div></details></div><button class="mock-switch" type="button" role="switch" aria-checked="false" aria-label="Launchery w autostarcie"><span></span></button></article><article class="app-setting-row"><div class="setting-symbol symbol-amber">ϟ</div><div class="setting-copy"><div class="setting-titleline"><strong>Profil energii</strong><span class="setting-state-text">Zrównoważony</span></div><p>Dopasuj wydajność do swojego rytmu.</p><details class="setting-help"><summary><span>?</span> Wyjaśnij</summary><div class="help-content"><p>Więcej mocy na żądanie — profil przełączysz jednym kliknięciem.</p><details><summary>Dla nerdów</summary><p>Blessed pokazuje opcje obsługiwane przez Twój sprzęt.</p></details></div></details></div><button class="mock-switch" type="button" role="switch" aria-checked="false" aria-label="Profil energii"><span></span></button></article></div></template>
   <template id="panel-diagnostics"><div class="app-view-intro"><span class="mini-label">ODKRYWANIE · PODGLĄD</span><h3>Każdy PC ma swoją historię.</h3><p>Oto przyjazne podpowiedzi, które pomagają ją poznać.</p></div><div class="diagnostic-list"><article class="diagnostic-row"><span class="diag-status status-review">✧</span><span><strong>Możliwości Twojego ekranu</strong><small>Sprawdź obsługiwaną częstotliwość.</small></span><span class="diag-pill">WARTO ZERKNĄĆ</span></article><article class="diagnostic-row"><span class="diag-status status-check">✓</span><span><strong>Profil energii</strong><small>Znajdź balans mocy i czasu pracy na baterii.</small></span><span class="diag-pill">POZNAJ</span></article><article class="diagnostic-row"><span class="diag-status status-review">✧</span><span><strong>Aplikacje uruchamiane z systemem</strong><small>Zdecyduj, które mogą poczekać.</small></span><span class="diag-pill">WARTO ZERKNĄĆ</span></article><div class="diagnostic-disclaimer"><span>✦</span> Przykładowe wskazówki — pełny przegląd wykonasz w aplikacji Windows.</div></div></template>
   <template id="panel-settings"><div class="app-view-intro"><span class="mini-label">TWOJE USTAWIENIA · PODGLĄD</span><h3>Spokojnie. To Ty prowadzisz.</h3><p>Tak wyglądają najważniejsze preferencje aplikacji.</p></div><div class="preference-list"><div class="preference-row"><span class="pref-symbol pref-green">◇</span><span><strong>Pytaj przed zmianą</strong><small>Przejrzystość na każdym kroku</small></span><span class="pref-enabled">ZAWSZE</span></div><div class="preference-row"><span class="pref-symbol pref-purple">↶</span><span><strong>Pokaż sposób cofnięcia</strong><small>Najpierw droga powrotu</small></span><span class="pref-enabled">WŁ.</span></div><div class="preference-row"><span class="pref-symbol pref-amber">✧</span><span><strong>Poziom wyjaśnień</strong><small>Prosto dla każdego, technicznie dla chętnych</small></span><span class="pref-enabled">PEŁNY</span></div><div class="settings-note"><span>✦</span><span><strong>Troska o Twój komputer</strong><small>Ochrona Windows i aktualizacje zostają na swoim miejscu.</small></span></div></div></template>
-
-
-  <template id="program-template-gaming">
-    <div class="program-category-heading"><span class="program-mini-pill"><i>✦</i> STREFA GRACZA · PODGLĄD</span><h4>Razem po spokojniejszą rozgrywkę.</h4><p>Przygotuj profil, sprawdź najważniejsze sygnały i wybierz sam, co zrobić. Żadnych obietnic „zero lagów”.</p></div>
-    <div class="gaming-layout">
-      <article class="standby-card"><div class="standby-header"><span class="standby-symbol">ϟ</span><span><small>WIERNY POMOCNIK W GRZE</small><strong>Tryb czuwania Blessed</strong></span><span class="program-status-pill status-warm">DOSTĘPNE · CPU/RAM</span></div><p class="standby-description">Po włączeniu czuwania aplikacja lokalnie odświeża ogólne użycie procesora i pamięci co 2 sekundy. Nie mierzy FPS ani nie rozpoznaje gry.</p>
-        <div class="program-setting-row standby-toggle"><span class="program-setting-copy"><strong>Włącz tryb czuwania</strong><small>Włączasz tylko podgląd tej funkcji</small><em class="program-setting-state">Wyłączone w makiecie</em></span><button class="program-switch" type="button" role="switch" aria-checked="false" aria-label="Tryb czuwania Blessed w makiecie" data-program-switch="standby"><span></span></button></div>
-        <div class="monitor-pills"><span>CPU · odczyt lokalny</span><span>RAM · odczyt lokalny</span><span>Bez pomiaru FPS</span></div>
-        <div class="standby-activity" id="standby-activity-card" data-state="off"><span class="standby-pulse"></span><span><strong>Podgląd czuwania</strong><small id="standby-activity-message">Włącz tryb, aby zobaczyć przykładowy monitoring.</small></span><span class="standby-activity-state" id="standby-activity-state">OCZEKUJE</span></div>
-        <details class="safety-details"><summary>Jak Blessed zadba o bezpieczeństwo?</summary><p>Czuwanie pokazuje odczyty CPU i RAM wtedy, gdy go potrzebujesz. Procesy systemowe, sterowniki, zabezpieczenia i aktualizacje pozostają nietknięte.</p></details>
-        <p class="standby-footnote"><span>✦</span> Ta strona nie monitoruje gry i nie zamyka żadnych procesów.</p>
-      </article>
-      <div class="gaming-metrics"><article class="gaming-metric-card"><span class="metric-orbit">⌁</span><small>FPS / PING</small><strong>Nie mierzono</strong><span>Potrzebny prawdziwy test</span></article><article class="gaming-metric-card"><span class="metric-orbit metric-gold">◌</span><small>TRYB CZUWANIA</small><strong>Tylko demo</strong><span>Bez dostępu do komputera</span></article><button class="program-inline-cta" type="button" data-preview-to-sim>Zobacz raport demo <span aria-hidden="true">↘</span></button></div>
-    </div>
-  </template>
-
-  <template id="program-template-connections">
-    <div class="program-category-heading"><span class="program-mini-pill"><i>✦</i> POŁĄCZENIA · PODGLĄD</span><h4>Sprawdzę, co jest nie tak.</h4><p>Najpierw test i wyjaśnienie prostym językiem. Potem decydujesz, co dalej.</p></div>
-    <div class="connection-type-pills" role="group" aria-label="Wybierz typ połączenia"><button class="connection-type-pill is-selected" type="button" aria-pressed="true" data-connection-type="wifi" data-connection-name="Wi-Fi" data-connection-description="Widok sieci bezprzewodowej: stan adaptera, opóźnienie i stabilność połączenia." data-connection-state="Przykładowy wynik">Wi-Fi</button><button class="connection-type-pill" type="button" aria-pressed="false" data-connection-type="ethernet" data-connection-name="Ethernet" data-connection-description="Stan karty przewodowej i test łącza — szybko, jednym kliknięciem." data-connection-state="Przykładowy wynik">Ethernet</button><button class="connection-type-pill" type="button" aria-pressed="false" data-connection-type="bluetooth" data-connection-name="Bluetooth" data-connection-description="Panel diagnostyczny Bluetooth — stan adaptera i podłączonych urządzeń." data-connection-state="Przykładowy wynik">Bluetooth</button></div>
-    <article class="connection-check-card"><div class="connection-card-heading"><span class="connection-symbol">⌁</span><div><span class="program-card-kicker">WYBRANE POŁĄCZENIE · DEMO</span><h5 id="connection-name">Wi-Fi</h5></div><span class="program-status-pill status-warm" id="connection-state">Przykładowy wynik</span></div><p id="connection-description">Widok sieci bezprzewodowej: stan adaptera, opóźnienie i stabilność połączenia.</p><div class="connection-metrics"><div><small>OPÓŹNIENIE</small><strong>24 ms</strong></div><div><small>STABILNOŚĆ</small><strong>Dobra</strong></div><div><small>ADAPTER</small><strong>Wi-Fi 5 GHz</strong></div></div><button class="program-inline-cta connection-test-button" type="button" data-program-audit data-progress-message="Blessed układa przykładowy test połączenia…" data-success-message="Gotowe — tak wygląda raport z testu połączenia." data-finish-label="Uruchom test ponownie">Sprawdź przykładowe połączenie <span aria-hidden="true">↗</span></button><p class="program-audit-feedback" id="program-audit-feedback" role="status">Uruchom przykładowy test, aby zobaczyć układ raportu.</p><details class="safety-details"><summary>A co z naprawą sieci?</summary><p>Blessed diagnozuje połączenie i tłumaczy wynik prostym językiem. Każdą zmianę zatwierdzasz sam, a punkt powrotu zapisuje się automatycznie.</p></details></article>
-  </template>
-
-  <template id="program-template-proposals">
-    <div class="program-category-heading"><span class="program-mini-pill"><i>✦</i> PROPOZYCJE BLESSED</span><h4>Małe rzeczy warte sprawdzenia.</h4><p>Konkretne pomysły z wyjaśnieniem — wybierasz te, które mają dla Ciebie sens.</p></div>
-    <div class="proposal-list"><article class="proposal-card"><div class="proposal-icon proposal-cyan">↗</div><div class="proposal-main"><div class="proposal-title-row"><h5>Przejrzyj aplikacje uruchamiane razem z Windowsem</h5><span class="proposal-priority">ŁATWE DO SPRAWDZENIA</span></div><p>Skróć listę programów startujących z systemem — zostaw tylko te, których potrzebujesz od razu.</p><details><summary>Dlaczego to proponuję?</summary><p><strong>Prosto:</strong> mniej aplikacji na starcie to mniej pracy w tle. <strong>Technicznie:</strong> Blessed czyta wpisy autostartu Twojego konta i pokazuje stan przed i po zmianie.</p></details></div></article><article class="proposal-card"><div class="proposal-icon proposal-gold">⌁</div><div class="proposal-main"><div class="proposal-title-row"><h5>Sprawdź częstotliwość odświeżania ekranu</h5><span class="proposal-priority">JEŚLI SPRZĘT POZWALA</span></div><p>Twój monitor może dawać płynniejszy obraz niż ustawiony obecnie. Blessed pokaże dostępne tryby.</p><details><summary>Rozwiń wyjaśnienie</summary><p><strong>Prosto:</strong> więcej herców to płynniejszy ruch. <strong>Technicznie:</strong> Blessed wskazuje tryby obsługiwane przez Twój monitor, kabel i kartę graficzną.</p></details></div></article><article class="proposal-card"><div class="proposal-icon proposal-violet">ϟ</div><div class="proposal-main"><div class="proposal-title-row"><h5>Dopasuj profil energii do swojego dnia</h5><span class="proposal-priority">Z OPCJĄ COFNIĘCIA</span></div><p>Praca, granie i dzień na baterii lubią różne ustawienia. Przełączysz je w sekundę.</p><details><summary>Co warto wiedzieć?</summary><p>Blessed pokazuje wpływ profilu na wydajność i czas pracy baterii oraz zapisuje oryginalne ustawienia do przywrócenia.</p></details></div></article></div><div class="proposal-footer"><span>✦</span> Nic nie dzieje się w tle — każdą propozycję zatwierdzasz jednym kliknięciem.</div>
-  </template>
-
-  <template id="program-template-personalization">
-    <div class="program-category-heading"><span class="program-mini-pill"><i>✦</i> PERSONALIZACJA WINDOWS</span><h4>Niech komputer będzie bardziej Twój.</h4><p>Ustaw wygląd Windows i samego Blessed Optimizer — zmianę widzisz od razu w podglądzie.</p></div>
-    <div class="personalization-layout"><div class="personalization-controls"><span class="program-card-kicker">CO CHCESZ PERSONALIZOWAĆ?</span><div class="theme-target-pills" role="group" aria-label="Wybierz miejsce personalizacji"><button class="theme-target-pill is-selected" type="button" aria-pressed="true" data-theme-target="windows">System Windows</button><button class="theme-target-pill" type="button" aria-pressed="false" data-theme-target="app">Wygląd Blessed</button></div><p class="theme-target-description" id="theme-target-description">Wybierz motyw i kolor akcentu — podgląd pokaże efekt natychmiast.</p><span class="program-card-kicker theme-control-label">MOTYW PODGLĄDU</span><div class="theme-mode-pills" role="group" aria-label="Wybierz motyw"><button class="theme-mode-pill is-selected" type="button" aria-pressed="true" data-theme-mode="system">Systemowy</button><button class="theme-mode-pill" type="button" aria-pressed="false" data-theme-mode="light">Jasny</button><button class="theme-mode-pill" type="button" aria-pressed="false" data-theme-mode="dark">Ciemny</button></div><span class="program-card-kicker theme-control-label">KOLOR AKCENTU</span><div class="accent-pills" role="group" aria-label="Wybierz kolor akcentu"><button class="accent-pill accent-sky is-selected" type="button" aria-label="Błękitny akcent" aria-pressed="true" data-accent-choice="sky"></button><button class="accent-pill accent-gold" type="button" aria-label="Złoty akcent" aria-pressed="false" data-accent-choice="gold"></button><button class="accent-pill accent-violet" type="button" aria-label="Fioletowy akcent" aria-pressed="false" data-accent-choice="violet"></button><button class="accent-pill accent-mint" type="button" aria-label="Miętowy akcent" aria-pressed="false" data-accent-choice="mint"></button></div></div><article class="program-theme-preview" id="program-theme-preview" data-theme="system" data-accent="sky"><div class="theme-preview-heading"><span><small>PODGLĄD NA ŻYWO</small><strong id="program-theme-target-label">Motyw systemu Windows</strong></span><span class="theme-live-pill"><i></i> DEMO</span></div><div class="theme-preview-window"><div class="theme-preview-titlebar"><span class="theme-preview-appicon">✦</span><span>Blessed · ustawienia wyglądu</span><span class="theme-preview-dots">···</span></div><div class="theme-preview-body"><span class="theme-preview-kicker">TWÓJ MOTYW</span><h5>Twój komputer,<br>Twój kolor.</h5><p>Tak wygląda wybrany styl. Przełączasz go w każdej chwili.</p><span class="theme-preview-action">Akcent Blessed <i></i></span></div></div><p class="theme-preview-caption">System Windows · aplikacja · wszystko po Twojemu</p></article></div><p class="personalization-safety"><span>✧</span> Zmiana wyglądu działa od razu i zawsze możesz wrócić do poprzedniego stylu.</p>
-  </template>
-
-  <template id="program-template-processes">
-    <div class="program-category-heading"><span class="program-mini-pill"><i>✦</i> PROCESY · DANE DEMO</span><h4>Zobacz, co korzysta z zasobów.</h4><p>Aplikacja pokazuje lokalne użycie procesora i pamięci w czasie rzeczywistym. Poniższe wartości są przykładowe.</p></div>
-    <article class="program-audit-card"><div class="program-audit-heading"><span class="program-audit-icon">▤</span><div><span class="program-card-kicker">LOKALNY PODGLĄD</span><strong>Aktywne procesy</strong></div><span class="program-status-pill status-warm">DANE DEMO</span></div><div class="program-audit-list"><div><i class="audit-light"></i><span><strong>explorer.exe · PID 1840</strong><small>Procesor 0,4% · pamięć 142 MB</small></span><span class="program-status-pill">AKTYWNY</span></div><div><i class="audit-gold"></i><span><strong>chrome.exe · PID 5208</strong><small>Procesor 1,2% · pamięć 684 MB</small></span><span class="program-status-pill">AKTYWNY</span></div><div><i class="audit-lilac"></i><span><strong>System · PID 4</strong><small>Procesor 0,1% · pamięć 96 MB</small></span><span class="program-status-pill">SYSTEM</span></div></div><div class="program-protection-note"><span>✦</span><span><strong>Podgląd nie zmienia pracy programów.</strong><small>Czysty podgląd zużycia zasobów — bez ingerencji w działające programy.</small></span></div></article>
-  </template>
-
-  <template id="program-template-startup">
-    <div class="program-category-heading"><span class="program-mini-pill"><i>✦</i> AUTOSTART · DANE DEMO</span><h4>To Ty wybierasz, co uruchamia się z Windowsem.</h4><p>Lista obejmuje wpisy autostartu Twojego konta. Wartości tutaj są przykładowe.</p></div>
-    <article class="program-audit-card"><div class="program-audit-heading"><span class="program-audit-icon">↻</span><div><span class="program-card-kicker">WPISY BIEŻĄCEGO UŻYTKOWNIKA</span><strong>Aplikacje przy starcie</strong></div><span class="program-status-pill status-warm">DANE DEMO</span></div><div class="program-audit-list"><div><i class="audit-light"></i><span><strong>OneDrive</strong><small>Autostart włączony · kopia przed zmianą</small></span><span class="program-status-pill">WŁĄCZONY</span></div><div><i class="audit-gold"></i><span><strong>Microsoft Teams</strong><small>Wpis bieżącego użytkownika</small></span><span class="program-status-pill">WŁĄCZONY</span></div><div><i class="audit-lilac"></i><span><strong>Spotify</strong><small>Możliwe przywrócenie wcześniejszego wpisu</small></span><span class="program-status-pill">WYŁĄCZONY</span></div></div><div class="program-protection-note"><span>✦</span><span><strong>Zmiana wymaga Twojej decyzji.</strong><small>Każdy wpis ma zapisaną kopię, więc przywrócisz go jednym kliknięciem.</small></span></div></article>
-  </template>
-
-  <template id="program-template-power">
-    <div class="program-category-heading"><span class="program-mini-pill"><i>✦</i> ZASILANIE · DANE DEMO</span><h4>Poznaj ustawienia aktywnego planu.</h4><p>Aplikacja odczytuje aktywny plan Windows i pozwala zmieniać opcje osobno dla zasilania z sieci i baterii.</p></div>
-    <article class="program-audit-card"><div class="program-audit-heading"><span class="program-audit-icon">ϟ</span><div><span class="program-card-kicker">AKTYWNY PLAN</span><strong>Zrównoważony</strong></div><span class="program-status-pill status-warm">PRZYKŁAD</span></div><div class="program-audit-list"><div><i class="audit-light"></i><span><strong>Maksymalny stan procesora</strong><small>Zasilanie z sieci · przykładowo 100%</small></span><span class="program-status-pill">AC</span></div><div><i class="audit-gold"></i><span><strong>Maksymalny stan procesora</strong><small>Bateria · przykładowo 95%</small></span><span class="program-status-pill">DC</span></div><div><i class="audit-lilac"></i><span><strong>Oryginalne wartości</strong><small>Można przywrócić po potwierdzeniu</small></span><span class="program-status-pill">KOPIA</span></div></div><div class="program-protection-note"><span>✦</span><span><strong>Zmiana ustawień wymaga potwierdzenia Windows.</strong><small>Oryginalne wartości zapisują się lokalnie — przywrócisz je w każdej chwili.</small></span></div></article>
-  </template>
 
 
   <div class="cursor-wings" id="cursor-wings" aria-hidden="true">

@@ -56,13 +56,19 @@ public sealed class BlessedWatchService
 {
     private static readonly TimeSpan TempFileAge = TimeSpan.FromDays(2);
     private static readonly TimeSpan TempScanInterval = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan AppxScanInterval = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan AppxScanTimeout = TimeSpan.FromSeconds(15);
 
     private TempScanResult? _cachedTempScan;
     private DateTimeOffset _cachedTempScanAt = DateTimeOffset.MinValue;
+    private IReadOnlyList<AppxPackage>? _cachedAppxPackages;
+    private DateTimeOffset _cachedAppxScanAt = DateTimeOffset.MinValue;
 
     public TempScanResult? LastTempScan => _cachedTempScan;
 
     public void InvalidateTempScan() => _cachedTempScan = null;
+
+    public void InvalidateAppxScan() => _cachedAppxPackages = null;
 
     public async Task<WatchReport> InspectAsync(DeviceSnapshot? snapshot, BlessedProfile profile, LiveUsage? usage, CancellationToken cancellationToken = default)
     {
@@ -88,6 +94,7 @@ public sealed class BlessedWatchService
         }, cancellationToken).ConfigureAwait(false);
 
         await InspectTempAsync(profile, findings, cancellationToken).ConfigureAwait(false);
+        await InspectAppxAsync(findings, cancellationToken).ConfigureAwait(false);
 
         findings = WithoutMuted(findings, profile);
 
@@ -117,6 +124,14 @@ public sealed class BlessedWatchService
             return findings.ToList();
         return findings.Where(finding => !profile.MutedFindingIds.Contains(finding.Id)).ToList();
     }
+
+    /// <summary>Findings Blessed can apply on its own during a one-click optimization run.</summary>
+    internal static IReadOnlyList<BlessedFinding> AutoApplicableFindings(WatchReport report) =>
+        report.Findings.Where(finding => finding.Action == FindingAction.BlessedHandlesIt).ToArray();
+
+    /// <summary>True when the power-plan finding should be fixed automatically (full CPU on AC for gaming/work).</summary>
+    internal static bool IsOneClickPowerFixApplicable(BlessedFinding finding, BlessedProfile profile) =>
+        finding.Id == "power-cpu-limit" && profile.Priority is BlessedPriority.Gaming or BlessedPriority.Work;
 
     private static void InspectDiskSpace(DeviceSnapshot? snapshot, List<BlessedFinding> findings)
     {
@@ -588,6 +603,39 @@ public sealed class BlessedWatchService
             "Opróżnij kosz za mnie",
             FindingAction.BlessedHandlesIt,
             "recycle-bin-empty"));
+    }
+
+    private async Task InspectAppxAsync(List<BlessedFinding> findings, CancellationToken cancellationToken)
+    {
+        if (_cachedAppxPackages is null || DateTimeOffset.Now - _cachedAppxScanAt > AppxScanInterval)
+        {
+            try
+            {
+                _cachedAppxPackages = await AppxInventoryService.ReadUserPackagesAsync(AppxScanTimeout, cancellationToken).ConfigureAwait(false);
+                _cachedAppxScanAt = DateTimeOffset.Now;
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception or IOException)
+            {
+                return;
+            }
+        }
+
+        var count = _cachedAppxPackages?.Count ?? 0;
+        if (count <= 25)
+            return;
+
+        findings.Add(new BlessedFinding(
+            "appx-crowd",
+            FindingSeverity.Info,
+            $"Masz {count} aplikacji z Microsoft Store",
+            "Część aplikacji mogła zostać po próbowaniu — zajmują miejsce i aktualizują się w tle. Przejrzyj listę i odinstaluj to, czego nie używasz; każdą aplikację wgrasz z powrotem przez Microsoft Store.",
+            "Przejrzyj aplikacje",
+            FindingAction.OpenPage,
+            "cleanup"));
     }
 
     private static (string Name, double MemoryMb)? FindTopMemoryProcess()
