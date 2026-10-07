@@ -21,16 +21,16 @@ public sealed record DeviceSnapshot(
     {
         var facts = new List<string>
         {
-            $"Czy Twój PC odpali 300 kalkulatorów bez zacięcia? Nie będę zgadywać — pokazuję prawdziwe parametry, bez uruchamiania benchmarku.",
-            $"Windows widzi {LogicalProcessorCount} logicznych wątków procesora. Sama ich liczba nie przewiduje FPS — liczą się też grafika, pamięć i temperatury.",
-            $"Wykryta pamięć RAM: {TotalMemoryGb:0.#} GB. Wolna pamięć to ważny sygnał, ale nie jedyna miara szybkości komputera."
+            $"Czy Twój PC odpali 300 kalkulatorów naraz? Oto jego prawdziwe parametry — prosto z systemu.",
+            $"Windows widzi {LogicalProcessorCount} logicznych wątków procesora — tyle zadań Twój CPU bierze na raz.",
+            $"Wykryta pamięć RAM: {TotalMemoryGb:0.#} GB. To Twój zapas na gry, karty przeglądarki i pracę naraz."
         };
 
         if (!string.Equals(GraphicsAdapters, "Nie udało się odczytać", StringComparison.OrdinalIgnoreCase))
-            facts.Add($"Wykryta grafika: {GraphicsAdapters}. Blessed niczego nie podkręca ani nie zmienia jej ustawień.");
+            facts.Add($"Wykryta grafika: {GraphicsAdapters}. To ona rysuje każdą klatkę Twojej rozgrywki.");
         if (SystemDriveFreeGb is { } freeGb)
-            facts.Add($"Na dysku systemowym jest około {freeGb:0.#} GB wolnego miejsca. Samo zwolnienie miejsca nie zawsze przyspiesza Windows.");
-        facts.Add("Ciekawostki opierają się na odczycie lokalnym. Instalator nie wysyła parametrów urządzenia do internetu.");
+            facts.Add($"Na dysku systemowym jest około {freeGb:0.#} GB wolnego miejsca — Windows lubi mieć zapas na aktualizacje.");
+        facts.Add("Wszystkie ciekawostki pochodzą z odczytu lokalnego — parametry zostają na Twoim komputerze.");
         return facts;
     }
 }

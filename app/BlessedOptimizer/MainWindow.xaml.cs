@@ -10,6 +10,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 using System.Windows.Threading;
 using BlessedOptimizer.Models;
@@ -25,9 +26,19 @@ public partial class MainWindow : Window
     private readonly PerformanceMonitor _performanceMonitor = new();
     private readonly ProcessOverviewService _processOverviewService = new();
     private readonly DispatcherTimer _processTimer;
+    private readonly DispatcherTimer _careTimer;
+    private readonly BlessedWatchService _watchService = new();
+    private readonly PerformanceMonitor _carePerformance = new();
     private readonly CancellationTokenSource _lifetime = new();
+    private BlessedProfile _profile = BlessedProfileStore.Load();
+    private WatchReport? _lastReport;
+    private bool _careBusy;
+    private DateTimeOffset _lastAutoCleanupAt = DateTimeOffset.MinValue;
+    private TextBlock? _careStatusText;
+    private StackPanel? _careFindingsHost;
+    private Button? _careScanButton;
     private DeviceSnapshot? _snapshot;
-    private string _currentPage = "gaming";
+    private string _currentPage = "care";
     private bool _monitoring;
     private bool _checkingUpdates;
     private TextBlock? _cpuValue;
@@ -46,6 +57,8 @@ public partial class MainWindow : Window
     private bool _powerOperationBusy;
     private HwndSource? _windowSource;
     private readonly TranslateTransform _cursorWingsPosition = new();
+    private readonly ScaleTransform _guideLogoScale = new(1, 1);
+    private readonly ScaleTransform _careBadgeScale = new(1, 1);
     private bool _mouseLeaveTrackingRequested;
     private bool _mouseLeaveTrackingIsNonClient;
 
@@ -97,6 +110,10 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         CursorWingsAnchor.RenderTransform = _cursorWingsPosition;
+        GuideLogo.RenderTransformOrigin = new Point(0.5, 0.5);
+        GuideLogo.RenderTransform = _guideLogoScale;
+        CareBadge.RenderTransformOrigin = new Point(0.5, 0.5);
+        CareBadge.RenderTransform = _careBadgeScale;
         _snapshot = initialSnapshot;
         _isPortable = isPortable;
         _skipUpdateCheck = skipUpdateCheck;
@@ -109,6 +126,8 @@ public partial class MainWindow : Window
         _watchTimer.Tick += WatchTimer_Tick;
         _processTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _processTimer.Tick += ProcessTimer_Tick;
+        _careTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(3) };
+        _careTimer.Tick += CareTimer_Tick;
         RenderCurrentPage();
     }
 
@@ -219,7 +238,7 @@ public partial class MainWindow : Window
             {
                 _snapshot = await SystemSnapshotService.CaptureAsync(_lifetime.Token);
                 HeaderSummary.Text = $"{_snapshot.OperatingSystem} · {_snapshot.TotalMemoryGb:0.#} GB RAM";
-                FooterStatusText.Text = "Skan lokalny zakończony · niczego nie zmieniono";
+                FooterStatusText.Text = "Przegląd komputera zakończony";
                 RenderCurrentPage();
             }
             catch (OperationCanceledException)
@@ -228,10 +247,14 @@ public partial class MainWindow : Window
             }
             catch (Exception ex)
             {
-                FooterStatusText.Text = "Nie udało się odczytać wszystkich parametrów. Możesz nadal korzystać z aplikacji.";
+                FooterStatusText.Text = "Część parametrów jest jeszcze odczytywana. Reszta panelu działa normalnie.";
                 UpdateStatusText.Text = ex.Message;
             }
         }
+
+        await RunWatchAsync(auto: true);
+        if (_profile.WatchInBackground)
+            _careTimer.Start();
 
         if (!_skipUpdateCheck)
             await CheckForUpdatesAsync(showUpToDateMessage: false);
@@ -242,13 +265,15 @@ public partial class MainWindow : Window
         if (sender is not Button button) return;
         var nextPage = button.Name switch
         {
+            nameof(CareNavButton) => "care",
             nameof(ProcessesNavButton) => "processes",
             nameof(StartupNavButton) => "startup",
             nameof(PowerNavButton) => "power",
             nameof(ConnectionsNavButton) => "connections",
             nameof(ProposalsNavButton) => "proposals",
             nameof(PersonalizationNavButton) => "personalization",
-            _ => "gaming"
+            nameof(GamingNavButton) => "gaming",
+            _ => "care"
         };
         if (nextPage != "gaming" && _monitoring)
             StopMonitoring();
@@ -261,6 +286,7 @@ public partial class MainWindow : Window
 
     private void UpdateNavigationState()
     {
+        CareNavButton.Tag = _currentPage == "care" ? "active" : null;
         GamingNavButton.Tag = _currentPage == "gaming" ? "active" : null;
         ProcessesNavButton.Tag = _currentPage == "processes" ? "active" : null;
         StartupNavButton.Tag = _currentPage == "startup" ? "active" : null;
@@ -276,15 +302,17 @@ public partial class MainWindow : Window
         PageHost.Children.Clear();
         var page = _currentPage switch
         {
+            "gaming" => BuildGamingPage(),
             "processes" => BuildProcessesPage(),
             "startup" => BuildStartupPage(),
             "power" => BuildPowerPage(),
             "connections" => BuildConnectionsPage(),
             "proposals" => BuildProposalsPage(),
             "personalization" => BuildPersonalizationPage(),
-            _ => BuildGamingPage()
+            _ => BuildCarePage()
         };
         PageHost.Children.Add(page);
+        AnimateIn(PageHost, 16);
         if (_currentPage == "processes")
         {
             _processTimer.Start();
@@ -300,13 +328,16 @@ public partial class MainWindow : Window
     {
         var page = _currentPage switch
         {
-            "connections" => (Title: "Połączenia", Crumb: "POŁĄCZENIA", Message: "Sprawdzę stan kart i pomogę wykonać test ping. Niczego nie przestawię bez Twojej decyzji."),
-            "proposals" => (Title: "Propozycje", Crumb: "PROPOZYCJE", Message: "Podpowiem bezpieczne rzeczy do sprawdzenia. To Ty wybierasz, czy otworzyć odpowiednie ustawienia Windows."),
-            "personalization" => (Title: "Personalizacja Windows", Crumb: "PERSONALIZACJA WINDOWS", Message: "Pokażę Ci ustawienia wyglądu. Motyw Blessed zmienia tylko aplikację, a ustawienia systemu otwierasz samodzielnie."),
-            "processes" => (Title: "Procesy", Crumb: "PROCESY", Message: "Pokażę lokalne zużycie CPU i pamięci. Nie zamykam procesów ani nie zmieniam ich priorytetów."),
-            "startup" => (Title: "Autostart", Crumb: "AUTOSTART", Message: "Pomogę przejrzeć wpisy autostartu bieżącego konta. Przed zmianą zachowuję kopię i pokazuję, jak ją cofnąć."),
-            "power" => (Title: "Zasilanie", Crumb: "ZASILANIE", Message: "Wyjaśnię dostępne opcje zasilania. Każda zmiana wymaga Twojego potwierdzenia i może być cofnięta."),
-            _ => (Title: "Strefa gracza", Crumb: "STREFA GRACZA", Message: "Włącz lokalne czuwanie, aby obserwować użycie procesora i pamięci podczas gry. Nie mierzę FPS ani nie zamykam aplikacji.")
+            "gaming" => (Title: "Strefa gracza", Crumb: "STREFA GRACZA", Message: "Włącz czuwanie, aby obserwować użycie procesora i pamięci podczas gry."),
+            "connections" => (Title: "Połączenia", Crumb: "POŁĄCZENIA", Message: "Sprawdzę stan kart sieciowych i wykonam test ping. Każdą zmianę zatwierdzasz Ty."),
+            "proposals" => (Title: "Propozycje", Crumb: "PROPOZYCJE", Message: "Podpowiem, co warto sprawdzić, i zaprowadzę Cię prosto do właściwych ustawień Windows."),
+            "personalization" => (Title: "Personalizacja Windows", Crumb: "PERSONALIZACJA WINDOWS", Message: "Dopasuj wygląd Blessed do siebie — motyw i akcent zmieniają się od razu."),
+            "processes" => (Title: "Procesy", Crumb: "PROCESY", Message: "Pokażę zużycie CPU i pamięci przez każdy proces — czytelnie i na żywo."),
+            "startup" => (Title: "Autostart", Crumb: "AUTOSTART", Message: "Przejrzyj wpisy autostartu swojego konta. Każda zmiana ma zapisaną kopię do przywrócenia."),
+            "power" => (Title: "Zasilanie", Crumb: "ZASILANIE", Message: "Dostrój plan zasilania. Każdą zmianę potwierdzasz Ty i zawsze możesz ją cofnąć."),
+            _ => (Title: "Blessed czuwa", Crumb: "BLESSED CZUWA", Message: _lastReport is null
+                ? "Robię przegląd Twojego komputera i zaraz powiem, czym się zająć."
+                : _lastReport.Headline)
         };
 
         WorkspaceKicker.Text = _isPortable ? "TRYB PRZENOŚNY · DANE LOKALNE" : "TWÓJ PANEL · DANE NA ŻYWO";
@@ -318,15 +349,15 @@ public partial class MainWindow : Window
 
     private UIElement BuildGamingPage()
     {
-        var page = NewPage("STREFA GRACZA · DANE LOKALNE", "Razem po spokojniejszą rozgrywkę.",
-            "Monitoruj lokalne użycie procesora i pamięci podczas gry. To nie jest pomiar FPS ani identyfikacja procesów gry; czuwanie włączasz i zatrzymujesz samodzielnie.");
+        var page = NewPage("STREFA GRACZA · DANE LOKALNE", "Razem po spokojniejszą rozgrywkę.", iconKey: "IconGame", description:
+            "Monitoruj użycie procesora i pamięci podczas gry. Czuwanie włączasz i zatrzymujesz jednym kliknięciem.");
 
         var monitor = NewPanel();
         monitor.Children.Add(Text("Tryb czuwania Blessed", 17, "TextPrimaryBrush", FontWeights.SemiBold));
         monitor.Children.Add(Text("Pomiar startuje dopiero po Twoim kliknięciu i odświeża się co 2 sekundy. Zatrzymaj go w dowolnym momencie.", 12, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 14)));
 
         var controls = new DockPanel { LastChildFill = false, Margin = new Thickness(0, 0, 0, 14) };
-        _monitoringStatus = Text("Czuwanie wyłączone · nic nie jest monitorowane", 11, "TextSecondaryBrush");
+        _monitoringStatus = Text("Czuwanie wyłączone", 11, "TextSecondaryBrush");
         _monitoringStatus.VerticalAlignment = VerticalAlignment.Center;
         controls.Children.Add(_monitoringStatus);
         _watchButton = new Button { Content = "Włącz czuwanie", Style = (Style)FindResource("PrimaryButton"), Margin = new Thickness(12, 0, 0, 0) };
@@ -339,32 +370,32 @@ public partial class MainWindow : Window
         meters.Children.Add(BuildUsageMeter("UŻYCIE CPU · CAŁY SYSTEM", out _cpuValue, out _cpuBar));
         meters.Children.Add(BuildUsageMeter("ZAJĘTA PAMIĘĆ RAM", out _memoryValue, out _memoryBar));
         monitor.Children.Add(meters);
-        monitor.Children.Add(Text("Przy dużym obciążeniu pokażę Ci odczyt — nie ubiję procesu ani nie obiecam braku przycięć. Procesy systemowe, zabezpieczenia, sterowniki i aktualizacje zostają nietknięte.", 11, "TextSecondaryBrush", margin: new Thickness(0, 13, 0, 0)));
+        monitor.Children.Add(Text("Przy dużym obciążeniu od razu zobaczysz, gdzie ucieka moc. Procesy systemowe, zabezpieczenia, sterowniki i aktualizacje zostają nietknięte.", 11, "TextSecondaryBrush", margin: new Thickness(0, 13, 0, 0)));
         page.Children.Add(WrapPanel(monitor));
 
         var hardware = NewPanel();
         hardware.Children.Add(Text("O TYM URZĄDZENIU", 10, "AccentBrush", FontWeights.Bold, new Thickness(0, 0, 0, 12)));
         var specs = new UniformGrid { Columns = 2, Rows = 2 };
-        specs.Children.Add(SpecCard("PROCESOR", _snapshot?.ProcessorName ?? "Odczyt w toku"));
-        specs.Children.Add(SpecCard("PAMIĘĆ", _snapshot is null ? "—" : $"{_snapshot.TotalMemoryGb:0.#} GB RAM · {_snapshot.AvailableMemoryGb:0.#} GB dostępne"));
-        specs.Children.Add(SpecCard("KARTA GRAFICZNA", _snapshot?.GraphicsAdapters ?? "Odczyt w toku"));
-        specs.Children.Add(SpecCard("WINDOWS", _snapshot is null ? "—" : $"{_snapshot.OperatingSystem} · kompilacja {_snapshot.OperatingSystemBuild}"));
+        specs.Children.Add(SpecCard("PROCESOR", _snapshot?.ProcessorName ?? "Odczyt w toku", "IconCpu"));
+        specs.Children.Add(SpecCard("PAMIĘĆ", _snapshot is null ? "—" : $"{_snapshot.TotalMemoryGb:0.#} GB RAM · {_snapshot.AvailableMemoryGb:0.#} GB dostępne", "IconMemory"));
+        specs.Children.Add(SpecCard("KARTA GRAFICZNA", _snapshot?.GraphicsAdapters ?? "Odczyt w toku", "IconDisplay"));
+        specs.Children.Add(SpecCard("WINDOWS", _snapshot is null ? "—" : $"{_snapshot.OperatingSystem} · kompilacja {_snapshot.OperatingSystemBuild}", "IconShield"));
         hardware.Children.Add(specs);
         if (_snapshot?.SystemDriveFreeGb is { } freeGb)
-            hardware.Children.Add(Text($"Dysk systemowy: około {freeGb:0.#} GB wolnego miejsca. To odczyt, nie test szybkości.", 11, "TextSecondaryBrush", margin: new Thickness(0, 13, 0, 0)));
+            hardware.Children.Add(Text($"Dysk systemowy: około {freeGb:0.#} GB wolnego miejsca.", 11, "TextSecondaryBrush", margin: new Thickness(0, 13, 0, 0)));
         page.Children.Add(WrapPanel(hardware));
 
         var note = NewPanel();
-        note.Children.Add(Text("Ważne", 13, "GoldBrush", FontWeights.SemiBold));
-        note.Children.Add(Text("Procesów nie zamykam, a usług, zabezpieczeń, sterowników i Windows Update nie wyłączam. Autostart bieżącego konta oraz wybrane ukryte opcje zasilania można zmieniać osobno — z opisem skutków, zgodą użytkownika i możliwością przywrócenia zapisanych wartości.", 11, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 0)));
+        note.Children.Add(PanelHeading("IconAlert", "Ważne"));
+        note.Children.Add(Text("Usługi, zabezpieczenia, sterowniki i Windows Update zostają nietknięte. Autostart Twojego konta i ukryte opcje zasilania zmieniasz świadomie — z opisem skutków i zapisaną kopią do przywrócenia.", 11, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 0)));
         page.Children.Add(WrapPanel(note));
         return page;
     }
 
     private UIElement BuildProcessesPage()
     {
-        var page = NewPage("PROCESY", "Zobacz, co naprawdę zajmuje zasoby.",
-            "Lokalny podgląd CPU, pamięci i czasu uruchomienia każdego procesu. Lista odświeża się co 2 sekundy tylko wtedy, gdy ta karta jest otwarta; nie zamyka ani nie zmienia priorytetu żadnego procesu.");
+        var page = NewPage("PROCESY", "Zobacz, co naprawdę zajmuje zasoby.", iconKey: "IconList", description:
+            "Podgląd CPU, pamięci i czasu uruchomienia każdego procesu. Lista odświeża się co 2 sekundy, gdy ta karta jest otwarta.");
         var panel = NewPanel();
         var toolbar = new DockPanel { LastChildFill = false, Margin = new Thickness(0, 0, 0, 12) };
         _processSearch = new TextBox
@@ -426,8 +457,8 @@ public partial class MainWindow : Window
         page.Children.Add(WrapPanel(panel));
 
         var safety = NewPanel();
-        safety.Children.Add(Text("Pełny obraz, bez ryzykownego „Ubij proces”", 13, "GoldBrush", FontWeights.SemiBold));
-        safety.Children.Add(Text("Dostęp do chronionych procesów Windows może być ograniczony przez system. Blessed nie kończy zadań, nie dotyka zabezpieczeń ani nie obiecuje wzrostu FPS na podstawie samego zużycia CPU.", 11, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 0)));
+        safety.Children.Add(PanelHeading("IconCpu", "Pełny obraz zasobów"));
+        safety.Children.Add(Text("Widzisz, co realnie zajmuje procesor i pamięć — bez ingerencji w działające programy i zabezpieczenia Windows.", 11, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 0)));
         page.Children.Add(WrapPanel(safety));
         return page;
     }
@@ -473,8 +504,8 @@ public partial class MainWindow : Window
 
     private UIElement BuildStartupPage()
     {
-        var page = NewPage("AUTOSTART", "Wybierz, co startuje razem z Windowsem.",
-            "Lista obejmuje wyłącznie wpisy Run i RunOnce bieżącego użytkownika. Wyłączenie zapisuje kopię i usuwa tylko rejestrację autostartu — nie zamyka programu ani nie usuwa pliku. Każdą pozycję można przywrócić.");
+        var page = NewPage("AUTOSTART", "Wybierz, co startuje razem z Windowsem.", iconKey: "IconRestart", description:
+            "Lista obejmuje wpisy Run i RunOnce Twojego konta. Wyłączenie zapisuje kopię i usuwa samą rejestrację autostartu — każdą pozycję przywrócisz jednym kliknięciem.");
         var panel = NewPanel();
         var heading = new DockPanel { LastChildFill = true, Margin = new Thickness(0, 0, 0, 12) };
         heading.Children.Add(Text("Pozycje bieżącego konta", 16, "TextPrimaryBrush", FontWeights.SemiBold));
@@ -519,7 +550,7 @@ public partial class MainWindow : Window
         }
 
         var note = NewPanel();
-        note.Children.Add(Text("Zakres zmian", 12, "GoldBrush", FontWeights.SemiBold));
+        note.Children.Add(PanelHeading("IconList", "Zakres zmian", fontSize: 12));
         note.Children.Add(Text("Blessed nie wyłącza autostartu maszynowego (HKLM), usług, zadań systemowych, sterowników, Windows Update ani zabezpieczeń. Zmiana dotyczy wyłącznie wpisu konkretnej aplikacji dla zalogowanego konta. Przed wyłączeniem sprawdź polecenie; nie wyłączaj ochrony antywirusowej, kopii zapasowych, synchronizacji, narzędzi dostępności ani sterowników, jeśli nie masz pewności co do skutków.", 10, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 0)));
         panel.Children.Add(WrapPanel(note));
         page.Children.Add(WrapPanel(panel));
@@ -541,7 +572,7 @@ public partial class MainWindow : Window
                 StartupManagerService.Disable(entry);
             else
                 StartupManagerService.Restore(entry);
-            FooterStatusText.Text = entry.IsEnabled ? "Autostart wyłączono · kopia do przywrócenia została zachowana" : "Autostart przywrócono · program nie został uruchomiony";
+            FooterStatusText.Text = entry.IsEnabled ? "Autostart wyłączono · kopia do przywrócenia została zachowana" : "Autostart przywrócono";
             RenderCurrentPage();
         }
         catch (Exception ex) when (ex is UnauthorizedAccessException or System.Security.SecurityException or IOException or InvalidOperationException or ArgumentException)
@@ -552,7 +583,7 @@ public partial class MainWindow : Window
 
     private UIElement BuildPowerPage()
     {
-        var page = NewPage("UKRYTE OPCJE ZASILANIA", "Ustawienia planu bez polowania po Panelu sterowania.",
+        var page = NewPage("UKRYTE OPCJE ZASILANIA", "Ustawienia planu bez polowania po Panelu sterowania.", iconKey: "IconBolt", description:
             "Odczytuję prawdziwe wartości aktywnego planu Windows. Zmiany dotyczą osobno zasilania z sieci i baterii, są poprzedzone wyjaśnieniem i zgodą oraz mają zapisaną kopię do cofnięcia.");
 
         PowerPlanSnapshot snapshot;
@@ -572,20 +603,20 @@ public partial class MainWindow : Window
         var summary = NewPanel();
         summary.Children.Add(Text($"Aktywny plan: {snapshot.SchemeName}", 15, "TextPrimaryBrush", FontWeights.SemiBold));
         summary.Children.Add(Text($"GUID planu: {snapshot.SchemeId:D}", 9, "TextSecondaryBrush", margin: new Thickness(0, 4, 0, 0)));
-        summary.Children.Add(Text("Zmiana otwiera osobny monit UAC dla zapisu systemowego. Blessed nie zmienia limitów temperatury, nie podkręca sprzętu i nie wyłącza zabezpieczeń.", 10, "GoldBrush", margin: new Thickness(0, 8, 0, 0)));
+        summary.Children.Add(Text("Zapis ustawień systemowych potwierdzasz w monicie UAC. Limity temperatury, taktowanie i zabezpieczenia pozostają nietknięte.", 10, "GoldBrush", margin: new Thickness(0, 8, 0, 0)));
         page.Children.Add(WrapPanel(summary));
 
         if (snapshot.Settings.Count == 0)
         {
             var empty = NewPanel();
-            empty.Children.Add(Text("Ten komputer nie udostępnił obsługiwanych ukrytych ustawień planu.", 11, "TextSecondaryBrush"));
+            empty.Children.Add(Text("Ten plan zasilania nie udostępnia dodatkowych opcji do dostrojenia.", 11, "TextSecondaryBrush"));
             page.Children.Add(WrapPanel(empty));
         }
         foreach (var state in snapshot.Settings)
             page.Children.Add(BuildPowerSettingCard(snapshot, state));
 
         var note = NewPanel();
-        note.Children.Add(Text("Cofnięcie zmian", 12, "GoldBrush", FontWeights.SemiBold));
+        note.Children.Add(PanelHeading("IconRestart", "Cofnięcie zmian", fontSize: 12));
         note.Children.Add(Text("Pierwsza zmiana danej opcji zapisuje oryginalne wartości AC i baterii w profilu użytkownika. Przycisk „Przywróć oryginał” odtwarza te wartości; samo przełączanie profilu nie kasuje kopii.", 10, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 0)));
         page.Children.Add(WrapPanel(note));
         return page;
@@ -770,8 +801,8 @@ public partial class MainWindow : Window
 
     private UIElement BuildConnectionsPage()
     {
-        var page = NewPage("POŁĄCZENIA · DANE LOKALNE", "Sprawdzę, co jest nie tak.",
-            "Lista kart pochodzi z Windows i jest odczytywana lokalnie. Pokazuję Wi-Fi/Ethernet oraz Bluetooth PAN, jeśli Windows wystawia go jako adapter sieciowy. Nie skanuję ani nie paruję urządzeń Bluetooth. Test ping wysyła jedno zapytanie do 1.1.1.1 tylko po kliknięciu.");
+        var page = NewPage("POŁĄCZENIA · DANE LOKALNE", "Sprawdzę, co jest nie tak.", iconKey: "IconSignal", description:
+            "Lista kart pochodzi bezpośrednio z Windows: Wi-Fi, Ethernet oraz Bluetooth PAN, jeśli system wystawia go jako adapter sieciowy. Test ping wysyła jedno zapytanie do 1.1.1.1 po kliknięciu.");
 
         var adaptersCard = NewPanel();
         var heading = new DockPanel { LastChildFill = true, Margin = new Thickness(0, 0, 0, 12) };
@@ -822,7 +853,7 @@ public partial class MainWindow : Window
 
         var testCard = NewPanel();
         testCard.Children.Add(Text("Jednorazowy test łączności", 16, "TextPrimaryBrush", FontWeights.SemiBold));
-        testCard.Children.Add(Text("Test mierzy tylko odpowiedź ICMP serwera 1.1.1.1. Nie resetuje Wi-Fi, DNS ani ustawień TCP. Sieć może blokować ping.", 11, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 12)));
+        testCard.Children.Add(Text("Test mierzy czas odpowiedzi serwera 1.1.1.1 (ICMP). Ustawienia Wi-Fi, DNS i TCP pozostają bez zmian.", 11, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 12)));
         var testControls = new DockPanel { LastChildFill = false };
         _pingResult = Text("Test nie został uruchomiony.", 11, "TextSecondaryBrush");
         _pingResult.VerticalAlignment = VerticalAlignment.Center;
@@ -835,32 +866,32 @@ public partial class MainWindow : Window
         page.Children.Add(WrapPanel(testCard));
 
         var safety = NewPanel();
-        safety.Children.Add(Text("Naprawa sieci wymaga Twojej zgody", 13, "GoldBrush", FontWeights.SemiBold));
-        safety.Children.Add(Text("Reset adaptera, zmiana DNS lub ustawień TCP może przerwać połączenie. Blessed w tej wersji jedynie diagnozuje i objaśnia — nie stosuje zmian w systemie.", 11, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 0)));
+        safety.Children.Add(PanelHeading("IconSignal", "Naprawa sieci wymaga Twojej zgody"));
+        safety.Children.Add(Text("Blessed diagnozuje połączenie i tłumaczy wynik prostym językiem. Ustawienia sieci pozostają w Twoich rękach.", 11, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 0)));
         page.Children.Add(WrapPanel(safety));
         return page;
     }
 
     private UIElement BuildProposalsPage()
     {
-        var page = NewPage("PROPOZYCJE BLESSED", "Małe rzeczy warte sprawdzenia.",
-            "Blessed nie wyłącza procesów ani nie zmienia ukrytych ustawień w tle. Poniższe przyciski otwierają odpowiednią stronę Ustawień Windows; o każdej zmianie decydujesz tam sam.");
+        var page = NewPage("PROPOZYCJE BLESSED", "Małe rzeczy warte sprawdzenia.", iconKey: "IconSpark", description:
+            "Poniższe przyciski prowadzą prosto do właściwej strony Ustawień Windows. Nic nie dzieje się w tle — decyzja należy do Ciebie.");
 
         if (_snapshot is { TotalMemoryGb: > 0 and < 8 })
             page.Children.Add(ProposalCard("Mało pamięci RAM wykrytej", $"Windows widzi około {_snapshot.TotalMemoryGb:0.#} GB RAM. Zamykaj tylko aplikacje, które sam rozpoznajesz i których teraz nie potrzebujesz. Nie zamykaj procesów systemu ani zabezpieczeń.", "Otwórz wskazówki Windows", null));
         if (_snapshot?.SystemDriveFreeGb is { } freeGb && freeGb < 20)
-            page.Children.Add(ProposalCard("Niewiele wolnego miejsca na dysku systemowym", $"Pozostało około {freeGb:0.#} GB. Zanim usuniesz pliki, sprawdź je i zachowaj kopię. Blessed niczego nie usuwa.", "Otwórz Czujnik pamięci", "ms-settings:storagesense"));
+            page.Children.Add(ProposalCard("Niewiele wolnego miejsca na dysku systemowym", $"Pozostało około {freeGb:0.#} GB. Przejrzyj duże pliki w Ustawieniach Windows i zwolnij miejsce po swojemu.", "Otwórz Czujnik pamięci", "ms-settings:storagesense"));
 
-        page.Children.Add(ProposalCard("Przejrzyj aplikacje uruchamiane z Windowsem", "Możesz sam wyłączyć autostart aplikacji, które rozpoznajesz i nie są Ci potrzebne od razu. Efekt zależy od tego, co faktycznie uruchamia Twój komputer.", "Otwórz Autostart", "ms-settings:startupapps"));
+        page.Children.Add(ProposalCard("Przejrzyj aplikacje uruchamiane z Windowsem", "Wyłącz autostart aplikacji, których nie potrzebujesz od razu po zalogowaniu. Mniej programów na starcie to szybsze wejście do systemu.", "Otwórz Autostart", "ms-settings:startupapps"));
         page.Children.Add(ProposalCard("Sprawdź Tryb gry Windows", "Tryb gry jest ustawieniem systemowym. Przeczytaj opis w Windows i zdecyduj, czy pasuje do Twoich gier.", "Otwórz Tryb gry", "ms-settings:gaming-gamemode"));
-        page.Children.Add(ProposalCard("Zadbaj o aktualne kopie ważnych plików", "Przed większymi zmianami systemowymi przygotuj kopię plików, których nie chcesz stracić. Blessed nie tworzy kopii ani nie zmienia ustawień odzyskiwania.", "Otwórz Kopię zapasową", "ms-settings:backup"));
+        page.Children.Add(ProposalCard("Zadbaj o aktualne kopie ważnych plików", "Przed większymi zmianami systemowymi warto mieć kopię ważnych plików. Blessed pokaże, gdzie ją skonfigurować.", "Otwórz Kopię zapasową", "ms-settings:backup"));
         return page;
     }
 
     private UIElement BuildPersonalizationPage()
     {
-        var page = NewPage("PERSONALIZACJA WINDOWS", "Niech komputer będzie bardziej Twój.",
-            "Wybór motywu i akcentu zmienia tylko wygląd Blessed Optimizer. Ustawień systemowych Windows ta strona nie zapisuje.");
+        var page = NewPage("PERSONALIZACJA WINDOWS", "Niech komputer będzie bardziej Twój.", iconKey: "IconPalette", description:
+            "Motyw i akcent zmieniają wygląd Blessed Optimizer od razu. Ustawienia systemowe Windows otwierasz osobno.");
 
         var appThemeCard = NewPanel();
         appThemeCard.Children.Add(Text("Wygląd samego programu", 16, "TextPrimaryBrush", FontWeights.SemiBold));
@@ -869,7 +900,7 @@ public partial class MainWindow : Window
         modes.Children.Add(ChoiceButton("Ciemny", () => ApplyTheme("dark", null)));
         modes.Children.Add(ChoiceButton("Jasny", () => ApplyTheme("light", null)));
         appThemeCard.Children.Add(modes);
-        appThemeCard.Children.Add(Text("Kolor akcentu", 12, "TextPrimaryBrush", FontWeights.SemiBold, new Thickness(0, 16, 0, 8)));
+        appThemeCard.Children.Add(PanelHeading("IconPalette", "Kolor akcentu", "TextPrimaryBrush", 12, new Thickness(0, 16, 0, 8)));
         var colors = new WrapPanel();
         colors.Children.Add(ChoiceButton("Błękit", () => ApplyTheme(null, "sky")));
         colors.Children.Add(ChoiceButton("Złoto", () => ApplyTheme(null, "gold")));
@@ -898,21 +929,564 @@ public partial class MainWindow : Window
         page.Children.Add(personalizationLayout);
 
         var privacy = NewPanel();
-        privacy.Children.Add(Text("Twoje wybory nie opuszczają aplikacji", 13, "GoldBrush", FontWeights.SemiBold));
-        privacy.Children.Add(Text("Diagnostyka działa lokalnie. Motyw i akcent nie są wysyłane na serwer i nie zapisują zmian w Windows.", 11, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 0)));
+        privacy.Children.Add(PanelHeading("IconShield", "Twoje wybory nie opuszczają aplikacji"));
+        privacy.Children.Add(Text("Cała diagnostyka działa lokalnie. Żadne odczyty ani ustawienia wyglądu nie opuszczają Twojego komputera.", 11, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 0)));
         page.Children.Add(WrapPanel(privacy));
         return page;
     }
 
-    private static StackPanel NewPage(string kicker, string title, string description)
+    // ----- Blessed czuwa: proaktywny przegląd, automatyzacje i priorytety użytkownika -----
+
+    private UIElement BuildCarePage()
+    {
+        var page = NewPage("BLESSED CZUWA", "Zajmę się tym za Ciebie.", iconKey: "IconShield", description:
+            $"Sam sprawdzam dysk, pamięć, autostart, ekran, baterię i plan zasilania — co kilka minut, w tle. {_profile.PriorityPromise}");
+
+        if (!_profile.OnboardingCompleted)
+            page.Children.Add(WrapPanel(BuildOnboardingCard()));
+
+        var status = NewPanel();
+        var statusBar = new DockPanel { LastChildFill = false, Margin = new Thickness(0, 0, 0, 13) };
+        var statusCopy = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+        statusCopy.Children.Add(Text("STAN OPIEKI", 9, "AccentBrush", FontWeights.Bold));
+        _careStatusText = Text(DescribeWatchStatus(), 15, "TextPrimaryBrush", FontWeights.SemiBold, new Thickness(0, 6, 0, 0));
+        statusCopy.Children.Add(_careStatusText);
+        statusBar.Children.Add(statusCopy);
+        _careScanButton = new Button
+        {
+            Content = ButtonContent("IconSearch", "Sprawdź teraz", "AccentTextBrush"),
+            Style = (Style)FindResource("PrimaryButton"),
+            Margin = new Thickness(12, 0, 0, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+            IsEnabled = !_careBusy
+        };
+        _careScanButton.Click += async (_, _) => await RunWatchAsync(auto: false);
+        DockPanel.SetDock(_careScanButton, Dock.Right);
+        statusBar.Children.Add(_careScanButton);
+        status.Children.Add(statusBar);
+        status.Children.Add(BuildCareSummaryRow());
+        page.Children.Add(WrapPanel(status));
+
+        var findings = NewPanel();
+        findings.Children.Add(Text("CO ZNALAZŁEM", 9, "AccentBrush", FontWeights.Bold, new Thickness(0, 0, 0, 11)));
+        _careFindingsHost = new StackPanel();
+        findings.Children.Add(_careFindingsHost);
+        page.Children.Add(WrapPanel(findings));
+        RenderFindings();
+
+        page.Children.Add(WrapPanel(BuildPriorityCard()));
+        return page;
+    }
+
+    private UIElement BuildCareSummaryRow()
+    {
+        var grid = new UniformGrid { Columns = 3, Rows = 1 };
+        grid.Children.Add(SpecCard("OSTATNI PRZEGLĄD", _lastReport is null
+            ? "za chwilę"
+            : _lastReport.CompletedAt.ToString("HH:mm", CultureInfo.CurrentCulture), "IconClock"));
+        grid.Children.Add(SpecCard("ZWOLNIŁEM DLA CIEBIE", _profile.TotalFreedMb >= 1 ? $"{_profile.TotalFreedMb:0} MB" : "jeszcze nic", "IconBroom"));
+        grid.Children.Add(SpecCard("CZUWANIE", _profile.WatchInBackground ? "W tle, co 3 minuty" : "Tylko na żądanie", "IconShield"));
+        return grid;
+    }
+
+    private StackPanel BuildOnboardingCard()
+    {
+        var card = NewPanel();
+        card.Children.Add(Text("ZANIM ZACZNIEMY", 9, "GoldBrush", FontWeights.Bold));
+        card.Children.Add(Text("Powiedz mi, co jest dla Ciebie najważniejsze.", 17, "TextPrimaryBrush", FontWeights.SemiBold, new Thickness(0, 6, 0, 0)));
+        card.Children.Add(Text("Pod to dobiorę przegląd, kolejność spraw i to, czym zajmę się sam.", 11, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 13), lineHeight: 18));
+        card.Children.Add(BuildPriorityChoices(completeOnboarding: true));
+        return card;
+    }
+
+    private StackPanel BuildPriorityCard()
+    {
+        var card = NewPanel();
+        card.Children.Add(Text("CO JEST DLA CIEBIE WAŻNE", 9, "AccentBrush", FontWeights.Bold));
+        card.Children.Add(Text($"Twój priorytet: {_profile.PriorityLabel}", 15, "TextPrimaryBrush", FontWeights.SemiBold, new Thickness(0, 6, 0, 0)));
+        card.Children.Add(Text(_profile.PriorityPromise, 11, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 12), lineHeight: 18));
+        card.Children.Add(BuildPriorityChoices(completeOnboarding: false));
+
+        card.Children.Add(PanelHeading("IconCheck", "Czym mogę zająć się sam?", "TextPrimaryBrush", 13, new Thickness(0, 17, 0, 9)));
+        card.Children.Add(AutomationSwitch("Czuwam w tle i sprawdzam komputer co kilka minut", _profile.WatchInBackground, value =>
+        {
+            _profile.WatchInBackground = value;
+            if (value) _careTimer.Start(); else _careTimer.Stop();
+        }));
+        card.Children.Add(AutomationSwitch("Sprzątam pliki tymczasowe bez pytania", _profile.AllowTempCleanup, value => _profile.AllowTempCleanup = value));
+        card.Children.Add(AutomationSwitch("Pilnuję autostartu i sam zgłaszam zbędne wpisy", _profile.AllowStartupTuning, value => _profile.AllowStartupTuning = value));
+        card.Children.Add(AutomationSwitch("Pilnuję planu zasilania pod mój priorytet", _profile.AllowPowerTuning, value => _profile.AllowPowerTuning = value));
+        card.Children.Add(Text("Zmiany wymagające zgody Windows (UAC) zawsze pokażę przed wykonaniem, a oryginalne wartości zapiszę do przywrócenia.", 10, "TextSecondaryBrush", margin: new Thickness(0, 11, 0, 0), lineHeight: 16));
+        return card;
+    }
+
+    private WrapPanel BuildPriorityChoices(bool completeOnboarding)
+    {
+        var choices = new WrapPanel();
+        var options = new (BlessedPriority Priority, string Label)[]
+        {
+            (BlessedPriority.Gaming, "Granie i płynność"),
+            (BlessedPriority.Work, "Praca i szybki start"),
+            (BlessedPriority.Battery, "Długa bateria"),
+            (BlessedPriority.Quiet, "Cisza i chłód")
+        };
+        foreach (var option in options)
+        {
+            var selected = option;
+            var label = _profile.Priority == selected.Priority ? $"✓ {selected.Label}" : selected.Label;
+            choices.Children.Add(ChoiceButton(label, () => SelectPriority(selected.Priority, completeOnboarding)));
+        }
+        return choices;
+    }
+
+    private CheckBox AutomationSwitch(string label, bool value, Action<bool> onChanged)
+    {
+        var box = new CheckBox
+        {
+            Content = label,
+            IsChecked = value,
+            FontSize = 11,
+            Margin = new Thickness(0, 0, 0, 8)
+        };
+        box.SetResourceReference(Control.ForegroundProperty, "TextPrimaryBrush");
+        box.Checked += (_, _) => { onChanged(true); BlessedProfileStore.Save(_profile); };
+        box.Unchecked += (_, _) => { onChanged(false); BlessedProfileStore.Save(_profile); };
+        return box;
+    }
+
+    private void SelectPriority(BlessedPriority priority, bool completeOnboarding)
+    {
+        _profile.Priority = priority;
+        if (completeOnboarding)
+            _profile.OnboardingCompleted = true;
+        BlessedProfileStore.Save(_profile);
+        RenderCurrentPage();
+        _ = RunWatchAsync(auto: false);
+    }
+
+    private void RenderFindings()
+    {
+        if (_careFindingsHost is null) return;
+        _careFindingsHost.Children.Clear();
+        if (_lastReport is null)
+        {
+            _careFindingsHost.Children.Add(Text("Robię pierwszy przegląd Twojego komputera…", 11, "TextSecondaryBrush"));
+            return;
+        }
+        var index = 0;
+        foreach (var finding in _lastReport.Findings)
+        {
+            var card = BuildFindingCard(finding);
+            _careFindingsHost.Children.Add(card);
+            AnimateIn(card, 12, index * 55, 260);
+            index++;
+        }
+    }
+
+    private Border BuildFindingCard(BlessedFinding finding)
+    {
+        var accent = finding.Severity switch
+        {
+            FindingSeverity.Critical => ("#E2685C", "ZAJMIJMY SIĘ TYM"),
+            FindingSeverity.Warning => ("#E5BC67", "WARTO ZROBIĆ"),
+            FindingSeverity.Info => ("#69B9F5", "DROBIAZG"),
+            _ => ("#78D7B5", "W PORZĄDKU")
+        };
+
+        var layout = new Grid();
+        layout.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        layout.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        layout.Children.Add(SeverityBadge(FindingIconKey(finding), accent.Item1));
+
+        var copy = new StackPanel();
+        var labelRow = new StackPanel { Orientation = Orientation.Horizontal };
+        labelRow.Children.Add(new Border
+        {
+            Width = 6,
+            Height = 6,
+            CornerRadius = new CornerRadius(3),
+            Background = BrushFrom(accent.Item1),
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 7, 0)
+        });
+        labelRow.Children.Add(Text(accent.Item2, 8, "TextSecondaryBrush", FontWeights.Bold));
+        copy.Children.Add(labelRow);
+        copy.Children.Add(Text(finding.Title, 14, "TextPrimaryBrush", FontWeights.SemiBold, new Thickness(0, 5, 0, 0)));
+        copy.Children.Add(Text(finding.Message, 11, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 0), lineHeight: 18));
+        if (finding.Action != FindingAction.None && finding.ActionLabel is { } actionLabel)
+        {
+            var isAutomatic = finding.Action == FindingAction.BlessedHandlesIt;
+            var button = new Button
+            {
+                Content = ButtonContent(
+                    isAutomatic ? "IconBroom" : finding.Action == FindingAction.OpenPage ? "IconList" : "IconSpark",
+                    actionLabel,
+                    isAutomatic ? "AccentTextBrush" : "TextPrimaryBrush"),
+                Style = (Style)FindResource(isAutomatic ? "PrimaryButton" : "SecondaryButton"),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = new Thickness(0, 12, 0, 0),
+                Padding = new Thickness(13, 8, 13, 8)
+            };
+            button.Click += async (_, _) => await HandleFindingAsync(finding);
+            copy.Children.Add(button);
+        }
+        Grid.SetColumn(copy, 1);
+        layout.Children.Add(copy);
+
+        var card = new Border
+        {
+            Child = layout,
+            Padding = new Thickness(14),
+            Margin = new Thickness(0, 0, 0, 9),
+            CornerRadius = new CornerRadius(13),
+            BorderThickness = new Thickness(1)
+        };
+        card.SetResourceReference(Border.BackgroundProperty, "SurfaceRaisedBrush");
+        card.SetResourceReference(Border.BorderBrushProperty, "BorderBrush");
+        AddHoverLift(card);
+        return card;
+    }
+
+    private static string FindingIconKey(BlessedFinding finding) => finding.Id switch
+    {
+        "disk-space" => "IconDisk",
+        "temp-files" => "IconBroom",
+        "memory-pressure" => "IconMemory",
+        "cpu-pressure" => "IconCpu",
+        "uptime" => "IconClock",
+        "startup-crowd" => "IconRestart",
+        "display-hz" => "IconDisplay",
+        "power-cpu-limit" or "power-battery" => "IconBolt",
+        "battery-low" or "battery-full" => "IconBattery",
+        "drive-health" => "IconHeart",
+        "all-clear" => "IconCheck",
+        _ => "IconSpark"
+    };
+
+    private async Task HandleFindingAsync(BlessedFinding finding)
+    {
+        switch (finding.Action)
+        {
+            case FindingAction.OpenSettings when finding.ActionTarget is { } uri:
+                OpenWindowsSettings(uri);
+                break;
+            case FindingAction.OpenPage when finding.ActionTarget is { } target:
+                NavigateTo(target);
+                break;
+            case FindingAction.BlessedHandlesIt when finding.ActionTarget == "temp-cleanup":
+                await RunTempCleanupAsync(auto: false);
+                await RunWatchAsync(auto: false);
+                break;
+        }
+    }
+
+    private void NavigateTo(string page)
+    {
+        if (page != "gaming" && _monitoring)
+            StopMonitoring();
+        if (page != "processes")
+            _processTimer.Stop();
+        _currentPage = page;
+        UpdateNavigationState();
+        RenderCurrentPage();
+    }
+
+    private void CareTimer_Tick(object? sender, EventArgs e) => _ = RunWatchAsync(auto: true);
+
+    private async Task RunWatchAsync(bool auto)
+    {
+        if (_careBusy) return;
+        _careBusy = true;
+        if (_careScanButton is not null) _careScanButton.IsEnabled = false;
+        SetScanningIndicator(true);
+        SetCareStatus("Sprawdzam Twój komputer…");
+        try
+        {
+            _carePerformance.Read();
+            await Task.Delay(TimeSpan.FromMilliseconds(700), _lifetime.Token);
+            var usage = _carePerformance.Read();
+            _lastReport = await _watchService.InspectAsync(_snapshot, _profile, usage, _lifetime.Token);
+
+            if (_profile.AllowTempCleanup && ShouldAutoClean())
+            {
+                await RunTempCleanupAsync(auto: true);
+                _lastReport = await _watchService.InspectAsync(_snapshot, _profile, usage, _lifetime.Token);
+            }
+
+            RenderFindings();
+            UpdateCareBadge();
+            SetCareStatus(DescribeWatchStatus());
+            if (_currentPage == "care")
+                BlessedMessage.Text = _lastReport.Headline;
+            else if (_lastReport.ProblemCount > 0)
+                BlessedMessage.Text = $"{_lastReport.Headline} Zajrzyj do zakładki „Blessed czuwa” — mam gotowe rozwiązania.";
+        }
+        catch (OperationCanceledException)
+        {
+            // The window is closing.
+        }
+        catch (Exception ex)
+        {
+            SetCareStatus($"Przegląd przerwany: {ex.Message}");
+        }
+        finally
+        {
+            _careBusy = false;
+            SetScanningIndicator(false);
+            if (_careScanButton is not null) _careScanButton.IsEnabled = true;
+        }
+    }
+
+    private bool ShouldAutoClean()
+    {
+        if (_watchService.LastTempScan is not { } scan || scan.SizeMb < 1000)
+            return false;
+        if (DateTimeOffset.Now - _lastAutoCleanupAt < TimeSpan.FromHours(6))
+            return false;
+        if (_profile.LastCleanupAt is { } last && DateTimeOffset.Now - last < TimeSpan.FromHours(12))
+            return false;
+        _lastAutoCleanupAt = DateTimeOffset.Now;
+        return true;
+    }
+
+    private async Task RunTempCleanupAsync(bool auto)
+    {
+        SetCareStatus("Sprzątam pliki tymczasowe…");
+        try
+        {
+            var result = await MaintenanceService.CleanTempAsync(TimeSpan.FromDays(2), _lifetime.Token);
+            _watchService.InvalidateTempScan();
+            _profile.LastCleanupAt = DateTimeOffset.Now;
+            _profile.TotalFreedMb += result.FreedMb;
+            _profile.HandledCount++;
+            BlessedProfileStore.Save(_profile);
+            FooterStatusText.Text = $"Blessed zwolnił {result.FreedMb:0} MB · {result.DeletedFiles} plików";
+            if (!auto)
+            {
+                MessageBox.Show(this,
+                    $"Gotowe. Zwolniłem {result.FreedMb:0} MB w {result.DeletedFiles} plikach.\n\nPliki używane w tej chwili przez programy zostawiłem nietknięte: {result.SkippedFiles}.",
+                    "Blessed posprzątał", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // The window is closing.
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+        {
+            SetCareStatus("Część plików była zajęta — dokończę sprzątanie przy następnym przeglądzie.");
+        }
+    }
+
+    private void SetCareStatus(string message)
+    {
+        if (_careStatusText is not null)
+            _careStatusText.Text = message;
+    }
+
+    private string DescribeWatchStatus()
+    {
+        if (_lastReport is null)
+            return "Przygotowuję pierwszy przegląd…";
+        return $"{_lastReport.Headline} · przegląd o {_lastReport.CompletedAt.ToString("HH:mm", CultureInfo.CurrentCulture)}";
+    }
+
+    private void UpdateCareBadge()
+    {
+        var count = _lastReport?.ProblemCount ?? 0;
+        var hadBadge = CareBadge.Visibility == Visibility.Visible;
+        CareBadge.Visibility = count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        CareBadgeText.Text = count.ToString(CultureInfo.InvariantCulture);
+        if (count > 0 && !hadBadge)
+            PopCareBadge();
+        WorkspaceStatusText.Text = count == 0 ? "Blessed czuwa · czysto" : $"Blessed znalazł {count}";
+    }
+
+    private static StackPanel NewPage(string kicker, string title, string description, string? iconKey = null)
     {
         var page = new StackPanel();
-        var heading = new StackPanel { Margin = new Thickness(0, 2, 0, 14) };
+        var heading = new StackPanel();
         heading.Children.Add(Text(kicker, 9, "AccentBrush", FontWeights.Bold));
         heading.Children.Add(Text(title, 19, "TextPrimaryBrush", FontWeights.SemiBold, new Thickness(0, 6, 0, 0)));
         heading.Children.Add(Text(description, 11, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 0), lineHeight: 18));
-        page.Children.Add(heading);
+
+        if (iconKey is null)
+        {
+            heading.Margin = new Thickness(0, 2, 0, 14);
+            page.Children.Add(heading);
+            return page;
+        }
+
+        var row = new DockPanel { Margin = new Thickness(0, 2, 0, 14) };
+        var badge = IconBadge(iconKey, "GoldBrush", 44);
+        badge.Margin = new Thickness(0, 2, 14, 0);
+        DockPanel.SetDock(badge, Dock.Left);
+        row.Children.Add(badge);
+        row.Children.Add(heading);
+        page.Children.Add(row);
         return page;
+    }
+
+    // ----- Ikony i animacje -----
+
+    private static System.Windows.Shapes.Path IconPath(string geometryKey, double size = 16, string brushKey = "AccentBrush", Thickness? margin = null)
+    {
+        var icon = new System.Windows.Shapes.Path
+        {
+            Data = (Geometry)Application.Current.FindResource(geometryKey),
+            Style = (Style)Application.Current.FindResource("BlessedIcon"),
+            Width = size,
+            Height = size,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = margin ?? new Thickness(0)
+        };
+        icon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, brushKey);
+        return icon;
+    }
+
+    private static Border IconBadge(string geometryKey, string brushKey, double size = 34)
+    {
+        var badge = new Border
+        {
+            Width = size,
+            Height = size,
+            CornerRadius = new CornerRadius(size / 3),
+            BorderThickness = new Thickness(1),
+            VerticalAlignment = VerticalAlignment.Top,
+            Child = IconPath(geometryKey, Math.Round(size * 0.52), brushKey)
+        };
+        badge.SetResourceReference(Border.BackgroundProperty, "SurfaceRaisedBrush");
+        badge.SetResourceReference(Border.BorderBrushProperty, "BorderBrush");
+        return badge;
+    }
+
+    private static Border SeverityBadge(string geometryKey, string hex, double size = 36)
+    {
+        var color = ColorFrom(hex);
+        var icon = IconPath(geometryKey, Math.Round(size * 0.52));
+        icon.Stroke = new SolidColorBrush(color);
+        return new Border
+        {
+            Width = size,
+            Height = size,
+            CornerRadius = new CornerRadius(size / 3),
+            Background = new SolidColorBrush(Color.FromArgb(42, color.R, color.G, color.B)),
+            BorderBrush = new SolidColorBrush(Color.FromArgb(96, color.R, color.G, color.B)),
+            BorderThickness = new Thickness(1),
+            VerticalAlignment = VerticalAlignment.Top,
+            Margin = new Thickness(0, 1, 13, 0),
+            Child = icon
+        };
+    }
+
+    private static DockPanel PanelHeading(string iconKey, string title, string brushKey = "GoldBrush", double fontSize = 13, Thickness? margin = null)
+    {
+        var row = new DockPanel { Margin = margin ?? new Thickness(0) };
+        var icon = IconPath(iconKey, fontSize + 3, brushKey, new Thickness(0, 0, 9, 0));
+        DockPanel.SetDock(icon, Dock.Left);
+        row.Children.Add(icon);
+        row.Children.Add(Text(title, fontSize, brushKey, FontWeights.SemiBold));
+        return row;
+    }
+
+    private static StackPanel ButtonContent(string geometryKey, string label, string brushKey)
+    {
+        var content = new StackPanel { Orientation = Orientation.Horizontal };
+        content.Children.Add(IconPath(geometryKey, 14, brushKey, new Thickness(0, 0, 8, 0)));
+        content.Children.Add(new TextBlock { Text = label, VerticalAlignment = VerticalAlignment.Center });
+        return content;
+    }
+
+    private static void AnimateIn(FrameworkElement element, double offset = 14, int delayMs = 0, int durationMs = 290)
+    {
+        var slide = new TranslateTransform(0, offset);
+        if (element.RenderTransform is Transform existing && existing != Transform.Identity)
+        {
+            var group = new TransformGroup();
+            group.Children.Add(existing);
+            group.Children.Add(slide);
+            element.RenderTransform = group;
+        }
+        else
+        {
+            element.RenderTransform = slide;
+        }
+
+        element.Opacity = 0;
+        var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+        var begin = TimeSpan.FromMilliseconds(delayMs);
+        element.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(durationMs))
+        {
+            BeginTime = begin,
+            EasingFunction = ease
+        });
+        slide.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(offset, 0, TimeSpan.FromMilliseconds(durationMs + 70))
+        {
+            BeginTime = begin,
+            EasingFunction = ease
+        });
+    }
+
+    private static void AnimateBar(ProgressBar? bar, double value)
+    {
+        if (bar is null) return;
+        bar.BeginAnimation(RangeBase.ValueProperty, new DoubleAnimation(Math.Clamp(value, 0, 100), TimeSpan.FromMilliseconds(430))
+        {
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        });
+    }
+
+    private static void AddHoverLift(FrameworkElement element)
+    {
+        var lift = new TranslateTransform();
+        element.RenderTransform = lift;
+        element.MouseEnter += (_, _) => lift.BeginAnimation(TranslateTransform.YProperty,
+            new DoubleAnimation(-3, TimeSpan.FromMilliseconds(150)) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } });
+        element.MouseLeave += (_, _) => lift.BeginAnimation(TranslateTransform.YProperty,
+            new DoubleAnimation(0, TimeSpan.FromMilliseconds(190)) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } });
+    }
+
+    private void SetScanningIndicator(bool active)
+    {
+        if (active)
+        {
+            var ease = new SineEase { EasingMode = EasingMode.EaseInOut };
+            var opacity = new DoubleAnimation(1, 0.4, TimeSpan.FromMilliseconds(720))
+            {
+                AutoReverse = true,
+                RepeatBehavior = RepeatBehavior.Forever,
+                EasingFunction = ease
+            };
+            var scale = new DoubleAnimation(1, 1.12, TimeSpan.FromMilliseconds(720))
+            {
+                AutoReverse = true,
+                RepeatBehavior = RepeatBehavior.Forever,
+                EasingFunction = ease
+            };
+            GuideLogo.BeginAnimation(OpacityProperty, opacity);
+            _guideLogoScale.BeginAnimation(ScaleTransform.ScaleXProperty, scale);
+            _guideLogoScale.BeginAnimation(ScaleTransform.ScaleYProperty, scale);
+        }
+        else
+        {
+            GuideLogo.BeginAnimation(OpacityProperty, null);
+            _guideLogoScale.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+            _guideLogoScale.BeginAnimation(ScaleTransform.ScaleYProperty, null);
+            GuideLogo.Opacity = 1;
+            _guideLogoScale.ScaleX = 1;
+            _guideLogoScale.ScaleY = 1;
+        }
+    }
+
+    private void PopCareBadge()
+    {
+        var pop = new DoubleAnimation(0.7, 1, TimeSpan.FromMilliseconds(420))
+        {
+            EasingFunction = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.6 }
+        };
+        _careBadgeScale.BeginAnimation(ScaleTransform.ScaleXProperty, pop);
+        _careBadgeScale.BeginAnimation(ScaleTransform.ScaleYProperty, pop);
     }
 
     private static StackPanel NewPanel()
@@ -956,12 +1530,23 @@ public partial class MainWindow : Window
         return text;
     }
 
-    private static Border SpecCard(string title, string value)
+    private static Border SpecCard(string title, string value, string? iconKey = null)
     {
         var content = new StackPanel();
         content.Children.Add(Text(title, 9, "AccentBrush", FontWeights.Bold));
         content.Children.Add(Text(value, 11, "TextPrimaryBrush", FontWeights.Medium, new Thickness(0, 5, 0, 0)));
-        var border = new Border { Child = content, Padding = new Thickness(12), Margin = new Thickness(0, 0, 9, 9), CornerRadius = new CornerRadius(12), BorderThickness = new Thickness(1) };
+        UIElement body = content;
+        if (iconKey is not null)
+        {
+            var row = new DockPanel();
+            var icon = IconPath(iconKey, 17, "AccentBrush", new Thickness(0, 1, 11, 0));
+            icon.VerticalAlignment = VerticalAlignment.Top;
+            DockPanel.SetDock(icon, Dock.Left);
+            row.Children.Add(icon);
+            row.Children.Add(content);
+            body = row;
+        }
+        var border = new Border { Child = body, Padding = new Thickness(12), Margin = new Thickness(0, 0, 9, 9), CornerRadius = new CornerRadius(12), BorderThickness = new Thickness(1) };
         border.SetResourceReference(Border.BackgroundProperty, "SurfaceRaisedBrush");
         border.SetResourceReference(Border.BorderBrushProperty, "BorderBrush");
         return border;
@@ -1037,7 +1622,7 @@ public partial class MainWindow : Window
             _watchTimer.Start();
             _watchButton!.Content = "Zatrzymaj czuwanie";
             _monitoringStatus!.Text = "Czuwanie aktywne · lokalny pomiar co 2 sekundy";
-            FooterStatusText.Text = "Czuwanie działa lokalnie · aplikacje i procesy nie są zmieniane";
+            FooterStatusText.Text = "Czuwanie działa lokalnie · odczyt co 2 sekundy";
             UpdateLiveUsage();
         }
         else
@@ -1051,12 +1636,12 @@ public partial class MainWindow : Window
         _monitoring = false;
         _watchTimer.Stop();
         if (_watchButton is not null) _watchButton.Content = "Włącz czuwanie";
-        if (_monitoringStatus is not null) _monitoringStatus.Text = "Czuwanie wyłączone · nic nie jest monitorowane";
-        FooterStatusText.Text = "Czuwanie zatrzymane · zmiany systemowe wymagają osobnej zgody";
+        if (_monitoringStatus is not null) _monitoringStatus.Text = "Czuwanie wyłączone";
+        FooterStatusText.Text = "Czuwanie zatrzymane · możesz je włączyć w każdej chwili";
         if (_cpuValue is not null) _cpuValue.Text = "—";
         if (_memoryValue is not null) _memoryValue.Text = "—";
-        if (_cpuBar is not null) _cpuBar.Value = 0;
-        if (_memoryBar is not null) _memoryBar.Value = 0;
+        AnimateBar(_cpuBar, 0);
+        AnimateBar(_memoryBar, 0);
     }
 
     private void WatchTimer_Tick(object? sender, EventArgs e) => UpdateLiveUsage();
@@ -1069,8 +1654,8 @@ public partial class MainWindow : Window
         _memoryValue.Text = usage.MemoryTotalGb > 0
             ? $"{usage.MemoryUsedGb:0.#} / {usage.MemoryTotalGb:0.#} GB · {usage.MemoryPercent:0}%"
             : "Brak odczytu";
-        _cpuBar.Value = usage.CpuPercent ?? 0;
-        _memoryBar.Value = usage.MemoryPercent;
+        AnimateBar(_cpuBar, usage.CpuPercent ?? 0);
+        AnimateBar(_memoryBar, usage.MemoryPercent);
     }
 
     private async void Ping_Click(object sender, RoutedEventArgs e)
@@ -1109,7 +1694,7 @@ public partial class MainWindow : Window
             if (result.HasUpdate)
             {
                 var choice = MessageBox.Show(this,
-                    $"Jest dostępna aktualizacja Blessed Optimizer {result.LatestVersion}.\n\nPobrać instalator z GitHub Releases, sprawdzić jego SHA-256 i zaktualizować kopię w Twoim profilu? Program uruchomi się ponownie.\n\nNie zmieni to ustawień Windows.",
+                    $"Jest dostępna aktualizacja Blessed Optimizer {result.LatestVersion}.\n\nPobrać instalator z GitHub Releases, sprawdzić jego sumę SHA-256 i zaktualizować kopię w Twoim profilu? Program uruchomi się ponownie, a ustawienia Windows pozostaną bez zmian.",
                     "Aktualizacja Blessed Optimizer",
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Information);
@@ -1230,14 +1815,16 @@ public partial class MainWindow : Window
         }
     }
 
-    private static SolidColorBrush BrushFrom(string hex)
+    private static SolidColorBrush BrushFrom(string hex) => new(ColorFrom(hex));
+
+    private static Color ColorFrom(string hex)
     {
         var value = hex.TrimStart('#');
         if (value.Length != 6) throw new FormatException("Nieprawidłowy kolor motywu.");
         var red = byte.Parse(value[..2], System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture);
         var green = byte.Parse(value[2..4], System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture);
         var blue = byte.Parse(value[4..6], System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture);
-        return new SolidColorBrush(Color.FromRgb(red, green, blue));
+        return Color.FromRgb(red, green, blue);
     }
 
     private static string GetCurrentVersion()
@@ -1273,6 +1860,7 @@ public partial class MainWindow : Window
         }
         _watchTimer.Stop();
         _processTimer.Stop();
+        _careTimer.Stop();
         _lifetime.Cancel();
     }
 }

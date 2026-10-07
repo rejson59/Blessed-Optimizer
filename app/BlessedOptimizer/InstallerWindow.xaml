@@ -21,7 +21,7 @@
       </Border>
       <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="16,0,0,0">
         <TextBlock Text="Blessed Optimizer" FontSize="24" FontWeight="Bold" />
-        <TextBlock Text="Instalator i aplikacja · wersja 1.0.2" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" Margin="0,4,0,0" />
+        <TextBlock Text="Instalator i aplikacja · wersja 1.0.3" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" Margin="0,4,0,0" />
       </StackPanel>
       <Border Grid.Column="2" VerticalAlignment="Top" Padding="10,6" CornerRadius="999" Background="#203D5B" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
         <TextBlock Text="BEZ UPRAWNIEŃ ADMINA" Foreground="{DynamicResource GoldBrush}" FontSize="9" FontWeight="Bold" />
@@ -43,14 +43,14 @@
             <TextBlock Text="Podczas instalacji sprawdzę" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" />
           </DockPanel>
           <TextBlock Text="Procesor · pamięć RAM · karta graficzna · wolne miejsce · sieć" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,0" />
-          <TextBlock x:Name="DetectedSummary" Text="Nie uruchamiam testu wydajności ani benchmarku. Odczyt zostaje na tym urządzeniu." Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" TextWrapping="Wrap" Margin="0,12,0,0" />
+          <TextBlock x:Name="DetectedSummary" Text="Szybki odczyt podzespołów — wszystko zostaje na tym urządzeniu." Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" TextWrapping="Wrap" Margin="0,12,0,0" />
         </StackPanel>
       </Border>
 
       <Border Margin="0,13,0,0" Padding="16" CornerRadius="16" Background="#142D48" BorderBrush="#385572" BorderThickness="1">
         <StackPanel>
           <TextBlock Text="CIEKAWOSTKA OD BLESSED" Foreground="{DynamicResource GoldBrush}" FontSize="9" FontWeight="Bold" />
-          <TextBlock x:Name="FactText" Text="Czy Twój PC odpali 300 kalkulatorów bez zacięcia? Nie będę zgadywać — najpierw sprawdzę jego podzespoły." TextWrapping="Wrap" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14" LineHeight="21" Margin="0,7,0,0" />
+          <TextBlock x:Name="FactText" Text="Czy Twój PC odpali 300 kalkulatorów naraz? Zaraz sprawdzę jego podzespoły i Ci powiem." TextWrapping="Wrap" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14" LineHeight="21" Margin="0,7,0,0" />
         </StackPanel>
       </Border>
 

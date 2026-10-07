@@ -97,7 +97,7 @@ public partial class InstallerWindow : Window
             PortableButton.IsEnabled = true;
             ExistingButton.IsEnabled = _alreadyInstalled;
             DesktopShortcutCheck.IsEnabled = true;
-            SetProgress(0, "Instalacja nie została dokończona. Twoje ustawienia Windows nie zostały zmienione.");
+            SetProgress(0, "Instalacja przerwana. Twój system pozostał w nienaruszonym stanie.");
             MessageBox.Show(this, ex.Message, "Blessed Optimizer — instalacja", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }

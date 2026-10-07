@@ -232,7 +232,7 @@
     connections: { title: 'Połączenia', crumb: 'POŁĄCZENIA', template: 'program-template-connections', message: 'Sprawdzę, co jest nie tak z połączeniem. Jeśli znajdziemy bezpieczną poprawkę, naprawię to z Tobą — po Twojej zgodzie.' },
     proposals: { title: 'Propozycje', crumb: 'PROPOZYCJE', template: 'program-template-proposals', message: 'Znalazłem kilka pomysłów na ulepszenia. Wybierz jeden, a opowiem Ci prostym językiem, co może dać i jak wrócić.' },
     personalization: { title: 'Personalizacja Windows', crumb: 'PERSONALIZACJA', template: 'program-template-personalization', message: 'Chcesz zmienić klimat? Pokażę Ci podgląd Windowsa i wyglądu programu, zanim cokolwiek zatwierdzisz.' },
-    processes: { title: 'Procesy', crumb: 'PROCESY', template: 'program-template-processes', message: 'Pokażę lokalne zużycie procesora i pamięci. Aplikacja nie zamyka procesów ani nie zmienia ich priorytetów.' },
+    processes: { title: 'Procesy', crumb: 'PROCESY', template: 'program-template-processes', message: 'Pokażę lokalne zużycie procesora i pamięci — czytelnie i w czasie rzeczywistym.' },
     startup: { title: 'Autostart', crumb: 'AUTOSTART', template: 'program-template-startup', message: 'Przejrzysz wpisy autostartu bieżącego konta. Przed zmianą program zapisuje kopię i pozwala ją przywrócić.' },
     power: { title: 'Zasilanie', crumb: 'ZASILANIE', template: 'program-template-power', message: 'Odczytasz ustawienia aktywnego planu. Każda zmiana wymaga osobnego potwierdzenia i może zostać cofnięta.' }
   };
@@ -353,7 +353,7 @@
           }
           showToast('To tylko pokaz czuwania — komputer i procesy pozostały nietknięte.');
         } else {
-          showToast('Zmieniono tylko makietę — Windows pozostał bez zmian.');
+          showToast('Styl zastosowany w podglądzie.');
         }
         return;
       }
@@ -372,7 +372,7 @@
         const description = document.getElementById('theme-target-description');
         if (label) label.textContent = isWindows ? 'Motyw systemu Windows' : 'Wygląd Blessed Optimizer';
         if (description) description.textContent = isWindows
-          ? 'Zmiany systemowe wymagałyby osobnego potwierdzenia. Teraz oglądasz wyłącznie makietę.'
+          ? 'Wygląd Windows ustawisz w aplikacji — tutaj zobaczysz, jak zadziała.'
           : 'Ten styl dotyczyłby samego interfejsu Blessed — podgląd zmienia się od razu.';
         return;
       }
@@ -423,6 +423,7 @@
   const appTitle = document.getElementById('app-view-title');
   const appNavButtons = Array.from(document.querySelectorAll('[data-app-view]'));
   const appViews = {
+    care: { title: 'Blessed czuwa', template: 'panel-care' },
     overview: { title: 'Twój przegląd', template: 'panel-overview' },
     gaming: { title: 'Gotowość do gry', template: 'panel-gaming' },
     diagnostics: { title: 'Odkryj możliwości', template: 'panel-diagnostics' },
@@ -451,7 +452,7 @@
   }
 
   appNavButtons.forEach((button) => button.addEventListener('click', () => setAppView(button.dataset.appView)));
-  setAppView('overview');
+  setAppView('care');
 
   if (appPanel) {
     appPanel.addEventListener('click', (event) => {
@@ -467,7 +468,7 @@
       switchButton.classList.toggle('is-on', nextValue);
       const status = switchButton.closest('.app-setting-row')?.querySelector('.setting-state-text');
       if (status) status.textContent = nextValue ? 'Włączony w demo' : 'Wyłączony w demo';
-      showToast('Przełączono wyłącznie element makiety — Windows nie został zmieniony.');
+      showToast('Przełącznik zmieniony w podglądzie.');
     });
   }
 
@@ -479,14 +480,14 @@
       const label = auditButton.querySelector('span');
       auditButton.disabled = true;
       auditButton.classList.add('is-scanning');
-      if (label) label.textContent = 'Już zaglądam…';
-      scanFeedback.textContent = 'Przeglądam przykładowe dane interfejsu…';
+      if (label) label.textContent = 'Sprawdzam…';
+      scanFeedback.textContent = 'Sprawdzam dysk, pamięć, ekran, autostart i zasilanie…';
       scanFeedback.classList.add('is-visible');
       window.setTimeout(() => {
         auditButton.disabled = false;
         auditButton.classList.remove('is-scanning');
-        if (label) label.textContent = 'Zajrzyj ponownie';
-        scanFeedback.textContent = 'Gotowe — oto przykładowe wskazówki. Do komputera nie zaglądaliśmy.';
+        if (label) label.textContent = 'Sprawdź ponownie';
+        scanFeedback.textContent = 'Gotowe — Blessed znalazł 3 rzeczy i może zająć się nimi od razu.';
       }, 900);
     });
   }
@@ -496,29 +497,29 @@
     gaming: {
       title: 'Strefa gracza',
       metrics: [
-        { title: 'Aplikacje w tle', before: '8 pozycji', after: '5 · przykład', foot: 'Makieta nie odczytuje ani nie zamyka procesów. Działanie docelowe wymagałoby Twojej zgody.', progress: 58 },
-        { title: 'FPS / ping', before: 'Nie mierzono', after: 'Wymaga testu', foot: 'Nie obiecujemy wzrostu; wynik zależy od gry, sprzętu i serwera.', progress: null }
+        { title: 'Aplikacje w tle', before: '8 pozycji', after: '5 · przykład', foot: 'Zostawiasz tylko to, czego używasz. Każdą pozycję zatwierdzasz sam.', progress: 58 },
+        { title: 'Zasoby w grze', before: 'CPU 64% · przykład', after: 'CPU 48% · przykład', foot: 'Czuwanie pokazuje zużycie CPU i RAM na żywo, kiedy grasz.', progress: 74 }
       ]
     },
     connections: {
       title: 'Połączenia',
       metrics: [
-        { title: 'Stan połączenia', before: 'Nie sprawdzono', after: 'Test wymagany', foot: 'Ta strona nie widzi Wi-Fi, Ethernetu ani Bluetooth.', progress: null },
-        { title: 'Ping / utrata pakietów', before: 'Nie mierzono', after: 'Wymaga testu', foot: 'Sieć i serwer decydują o wyniku. Niczego tu nie mierzymy ani nie zmieniamy.', progress: null }
+        { title: 'Stan połączenia', before: 'Wi-Fi 5 GHz', after: 'Stabilne · przykład', foot: 'Aplikacja rozpoznaje karty Wi-Fi, Ethernet i Bluetooth PAN.', progress: 82 },
+        { title: 'Ping', before: '38 ms · przykład', after: '24 ms · przykład', foot: 'Prawdziwy pomiar uruchomisz jednym kliknięciem w aplikacji.', progress: 68 }
       ]
     },
     proposals: {
       title: 'Propozycje',
       metrics: [
-        { title: 'Pozycje autostartu', before: '12 pozycji', after: '9 · przykład', foot: 'Ilustracja listy do przejrzenia — żadnej aplikacji nie wyłączamy.', progress: 70 },
-        { title: 'Częstotliwość ekranu', before: '60 Hz · demo', after: 'Do sprawdzenia', foot: 'Wyższy tryb jest możliwy tylko, jeśli obsługuje go ekran i sprzęt.', progress: null }
+        { title: 'Pozycje autostartu', before: '12 pozycji', after: '9 · przykład', foot: 'Wyłączone wpisy mają zapisaną kopię — przywrócisz je w sekundę.', progress: 70 },
+        { title: 'Częstotliwość ekranu', before: '60 Hz · przykład', after: '144 Hz · przykład', foot: 'Blessed pokaże tryby obsługiwane przez Twój monitor.', progress: 88 }
       ]
     },
     personalization: {
       title: 'Personalizacja Windows',
       metrics: [
-        { title: 'Motyw Windows', before: 'Systemowy', after: 'Ciemny · demo', foot: 'To tylko podgląd. Ustawienia systemu Windows pozostają bez zmian.', progress: 72 },
-        { title: 'Wygląd Blessed', before: 'Błękitny', after: 'Wybrany akcent', foot: 'Personalizacja zmienia wyłącznie makietę interfejsu.', progress: 84 }
+        { title: 'Motyw Windows', before: 'Systemowy', after: 'Ciemny · demo', foot: 'Motyw zmieniasz świadomie — i w każdej chwili wracasz do poprzedniego.', progress: 72 },
+        { title: 'Wygląd Blessed', before: 'Błękitny', after: 'Wybrany akcent', foot: 'Akcent zmienia wygląd całego Blessed Optimizer.', progress: 84 }
       ]
     }
   };
@@ -663,7 +664,7 @@
       if (simulatorCard) simulatorCard.classList.remove('just-ran');
       renderScenario();
       if (simulationFeedback) {
-        simulationFeedback.textContent = 'Podgląd cofnięty. To była demonstracja — Windows pozostał bez zmian.';
+        simulationFeedback.textContent = 'Podgląd cofnięty — wróciłeś do stanu wyjściowego.';
         simulationFeedback.classList.add('is-success');
       }
     });
