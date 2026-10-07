@@ -233,7 +233,7 @@ public static class UpdateService
     private static HttpClient CreateHttpClient()
     {
         var client = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("BlessedOptimizer/1.0.3 (+https://github.com/rejson59/Blessed-Optimizer)");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("BlessedOptimizer/1.0.4 (+https://github.com/rejson59/Blessed-Optimizer)");
         return client;
     }
 
