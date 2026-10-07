@@ -50,6 +50,10 @@ jobs:
           -p:EnableCompressionInSingleFile=true
           -p:IncludeNativeLibrariesForSelfExtract=true
 
+      - name: Run unit tests
+        shell: pwsh
+        run: dotnet test app/BlessedOptimizer.Tests/BlessedOptimizer.Tests.csproj --configuration Release
+
       - name: Run read-only Windows integration smoke checks
         shell: pwsh
         run: dotnet run --configuration Release --project app/BlessedOptimizer.SmokeTests/BlessedOptimizer.SmokeTests.csproj

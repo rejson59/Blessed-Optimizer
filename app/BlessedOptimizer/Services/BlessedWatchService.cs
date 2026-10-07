@@ -79,9 +79,17 @@ public sealed class BlessedWatchService
             InspectPowerPlan(profile, findings);
             InspectBattery(profile, findings);
             InspectDriveHealth(findings);
+            InspectWindowsUpdate(findings);
+            InspectDefender(findings);
+            InspectFirewall(findings);
+            InspectTimeSync(findings);
+            InspectHiberfile(findings);
+            InspectRecycleBin(findings);
         }, cancellationToken).ConfigureAwait(false);
 
         await InspectTempAsync(profile, findings, cancellationToken).ConfigureAwait(false);
+
+        findings = WithoutMuted(findings, profile);
 
         if (findings.Count == 0)
         {
@@ -89,7 +97,7 @@ public sealed class BlessedWatchService
                 "all-clear",
                 FindingSeverity.Good,
                 "Czysto — nie mam się do czego przyczepić",
-                $"Sprawdziłem dysk, pamięć, autostart, ekran i plan zasilania. {profile.PriorityPromise}",
+                $"Sprawdziłem dysk, pamięć, autostart, ekran, baterię, zasilanie, aktualizacje i ochronę. {profile.PriorityPromise}",
                 null,
                 FindingAction.None,
                 null));
@@ -100,6 +108,14 @@ public sealed class BlessedWatchService
             .ToArray();
 
         return new WatchReport(DateTimeOffset.Now, ordered);
+    }
+
+    /// <summary>Removes findings the user muted. Kept separate so the rule stays unit-testable.</summary>
+    internal static List<BlessedFinding> WithoutMuted(IReadOnlyList<BlessedFinding> findings, BlessedProfile profile)
+    {
+        if (profile.MutedFindingIds.Count == 0)
+            return findings.ToList();
+        return findings.Where(finding => !profile.MutedFindingIds.Contains(finding.Id)).ToList();
     }
 
     private static void InspectDiskSpace(DeviceSnapshot? snapshot, List<BlessedFinding> findings)
@@ -383,6 +399,195 @@ public sealed class BlessedWatchService
         {
             // Reading SMART is a bonus; never let it break the sweep.
         }
+    }
+
+    private static void InspectWindowsUpdate(List<BlessedFinding> findings)
+    {
+        bool rebootPending;
+        DateTime? lastInstalled;
+        try
+        {
+            rebootPending = SecurityDiagnostics.IsUpdateRebootPending();
+            lastInstalled = SecurityDiagnostics.TryGetLastUpdateInstallDate();
+        }
+        catch (Exception ex) when (ex is SecurityException or UnauthorizedAccessException or IOException)
+        {
+            return;
+        }
+
+        if (rebootPending)
+        {
+            findings.Add(new BlessedFinding(
+                "update-reboot-pending",
+                FindingSeverity.Warning,
+                "Aktualizacje Windows czekają na restart",
+                "System pobrał ważne aktualizacje i dokończy je instalować dopiero przy ponownym uruchomieniu. Do tego czasu komputer pracuje bez części łatek — a Windows pokazuje to tylko jako małą ikonkę.",
+                "Otwórz Windows Update",
+                FindingAction.OpenSettings,
+                "ms-settings:windowsupdate-action"));
+            return;
+        }
+
+        if (lastInstalled is { } installed && DateTime.Now - installed > TimeSpan.FromDays(35))
+        {
+            findings.Add(new BlessedFinding(
+                "update-stale",
+                FindingSeverity.Info,
+                $"Ostatnia aktualizacja: {installed:dd MMMM yyyy}",
+                "Od ponad miesiąca na komputerze nie pojawiła się żadna aktualizacja. Zwykle wszystko dzieje się samo w tle — warto jednak rzucić okiem, czy Windows Update nie utknął.",
+                "Sprawdź aktualizacje",
+                FindingAction.OpenSettings,
+                "ms-settings:windowsupdate"));
+        }
+    }
+
+    private static void InspectDefender(List<BlessedFinding> findings)
+    {
+        DefenderStatus? status;
+        try
+        {
+            status = SecurityDiagnostics.ReadDefenderStatus();
+        }
+        catch (Exception ex) when (ex is ManagementException or SecurityException or UnauthorizedAccessException or COMException or InvalidOperationException or NotSupportedException)
+        {
+            return;
+        }
+        if (status is null)
+            return;
+
+        if (!status.RealTimeProtectionEnabled)
+        {
+            findings.Add(new BlessedFinding(
+                "defender-realtime-off",
+                FindingSeverity.Warning,
+                "Ochrona w czasie rzeczywistym jest wyłączona",
+                "Windows Defender nie skanuje plików na bieżąco, więc komputer nie zauważa zagrożeń, dopóki ich nie otworzysz. Windows o tym nie powie — a wyłączenie często zostaje po próbie innego programu.",
+                "Otwórz ustawienia zabezpieczeń",
+                FindingAction.OpenSettings,
+                "ms-settings:windowsdefender"));
+            return;
+        }
+
+        if (status.SignatureUpdatedAt is { } updated && DateTime.Now - updated > TimeSpan.FromDays(3))
+        {
+            var ageDays = Math.Max(1, (int)(DateTime.Now - updated).TotalDays);
+            findings.Add(new BlessedFinding(
+                "defender-signature-stale",
+                FindingSeverity.Info,
+                $"Definicje antywirusa mają {ageDays} dni",
+                "Windows Defender działa, ale jego baza zagrożeń jest nieaktualna — świeże zagrożenia mogą przejść niezauważone. Definicje zwykle aktualizują się same, gdy komputer ma dostęp do sieci.",
+                "Otwórz Windows Defender",
+                FindingAction.OpenSettings,
+                "ms-settings:windowsdefender"));
+        }
+    }
+
+    private static void InspectFirewall(List<BlessedFinding> findings)
+    {
+        IReadOnlyList<string> disabled;
+        try
+        {
+            disabled = SecurityDiagnostics.ReadDisabledFirewallProfiles();
+        }
+        catch (Exception ex) when (ex is ManagementException or SecurityException or UnauthorizedAccessException or COMException or InvalidOperationException or NotSupportedException)
+        {
+            return;
+        }
+        if (disabled.Count == 0)
+            return;
+
+        var names = string.Join(", ", disabled.Select(name => name switch
+        {
+            "Domain" => "profil domenowy",
+            "Private" => "profil prywatny",
+            "Public" => "profil publiczny",
+            _ => $"profil „{name}”"
+        }));
+        findings.Add(new BlessedFinding(
+            "firewall-off",
+            disabled.Count > 1 ? FindingSeverity.Critical : FindingSeverity.Warning,
+            $"Zapora Windows wyłączona — {names}",
+            "Zapora filtruje ruch sieciowy, zanim dotrze on do komputera. Gdy jest wyłączona, każdy program może swobodnie rozmawiać z internetem. Windows czasem wyłącza ją po instalacji innego zabezpieczenia.",
+            "Otwórz ustawienia zapory",
+            FindingAction.OpenSettings,
+            "ms-settings:windowsdefender-firewall"));
+    }
+
+    private static void InspectTimeSync(List<BlessedFinding> findings)
+    {
+        bool disabled;
+        try
+        {
+            disabled = SecurityDiagnostics.IsTimeSyncDisabled();
+        }
+        catch (Exception ex) when (ex is SecurityException or UnauthorizedAccessException or IOException)
+        {
+            return;
+        }
+        if (!disabled)
+            return;
+
+        findings.Add(new BlessedFinding(
+            "time-sync-off",
+            FindingSeverity.Warning,
+            "Synchronizacja czasu jest wyłączona",
+            "Gdy zegar komputera się rozjedzie, przestają działać certyfikaty, podpisy cyfrowe i logowanie do części kont. Windows zwykle sam trzyma czas w ryzach — tutaj usługa jest jednak wyłączona całkowicie.",
+            "Otwórz ustawienia daty i godziny",
+            FindingAction.OpenSettings,
+            "ms-settings:dateandtime"));
+    }
+
+    private static void InspectHiberfile(List<BlessedFinding> findings)
+    {
+        try
+        {
+            var systemRoot = Path.GetPathRoot(Environment.GetFolderPath(Environment.SpecialFolder.Windows));
+            if (string.IsNullOrWhiteSpace(systemRoot))
+                return;
+            var hiberfil = Path.Combine(systemRoot, "hiberfil.sys");
+            if (!File.Exists(hiberfil))
+                return;
+            var sizeGb = new FileInfo(hiberfil).Length / 1024d / 1024d / 1024d;
+            if (sizeGb < 3)
+                return;
+            findings.Add(new BlessedFinding(
+                "hiberfile-size",
+                FindingSeverity.Info,
+                $"Plik hibernacji zajmuje {sizeGb:0.#} GB",
+                "Windows trzyma w nim kopię całej pamięci na wypadek hibernacji. Jeśli komputer zawsze zamykasz, a nie usypiasz, to miejsce można odzyskać w ustawieniach zasilania — Windows o tym nie wspomni.",
+                "Otwórz ustawienia zasilania",
+                FindingAction.OpenSettings,
+                "ms-settings:powersleep"));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
+        {
+            // hiberfil.sys is a protected system file; when it cannot be measured, stay quiet.
+        }
+    }
+
+    private static void InspectRecycleBin(List<BlessedFinding> findings)
+    {
+        RecycleBinScan scan;
+        try
+        {
+            scan = MaintenanceService.ScanRecycleBin();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
+        {
+            return;
+        }
+        if (scan.SizeMb < 1000)
+            return;
+
+        var sizeGb = scan.SizeMb / 1024d;
+        findings.Add(new BlessedFinding(
+            "recycle-bin",
+            scan.SizeMb > 8000 ? FindingSeverity.Warning : FindingSeverity.Info,
+            sizeGb >= 1 ? $"W koszach leży {sizeGb:0.#} GB" : $"{scan.SizeMb:0} MB w koszach",
+            $"Na dyskach nazbierało się {scan.FileCount:N0} plików w koszu — to dokładnie to, co robi przycisk „Opróżnij kosz”, tylko z Twoim wyraźnym potwierdzeniem. Pliki znikają trwale.",
+            "Opróżnij kosz za mnie",
+            FindingAction.BlessedHandlesIt,
+            "recycle-bin-empty"));
     }
 
     private static (string Name, double MemoryMb)? FindTopMemoryProcess()

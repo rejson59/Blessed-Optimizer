@@ -6,9 +6,34 @@
   <meta name="theme-color" content="#0b3770">
   <meta name="description" content="Blessed Optimizer — przyjazny panel diagnostyczny Windows. Poznaj układ rzeczywistej aplikacji i sprawdź dostępność instalatora Windows (.exe).">
   <title>Blessed Optimizer — błogosławieństwo dla Twojego PC</title>
+  <link rel="canonical" href="https://rejson59.github.io/Blessed-Optimizer/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Blessed Optimizer">
+  <meta property="og:title" content="Blessed Optimizer — błogosławieństwo dla Twojego PC">
+  <meta property="og:description" content="Lokalny pomocnik Windowsa: sam sprawdza komputer, wyłapuje rzeczy, o których system milczy, i proponuje gotowe rozwiązanie jednym kliknięciem. Bez telemetrii.">
+  <meta property="og:url" content="https://rejson59.github.io/Blessed-Optimizer/">
+  <meta property="og:image" content="https://rejson59.github.io/Blessed-Optimizer/assets/blessed-optimizer-logo.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Blessed Optimizer — błogosławieństwo dla Twojego PC">
+  <meta name="twitter:description" content="Lokalny pomocnik Windowsa: sam sprawdza komputer, wyłapuje rzeczy, o których system milczy, i proponuje gotowe rozwiązanie jednym kliknięciem. Bez telemetrii.">
+  <meta name="twitter:image" content="https://rejson59.github.io/Blessed-Optimizer/assets/blessed-optimizer-logo.png">
   <link rel="icon" type="image/png" href="assets/blessed-optimizer-logo-no-background.png">
-  <link rel="stylesheet" href="styles.css?v=blessed-wings-8">
-  <script src="script.js?v=blessed-wings-8" defer></script>
+  <link rel="stylesheet" href="styles.css?v=blessed-wings-9">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Blessed Optimizer",
+    "operatingSystem": "Windows 10/11 x64",
+    "applicationCategory": "UtilitiesApplication",
+    "inLanguage": "pl",
+    "description": "Lokalny pomocnik Windowsa: co 3 minuty przegląda komputer, wyłapuje rzeczy, o których system milczy, i proponuje gotowe, odwracalne rozwiązania jednym kliknięciem. Bez telemetrii.",
+    "url": "https://rejson59.github.io/Blessed-Optimizer/",
+    "downloadUrl": "https://github.com/rejson59/Blessed-Optimizer/releases",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "PLN" }
+  }
+  </script>
+  <script src="script.js?v=blessed-wings-9" defer></script>
 </head>
 <body>
   <div class="blessing-light" aria-hidden="true"><span class="light-beam"></span><span class="light-ring light-ring-one"></span><span class="light-ring light-ring-two"></span><i class="light-spark spark-a">✦</i><i class="light-spark spark-b">✧</i></div>
@@ -23,6 +48,7 @@
       <div class="site-tabs" role="tablist" aria-label="Główne sekcje strony">
         <button class="site-tab is-active" id="tab-about" role="tab" type="button" aria-selected="true" aria-controls="panel-about" data-site-tab="about">O programie</button>
         <button class="site-tab" id="tab-simulator" role="tab" type="button" aria-selected="false" aria-controls="panel-simulator" data-site-tab="simulator" tabindex="-1">Symulator</button>
+        <a class="site-tab site-tab-link" href="changelog.html">Zmiany</a>
       </div>
       <button class="button button-top" type="button" data-open-tab="simulator">Otwórz symulator <span aria-hidden="true">↗</span></button>
     </div>
@@ -95,6 +121,8 @@
             <article class="how-card reveal"><span class="how-num">✦</span><span class="how-icon icon-peach">❤</span><h3>Dysk zgłasza S.M.A.R.T.</h3><p>Kontroler potrafi tygodniami ostrzegać o awarii nośnika, zanim Windows się odezwie. Blessed powie Ci o tym od razu.</p></article>
             <article class="how-card reveal reveal-delay-short"><span class="how-num">✦</span><span class="how-icon icon-blue">↻</span><h3>Za dużo na starcie</h3><p>Dziesięć programów budzących się razem z systemem. Blessed pokazuje każde z nich i wyłącza te, na które mu pozwolisz.</p></article>
             <article class="how-card reveal reveal-delay-medium"><span class="how-num">✦</span><span class="how-icon icon-gold">⏱</span><h3>Windows działa od 3 tygodni</h3><p>Po takim czasie pamięć i sterowniki się zapychają, a aktualizacje czekają w kolejce. Jedno przypomnienie załatwia sprawę.</p></article>
+            <article class="how-card reveal"><span class="how-num">✦</span><span class="how-icon icon-gold">↻</span><h3>Aktualizacje czekają na restart</h3><p>Windows pobiera łatki i pokazuje tylko małą ikonkę. Blessed mówi wprost: bez restartu komputer pracuje bez części zabezpieczeń.</p></article>
+            <article class="how-card reveal reveal-delay-short"><span class="how-num">✦</span><span class="how-icon icon-lilac">⌁</span><h3>Ochrona śpi, zapora milczy</h3><p>Wyłączona ochrona w czasie rzeczywistym albo profil zapory bez nadzoru — Windows o tym nie wspomni. Blessed sprawdza oba i prowadzi do ustawień.</p></article>
           </div>
         </div>
       </section>
@@ -137,12 +165,12 @@
       <section class="program-preview-section" aria-labelledby="program-preview-heading">
         <div class="wrap">
           <div class="program-preview-heading reveal">
-            <div><span class="section-kicker"><i>✦</i> BLESSED OPTIMIZER · v1.0.4</span><h2 id="program-preview-heading">Zajrzyj do aplikacji,<br><span>zanim zaczniesz z niej korzystać.</span></h2><p>Aplikacja 1.0.4 porządkuje funkcje w bocznym menu: opiekę, wydajność, diagnostykę, ustawienia Windows i preferencje. Tutaj zobaczysz przykładowe ekrany; prawdziwe dane pokaże program po instalacji.</p></div>
+            <div><span class="section-kicker"><i>✦</i> BLESSED OPTIMIZER · v1.1.0</span><h2 id="program-preview-heading">Zajrzyj do aplikacji,<br><span>zanim zaczniesz z niej korzystać.</span></h2><p>Aplikacja 1.1.0 porządkuje funkcje w bocznym menu: opiekę, wydajność, diagnostykę, ustawienia Windows i preferencje. Tutaj zobaczysz przykładowe ekrany; prawdziwe dane pokaże program po instalacji.</p></div>
             <span class="concept-badge"><i></i> PODGLĄD INTERFEJSU · DANE DEMO</span>
           </div>
           <div class="program-window glass-panel reveal" role="region" aria-label="Interaktywny podgląd układu aplikacji Blessed Optimizer">
             <div class="program-titlebar">
-              <div class="program-title-brand"><img src="assets/blessed-optimizer-logo-no-background.png" alt=""><span><strong>Blessed Optimizer</strong><small>Aplikacja Windows · v1.0.4</small></span></div>
+              <div class="program-title-brand"><img src="assets/blessed-optimizer-logo-no-background.png" alt=""><span><strong>Blessed Optimizer</strong><small>Aplikacja Windows · v1.1.0</small></span></div>
               <span class="program-window-status"><i></i> UKŁAD APLIKACJI · DANE DEMO</span>
               <div class="program-window-controls" aria-hidden="true"><i>−</i><i>□</i><i>×</i></div>
             </div>
@@ -168,7 +196,7 @@
               </div>
             </div>
           </div>
-          <p class="program-window-caption"><span>✧</span> To uproszczony symulator funkcji. W aplikacji 1.0.4 opcje są ułożone w bocznym menu, a przełączniki i liczby tutaj są demonstracyjne — rzeczywiste dane odczytuje zainstalowany program.</p>
+          <p class="program-window-caption"><span>✧</span> To uproszczony symulator funkcji. W aplikacji 1.1.0 opcje są ułożone w bocznym menu, a przełączniki i liczby tutaj są demonstracyjne — rzeczywiste dane odczytuje zainstalowany program.</p>
         </div>
       </section>
       <section class="simulator-section section-space" id="symulator">
@@ -189,10 +217,10 @@
     </section>
   </main>
 
-  <footer class="site-footer"><div class="wrap footer-inner"><a class="brand footer-brand" href="#program" data-open-tab="about"><img class="brand-logo" src="assets/blessed-optimizer-logo-no-background.png" alt=""><span class="brand-wordmark">Blessed <span>OPTIMIZER</span></span></a><p>Technologia z troską. <span>© <span id="current-year">2026</span> Blessed Optimizer</span></p><button class="back-to-top" type="button" data-open-tab="about">Na górę <span>↑</span></button></div></footer>
+  <footer class="site-footer"><div class="wrap footer-inner"><a class="brand footer-brand" href="#program" data-open-tab="about"><img class="brand-logo" src="assets/blessed-optimizer-logo-no-background.png" alt=""><span class="brand-wordmark">Blessed <span>OPTIMIZER</span></span></a><p>Technologia z troską. <span>© <span id="current-year">2026</span> Blessed Optimizer</span> · <a class="footer-link" href="changelog.html">Dziennik zmian</a></p><button class="back-to-top" type="button" data-open-tab="about">Na górę <span>↑</span></button></div></footer>
   <div class="toast" id="site-toast" role="status" aria-live="polite"></div>
 
-  <template id="panel-care"><div class="app-view-intro"><span class="mini-label">BLESSED CZUWA · PODGLĄD</span><h3>Sprawdziłem wszystko. Mam trzy sprawy.</h3><p>Przegląd uruchamiam co 3 minuty, gdy aplikacja jest otwarta. Przy każdej rzeczy mówię, co mogę zrobić za Ciebie.</p></div><div class="diagnostic-list"><article class="diagnostic-row"><span class="diag-status status-review">✦</span><span><strong>Ekran pracuje na 60 z 144 Hz</strong><small>Windows zostawił niższy tryb po aktualizacji sterownika.</small></span><span class="diag-pill">ZAJMĘ SIĘ TYM</span></article><article class="diagnostic-row"><span class="diag-status status-review">⎇</span><span><strong>2,8 GB plików tymczasowych</strong><small>Zostały po instalatorach. Sprzątam po Twojej zgodzie; pliki w użyciu zostawiam.</small></span><span class="diag-pill">ZA ZGODĄ</span></article><article class="diagnostic-row"><span class="diag-status status-check">ϟ</span><span><strong>Plan zasilania trzyma procesor na 70%</strong><small>Przy gniazdku nie ma powodu oddawać mocy.</small></span><span class="diag-pill">PODNIOSĘ</span></article><article class="diagnostic-row"><span class="diag-status status-check">✓</span><span><strong>Dysk, pamięć i autostart w porządku</strong><small>Sprawdzone minutę temu.</small></span><span class="diag-pill">CZYSTO</span></article><div class="diagnostic-disclaimer"><span>✦</span> Tak wygląda przegląd w aplikacji. Na Twoim komputerze Blessed pokaże prawdziwe wyniki.</div></div></template>
+  <template id="panel-care"><div class="app-view-intro"><span class="mini-label">BLESSED CZUWA · PODGLĄD</span><h3>Sprawdziłem wszystko. Mam pięć spraw.</h3><p>Przegląd uruchamiam co 3 minuty, gdy aplikacja jest otwarta. Przy każdej rzeczy mówię, co mogę zrobić za Ciebie.</p></div><div class="diagnostic-list"><article class="diagnostic-row"><span class="diag-status status-review">✦</span><span><strong>Ekran pracuje na 60 z 144 Hz</strong><small>Windows zostawił niższy tryb po aktualizacji sterownika.</small></span><span class="diag-pill">ZAJMĘ SIĘ TYM</span></article><article class="diagnostic-row"><span class="diag-status status-review">⎇</span><span><strong>2,8 GB plików tymczasowych</strong><small>Zostały po instalatorach. Sprzątam po Twojej zgodzie; pliki w użyciu zostawiam.</small></span><span class="diag-pill">ZA ZGODĄ</span></article><article class="diagnostic-row"><span class="diag-status status-review">↻</span><span><strong>Aktualizacje czekają na restart</strong><small>Pobrane łatki dokończą się instalować przy ponownym uruchomieniu.</small></span><span class="diag-pill">WARTO ZROBIĆ</span></article><article class="diagnostic-row"><span class="diag-status status-review">✧</span><span><strong>Definicje antywirusa mają 6 dni</strong><small>Ochrona działa, ale baza zagrożeń jest nieaktualna.</small></span><span class="diag-pill">WARTO ZERKNĄĆ</span></article><article class="diagnostic-row"><span class="diag-status status-check">ϟ</span><span><strong>Plan zasilania trzyma procesor na 70%</strong><small>Przy gniazdku nie ma powodu oddawać mocy.</small></span><span class="diag-pill">PODNIOSĘ</span></article><article class="diagnostic-row"><span class="diag-status status-check">✓</span><span><strong>Dysk, pamięć i autostart w porządku</strong><small>Sprawdzone minutę temu.</small></span><span class="diag-pill">CZYSTO</span></article><div class="diagnostic-disclaimer"><span>✦</span> Tak wygląda przegląd w aplikacji. Na Twoim komputerze Blessed pokaże prawdziwe wyniki.</div></div></template>
   <template id="panel-overview"><div class="overview-grid"><article class="overview-score-card"><div class="score-ring" role="img" aria-label="Przykładowy wynik: 68 na 100"><div><strong>68</strong><small>/100</small></div></div><div class="score-copy"><span class="mini-label">TWÓJ PUNKT STARTU · DEMO</span><h3>Małe kroki, dobra zmiana.</h3><p>Wynik tylko na potrzeby podglądu.</p><div class="score-badges"><span class="badge badge-violet">4 wskazówki</span><span class="badge badge-dim">0 zmian</span></div></div></article><div class="overview-stat-stack"><div class="overview-stat"><span class="overview-stat-icon mint">ϟ</span><span><small>Profil energii</small><strong>Zrównoważony</strong></span><span class="stat-chevron">›</span></div><div class="overview-stat"><span class="overview-stat-icon violet">⌁</span><span><small>Ekran</small><strong>60 Hz · przykład</strong></span><span class="stat-chevron">›</span></div><div class="overview-stat"><span class="overview-stat-icon amber">↗</span><span><small>Autostart</small><strong>12 pozycji · demo</strong></span><span class="stat-chevron">›</span></div></div></div><section class="overview-suggestions"><div class="app-section-title"><h3>Miłe rzeczy do sprawdzenia</h3><span>PRZYKŁAD</span></div><div class="suggestion-row"><span class="suggestion-symbol symbol-violet">⌁</span><span><strong>Poznaj możliwości swojego ekranu</strong><small>Być może czeka na Ciebie płynniejszy obraz.</small></span><button type="button" class="mini-more" aria-label="Więcej o ekranie" data-toast="To tylko wskazówka demo. Ustawienie sprawdzisz w opcjach ekranu Windows.">?</button></div><div class="suggestion-row"><span class="suggestion-symbol symbol-mint">↗</span><span><strong>Zajrzyj do aplikacji startowych</strong><small>Wybierz, które chcesz mieć pod ręką.</small></span><button type="button" class="mini-more" aria-label="Więcej o autostarcie" data-toast="To tylko przykład. Makieta nie widzi aplikacji na Twoim komputerze.">?</button></div></section></template>
   <template id="panel-gaming"><div class="app-view-intro"><span class="mini-label">STREFA GRACZA · PODGLĄD</span><h3>Wskocz do gry po swojemu.</h3><p>Najpierw zobacz opcje, potem decyduj. Każdy przełącznik działa lokalnie.</p></div><div class="app-setting-list"><article class="app-setting-row"><div class="setting-symbol symbol-mint">⌘</div><div class="setting-copy"><div class="setting-titleline"><strong>Tryb gry</strong><span class="setting-state-text">Włączony w demo</span></div><p>Opcja Windows związana z rozgrywką.</p><details class="setting-help"><summary><span>?</span> Wyjaśnij</summary><div class="help-content"><p>Windows traktuje aktywną grę priorytetowo i wycisza zbędne zadania w tle.</p><details><summary>Dla nerdów</summary><p>Aplikacja pokazuje źródło i dokładny zakres każdej zmiany.</p></details></div></details></div><button class="mock-switch is-on" type="button" role="switch" aria-checked="true" aria-label="Tryb gry w podglądzie"><span></span></button></article><article class="app-setting-row"><div class="setting-symbol symbol-violet">◉</div><div class="setting-copy"><div class="setting-titleline"><strong>Launchery w autostarcie</strong><span class="setting-state-text">Do sprawdzenia</span></div><p>Wybierz, co chcesz uruchamiać z systemem.</p><details class="setting-help"><summary><span>?</span> Wyjaśnij</summary><div class="help-content"><p>Zdecyduj, które launchery są Ci potrzebne od razu.</p><details><summary>Dla nerdów</summary><p>Aplikacja pokazuje nazwę wpisu i skutek jego wyłączenia.</p></details></div></details></div><button class="mock-switch" type="button" role="switch" aria-checked="false" aria-label="Launchery w autostarcie"><span></span></button></article><article class="app-setting-row"><div class="setting-symbol symbol-amber">ϟ</div><div class="setting-copy"><div class="setting-titleline"><strong>Profil energii</strong><span class="setting-state-text">Zrównoważony</span></div><p>Dopasuj wydajność do swojego rytmu.</p><details class="setting-help"><summary><span>?</span> Wyjaśnij</summary><div class="help-content"><p>Więcej mocy na żądanie — profil przełączysz jednym kliknięciem.</p><details><summary>Dla nerdów</summary><p>Blessed pokazuje opcje obsługiwane przez Twój sprzęt.</p></details></div></details></div><button class="mock-switch" type="button" role="switch" aria-checked="false" aria-label="Profil energii"><span></span></button></article></div></template>
   <template id="panel-diagnostics"><div class="app-view-intro"><span class="mini-label">ODKRYWANIE · PODGLĄD</span><h3>Każdy PC ma swoją historię.</h3><p>Oto przyjazne podpowiedzi, które pomagają ją poznać.</p></div><div class="diagnostic-list"><article class="diagnostic-row"><span class="diag-status status-review">✧</span><span><strong>Możliwości Twojego ekranu</strong><small>Sprawdź obsługiwaną częstotliwość.</small></span><span class="diag-pill">WARTO ZERKNĄĆ</span></article><article class="diagnostic-row"><span class="diag-status status-check">✓</span><span><strong>Profil energii</strong><small>Znajdź balans mocy i czasu pracy na baterii.</small></span><span class="diag-pill">POZNAJ</span></article><article class="diagnostic-row"><span class="diag-status status-review">✧</span><span><strong>Aplikacje uruchamiane z systemem</strong><small>Zdecyduj, które mogą poczekać.</small></span><span class="diag-pill">WARTO ZERKNĄĆ</span></article><div class="diagnostic-disclaimer"><span>✦</span> Przykładowe wskazówki — pełny przegląd wykonasz w aplikacji Windows.</div></div></template>

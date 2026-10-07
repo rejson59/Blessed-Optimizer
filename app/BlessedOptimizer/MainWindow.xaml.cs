@@ -989,7 +989,7 @@ public partial class MainWindow : Window
     private UIElement BuildCarePage()
     {
         var page = NewPage("BLESSED CZUWA", "Zajmę się tym za Ciebie.", iconKey: "IconShield", description:
-            $"Sam sprawdzam dysk, pamięć, autostart, ekran, baterię i plan zasilania co 3 minuty, gdy Blessed jest otwarty. {_profile.PriorityPromise}");
+            $"Sam sprawdzam dysk, pamięć, autostart, ekran, baterię, zasilanie, aktualizacje i ochronę co 3 minuty, gdy Blessed jest otwarty. {_profile.PriorityPromise}");
 
         if (!_profile.OnboardingCompleted)
             page.Children.Add(WrapPanel(BuildOnboardingCard()));
@@ -1111,6 +1111,34 @@ public partial class MainWindow : Window
         BlessedProfileStore.Save(_profile);
     }
 
+    private StackPanel BuildMutedCard()
+    {
+        var card = NewPanel();
+        card.Children.Add(Text("WYCISZONE SPRAWY", 9, "AccentBrush", FontWeights.Bold));
+        var count = _profile.MutedFindingIds.Count;
+        card.Children.Add(Text(count == 0 ? "Nie wyciszyłeś jeszcze żadnej sprawy." : $"Wyciszonych spraw: {count}.", 14, "TextPrimaryBrush", FontWeights.SemiBold, new Thickness(0, 6, 0, 0)));
+        card.Children.Add(Text("Wyciszona spraw znika z przeglądu, ale Blessed nadal ją sprawdza. Kliknięcie „✕” na karcie wycisza ją na stałe — aż ją przywrócisz.", 11, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 12), lineHeight: 18));
+        if (count > 0)
+        {
+            var button = new Button
+            {
+                Content = ButtonContent("IconCheck", $"Przywróć wszystkie wyciszone ({count})", "TextPrimaryBrush"),
+                Style = (Style)FindResource("SecondaryButton"),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Padding = new Thickness(13, 8, 13, 8)
+            };
+            button.Click += (_, _) =>
+            {
+                _profile.MutedFindingIds.Clear();
+                BlessedProfileStore.Save(_profile);
+                RenderCurrentPage();
+                _ = RunWatchAsync(auto: false);
+            };
+            card.Children.Add(button);
+        }
+        return card;
+    }
+
     private StackPanel BuildSettingsShortcutCard()
     {
         var card = NewPanel();
@@ -1134,6 +1162,7 @@ public partial class MainWindow : Window
             "Wybierz, na czym najbardziej Ci zależy, i osobno zdecyduj o automatycznych działaniach. Zmiany w Windows nadal wymagają Twojego potwierdzenia.");
         page.Children.Add(WrapPanel(BuildPriorityCard()));
         page.Children.Add(WrapPanel(BuildAutomationCard()));
+        page.Children.Add(WrapPanel(BuildMutedCard()));
 
         var privacy = NewPanel();
         privacy.Children.Add(PanelHeading("IconShield", "Prywatność i kontrola", "AccentBrush"));
@@ -1297,6 +1326,7 @@ public partial class MainWindow : Window
         var layout = new Grid();
         layout.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         layout.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        layout.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         layout.Children.Add(SeverityBadge(FindingIconKey(finding), accent.Item1));
 
         var copy = new StackPanel();
@@ -1345,7 +1375,45 @@ public partial class MainWindow : Window
         card.SetResourceReference(Border.BackgroundProperty, "SurfaceRaisedBrush");
         card.SetResourceReference(Border.BorderBrushProperty, "BorderBrush");
         AddHoverLift(card);
+
+        if (finding.Severity != FindingSeverity.Good)
+        {
+            var mute = new Button
+            {
+                Content = "✕",
+                ToolTip = "Nie pokazuj tego więcej",
+                Style = (Style)FindResource("WindowControlButton"),
+                Width = 26,
+                Height = 26,
+                FontSize = 11,
+                Opacity = 0.55,
+                VerticalAlignment = VerticalAlignment.Top,
+                HorizontalAlignment = HorizontalAlignment.Right
+            };
+            mute.SetResourceReference(Control.ForegroundProperty, "TextSecondaryBrush");
+            mute.MouseEnter += (_, _) => mute.Opacity = 1;
+            mute.MouseLeave += (_, _) => mute.Opacity = 0.55;
+            mute.Click += (_, _) => MuteFinding(finding, card);
+            Grid.SetColumn(mute, 2);
+            layout.Children.Add(mute);
+        }
         return card;
+    }
+
+    private void MuteFinding(BlessedFinding finding, Border card)
+    {
+        if (_profile.MutedFindingIds.Contains(finding.Id))
+            return;
+        _profile.MutedFindingIds.Add(finding.Id);
+        BlessedProfileStore.Save(_profile);
+        _careFindingsHost?.Children.Remove(card);
+        if (_lastReport is { } report)
+        {
+            var remaining = report.Findings.Where(item => item.Id != finding.Id).ToArray();
+            _lastReport = new WatchReport(report.CompletedAt, remaining);
+        }
+        UpdateCareBadge();
+        SetCareStatus("Wyciszyłem tę sprawę — przywrócisz ją w Ustawieniach, sekcja „Wyciszone sprawy”.");
     }
 
     private static string FindingIconKey(BlessedFinding finding) => finding.Id switch
@@ -1360,6 +1428,11 @@ public partial class MainWindow : Window
         "power-cpu-limit" or "power-battery" => "IconBolt",
         "battery-low" or "battery-full" => "IconBattery",
         "drive-health" => "IconHeart",
+        "update-reboot-pending" or "update-stale" => "IconUpdate",
+        "defender-realtime-off" or "defender-signature-stale" or "firewall-off" => "IconShield",
+        "time-sync-off" => "IconClock",
+        "hiberfile-size" => "IconMoon",
+        "recycle-bin" => "IconTrash",
         "all-clear" => "IconCheck",
         _ => "IconSpark"
     };
@@ -1376,6 +1449,10 @@ public partial class MainWindow : Window
                 break;
             case FindingAction.BlessedHandlesIt when finding.ActionTarget == "temp-cleanup":
                 await RunTempCleanupAsync(auto: false);
+                await RunWatchAsync(auto: false);
+                break;
+            case FindingAction.BlessedHandlesIt when finding.ActionTarget == "recycle-bin-empty":
+                await RunRecycleBinCleanupAsync();
                 await RunWatchAsync(auto: false);
                 break;
         }
@@ -1510,6 +1587,62 @@ public partial class MainWindow : Window
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
         {
             SetCareStatus("Część plików była zajęta — dokończę sprzątanie przy następnym przeglądzie.");
+        }
+    }
+
+    private async Task RunRecycleBinCleanupAsync()
+    {
+        SetCareStatus("Sprawdzam zawartość koszy…");
+        RecycleBinScan scan;
+        try
+        {
+            scan = await Task.Run(() => MaintenanceService.ScanRecycleBin(), _lifetime.Token);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+        {
+            MessageBox.Show(this, $"Nie udało się odczytać koszy: {ex.Message}", "Blessed Optimizer — kosz", MessageBoxButton.OK, MessageBoxImage.Warning);
+            SetCareStatus("Nie udało się odczytać koszy.");
+            return;
+        }
+
+        if (scan.FileCount == 0 || scan.SizeMb <= 0)
+        {
+            MessageBox.Show(this, "Kosze są już puste — nie ma czego opróżniać.", "Blessed — kosz", MessageBoxButton.OK, MessageBoxImage.Information);
+            SetCareStatus("Kosze są już puste.");
+            return;
+        }
+
+        var choice = MessageBox.Show(this,
+            $"Podgląd opróżniania kosza:\n\n• {scan.FileCount:N0} plików we wszystkich koszach\n• około {scan.SizeMb / 1024:0.#} GB do odzyskania\n\nUWAGA: opróżnienie kosza trwale usuwa te pliki — tego kroku nie da się cofnąć.\n\nNa pewno opróżnić wszystkie kosze?",
+            "Zanim Blessed opróżni kosz",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning,
+            MessageBoxResult.No);
+        if (choice != MessageBoxResult.Yes)
+        {
+            SetCareStatus("Opróżnianie kosza anulowano.");
+            return;
+        }
+
+        SetCareStatus("Opróżniam kosze…");
+        var emptied = await Task.Run(() => MaintenanceService.EmptyRecycleBin(), _lifetime.Token);
+        if (emptied)
+        {
+            _profile.TotalFreedMb += scan.SizeMb;
+            _profile.HandledCount++;
+            BlessedProfileStore.Save(_profile);
+            FooterStatusText.Text = $"Blessed opróżnił kosze · odzyskano około {scan.SizeMb / 1024:0.#} GB";
+            MessageBox.Show(this,
+                $"Gotowe. Kosze opróżnione — odzyskałeś około {scan.SizeMb / 1024:0.#} GB.\n\nTo była trwała operacja: usuniętych plików nie da się przywrócić.",
+                "Blessed posprzątał", MessageBoxButton.OK, MessageBoxImage.Information);
+            SetCareStatus("Kosze opróżnione.");
+        }
+        else
+        {
+            MessageBox.Show(this,
+                "Windows nie pozwolił opróżnić wszystkich koszy. Sprawdź, czy żaden program nie używa właśnie usuwanych plików, i spróbuj ponownie.",
+                "Blessed Optimizer — kosz", MessageBoxButton.OK, MessageBoxImage.Warning);
+            SetCareStatus("Nie udało się opróżnić wszystkich koszy.");
         }
     }
 
@@ -1923,7 +2056,7 @@ public partial class MainWindow : Window
         UpdateStatusText.Text = "Sprawdzam wydania GitHub…";
         try
         {
-            var current = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(1, 0, 4);
+            var current = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(1, 1, 0);
             var result = await UpdateService.CheckLatestAsync(current, _lifetime.Token);
             UpdateStatusText.Text = result.Message;
             if (result.HasUpdate)
@@ -2064,7 +2197,7 @@ public partial class MainWindow : Window
 
     private static string GetCurrentVersion()
     {
-        var version = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(1, 0, 4);
+        var version = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(1, 1, 0);
         return $"{version.Major}.{version.Minor}.{Math.Max(0, version.Build)}";
     }
 

@@ -1,12 +1,12 @@
-# Blessed Optimizer · strona i aplikacja Windows v1.0.4
+# Blessed Optimizer · strona i aplikacja Windows v1.1.0
 
 Blessed to lokalny pomocnik Windowsa. Gdy aplikacja jest otwarta, co 3 minuty przegląda komputer, wyłapuje rzeczy, o których system milczy, i proponuje gotowe rozwiązanie jednym kliknięciem.
 
-Responsywna, polskojęzyczna strona projektu z osobnymi zakładkami „O programie” i „Symulator”, niebieskim gradientem, szklistymi panelami oraz gołębiem Blessed. Interaktywny podgląd pokazuje przykładowe ekrany aplikacji; liczby na stronie są przykładowe, a prawdziwe odczyty pokazuje program dla Windows.
+Responsywna, polskojęzyczna strona projektu z osobnymi zakładkami „O programie” i „Symulator”, podstroną „Dziennik zmian” pobieraną z GitHub Releases, niebieskim gradientem, szklistymi panelami oraz gołębiem Blessed. Interaktywny podgląd pokazuje przykładowe ekrany aplikacji; liczby na stronie są przykładowe, a prawdziwe odczyty pokazuje program dla Windows.
 
-W katalogu `app/BlessedOptimizer/` znajduje się pierwsza natywna aplikacja Windows. Jej numer wersji to **1.0.4**. GitHub Actions buduje ją jako jeden samodzielny plik `.exe`, a instalator trafia do użytkowników po opublikowaniu GitHub Release z tagiem `v1.0.4`.
+W katalogu `app/BlessedOptimizer/` znajduje się pierwsza natywna aplikacja Windows. Jej numer wersji to **1.1.0**. GitHub Actions buduje ją jako jeden samodzielny plik `.exe`, a instalator trafia do użytkowników po opublikowaniu GitHub Release z tagiem `v1.1.0`.
 
-## Co robi aplikacja v1.0.4
+## Co robi aplikacja v1.1.0
 
 - **Blessed czuwa:** domyślna karta aplikacji. Gdy program jest otwarty, co 3 minuty wykonuje pełny przegląd i pokazuje listę spraw posortowaną według wagi, każdą z gotowym działaniem („Zajmij się tym za mnie”). Sprawdza: wolne miejsce na dysku systemowym, zajętość RAM wraz z procesem, który zjada najwięcej, obciążenie procesora, liczbę aktywnych wpisów autostartu, czas pracy bez restartu, poziom i tryb baterii, limit procesora w aktywnym planie zasilania, status S.M.A.R.T. nośnika oraz objętość plików tymczasowych.
 - **Rzeczy, o których Windows nie mówi:** monitor pracujący poniżej obsługiwanej częstotliwości odświeżania (porównanie trybów `EnumDisplaySettings`), przewidywana awaria dysku z `MSStorageDriver_FailurePredictStatus`, plan zasilania ograniczający procesor przy zasilaniu z sieci oraz gigabajty plików tymczasowych starszych niż dwa dni.
@@ -29,7 +29,7 @@ Instalator odczytuje parametry lokalnie, by pokazać dopasowane ciekawostki (pyt
 
 ## Pobieranie i wydanie
 
-Przycisk na stronie sprawdza najnowsze publiczne wydanie przez GitHub API. Gdy wydanie zawiera `BlessedOptimizer-Setup.exe`, przycisk pobiera plik bezpośrednio; w pozostałych przypadkach otwiera listę Releases. Workflow `.github/workflows/windows-release.yml` publikuje `BlessedOptimizer-Setup.exe`, `SHA256SUMS.txt` i manifest updatera po wypchnięciu tagu `vMAJOR.MINOR.PATCH` albo ręcznym uruchomieniu workflow z `main` i podaniem np. `v1.0.4`. Build uruchamia też na Windows read-only smoke checks dla API zasilania, enumeracji procesów i odczytu autostartu; nie zapisuje ustawień systemu. Pull request i zmiany na `main` udostępniają artefakt Actions, ale nie tworzą publicznego Release.
+Przycisk na stronie sprawdza najnowsze publiczne wydanie przez GitHub API. Gdy wydanie zawiera `BlessedOptimizer-Setup.exe`, przycisk pobiera plik bezpośrednio; w pozostałych przypadkach otwiera listę Releases. Podstrona `site/changelog.html` pobiera wszystkie wydania z GitHub Releases i pokazuje dziennik zmian; `site/sitemap.xml` i `site/robots.txt` wspierają indeksowanie. Workflow `.github/workflows/windows-release.yml` publikuje `BlessedOptimizer-Setup.exe`, `SHA256SUMS.txt` i manifest updatera po wypchnięciu tagu `vMAJOR.MINOR.PATCH` albo ręcznym uruchomieniu workflow z `main` i podaniem np. `v1.1.0`. Build uruchamia też na Windows testy jednostkowe (`app/BlessedOptimizer.Tests`) oraz read-only smoke checks dla API zasilania, enumeracji procesów, odczytu autostartu, stanu zabezpieczeń i skanu koszy; nie zapisuje ustawień systemu. Pull request i zmiany na `main` udostępniają artefakt Actions, ale nie tworzą publicznego Release.
 
 Build jest **Windows x64** i zawiera .NET, więc użytkownik nie musi instalować osobnego runtime’u. To jeden plik dla Windows 10/11 x64; na Windows 11 ARM działa przez emulację x64.
 
@@ -53,13 +53,21 @@ dotnet publish app/BlessedOptimizer/BlessedOptimizer.csproj `
   -p:IncludeNativeLibrariesForSelfExtract=true
 ```
 
+Unit tests (Windows only, also run in CI):
+
+```powershell
+dotnet test app/BlessedOptimizer.Tests/BlessedOptimizer.Tests.csproj --configuration Release
+```
+
+They cover the watch-report headline and problem counting, the profile JSON round-trip and consent defaults, muted-finding filtering, update version normalization, SHA256SUMS parsing and WMI datetime parsing.
+
 Read-only smoke checks (Windows only):
 
 ```powershell
 dotnet run --configuration Release --project app/BlessedOptimizer.SmokeTests/BlessedOptimizer.SmokeTests.csproj
 ```
 
-They verify that Windows exposes the active plan, local process enumeration works, the processor limit choices stay at 50–100%, the refresh-rate probe returns a sane mode, the TEMP scan is non-negative, a new profile keeps automatic cleanup disabled until consent, and a full Blessed sweep returns findings. They do not apply power or autostart changes; those write paths still need manual testing on a Windows PC with consent and UAC.
+They verify that Windows exposes the active plan, local process enumeration works, the processor limit choices stay at 50–100%, the refresh-rate probe returns a sane mode, the TEMP scan is non-negative, a new profile keeps automatic cleanup disabled until consent, a full Blessed sweep returns findings, the recycle-bin scan is non-negative, the security reads (reboot pending, last update, Defender, firewall profiles, time sync) complete, and muted findings stay out of the report. They do not apply power or autostart changes; those write paths still need manual testing on a Windows PC with consent and UAC.
 
 ## GitHub Pages
 

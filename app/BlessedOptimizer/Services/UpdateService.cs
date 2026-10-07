@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -233,14 +234,20 @@ public static class UpdateService
     private static HttpClient CreateHttpClient()
     {
         var client = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("BlessedOptimizer/1.0.4 (+https://github.com/rejson59/Blessed-Optimizer)");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd($"BlessedOptimizer/{CurrentVersionString()} (+https://github.com/rejson59/Blessed-Optimizer)");
         return client;
     }
 
-    private static Version Normalize(Version version) =>
+    internal static string CurrentVersionString()
+    {
+        var version = Assembly.GetExecutingAssembly().GetName().Version;
+        return version is null ? "1.0.0" : $"{version.Major}.{version.Minor}.{Math.Max(0, version.Build)}";
+    }
+
+    internal static Version Normalize(Version version) =>
         new(version.Major, version.Minor, Math.Max(0, version.Build));
 
-    private static string ReadExpectedHash(string checksumText, string assetName)
+    internal static string ReadExpectedHash(string checksumText, string assetName)
     {
         foreach (var line in checksumText.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
         {

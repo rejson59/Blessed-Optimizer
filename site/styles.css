@@ -158,3 +158,31 @@
 @media(max-width:760px){.program-nav{overflow:visible;flex-wrap:wrap;scrollbar-width:auto}}
 .download-note{max-width:490px;margin:9px 0 0;color:#aac6df;font-size:7px;line-height:1.6}.download-cta{white-space:nowrap}
 @media(max-width:560px){.download-cta,.download-note{display:none}}
+
+/* Changelog page (changelog.html) */
+.site-tab-link{display:inline-flex;align-items:center}
+.changelog-hero{padding:64px 0 8px}
+.changelog-section{padding-bottom:110px}
+.changelog-section-title{margin:0 0 10px;color:#f4faff;font-size:13px;font-weight:790;letter-spacing:.02em}
+.changelog-status{margin:0 0 22px;color:#a8cae6;font-size:8px}
+.changelog-status.is-error{color:#ffc9b8}
+.changelog-status a{color:#ffe0a0;font-weight:750}
+.changelog-list{display:grid;gap:14px}
+.changelog-entry{padding:22px 24px;border:1px solid rgba(231,246,255,.22);border-radius:20px;background:linear-gradient(140deg,rgba(208,236,255,.13),rgba(38,96,153,.22));box-shadow:0 16px 34px rgba(0,16,45,.22),inset 0 1px rgba(255,255,255,.22);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.changelog-entry-header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding-bottom:12px;border-bottom:1px solid rgba(231,246,255,.16)}
+.changelog-entry-heading{display:flex;align-items:baseline;gap:10px;min-width:0}
+.changelog-entry-heading h3{margin:0;color:#f7fbff;font-size:15px;font-weight:790;letter-spacing:-.02em}
+.changelog-tag{padding:4px 9px;border:1px solid rgba(255,224,160,.35);border-radius:999px;color:#ffe0a0;font-size:7px;font-weight:780;letter-spacing:.08em}
+.changelog-entry-meta{display:flex;align-items:center;gap:8px;color:#a8cae6;font-size:8px}
+.changelog-entry-meta time{font-variant-numeric:tabular-nums}
+.changelog-prerelease{padding:4px 9px;border:1px solid rgba(183,169,255,.4);border-radius:999px;color:#d4caff;font-size:7px;font-weight:780;letter-spacing:.06em;text-transform:uppercase}
+.changelog-body{padding-top:12px}
+.changelog-body h4{margin:14px 0 6px;color:#dcecf9;font-size:10px;font-weight:790}
+.changelog-body h4:first-child{margin-top:2px}
+.changelog-body p{margin:0 0 9px;color:#c0d8ef;font-size:9.5px;line-height:1.75}
+.changelog-body p:last-child{margin-bottom:0}
+.changelog-fallback{margin:18px 0 0;color:#a8cae6;font-size:8.5px}
+.changelog-fallback a{color:#ffe0a0;font-weight:750}
+@media(max-width:560px){.changelog-hero{padding-top:44px}.changelog-entry{padding:16px;border-radius:16px}.changelog-entry-header{flex-direction:column;align-items:flex-start}.changelog-entry-heading h3{font-size:13px}.changelog-body p{font-size:8.5px}}
+.footer-link{color:#ffe0a0;font-weight:750}
+.footer-link:hover{text-decoration:underline}
