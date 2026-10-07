@@ -167,7 +167,7 @@ public sealed class BlessedWatchService
             scan.SizeMb > 4000 ? FindingSeverity.Warning : FindingSeverity.Info,
             $"{scan.SizeMb:0} MB śmieci po instalatorach i aplikacjach",
             $"W folderze tymczasowym leży {scan.FileCount} plików starszych niż dwa dni. Windows o tym nie powie, a ja sprzątnę to w kilka sekund — pliki w użyciu zostawiam nietknięte.",
-            profile.AllowTempCleanup ? "Sprzątnij to za mnie" : "Pozwól mi sprzątnąć",
+            profile.AllowTempCleanup ? "Sprzątnij to za mnie" : "Pokaż podgląd i sprzątnij",
             FindingAction.BlessedHandlesIt,
             "temp-cleanup"));
     }

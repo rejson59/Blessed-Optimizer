@@ -24,11 +24,10 @@ public sealed class BlessedProfile
 
     public bool WatchInBackground { get; set; } = true;
 
-    public bool AllowTempCleanup { get; set; } = true;
+    public bool AllowTempCleanup { get; set; }
 
-    public bool AllowStartupTuning { get; set; }
-
-    public bool AllowPowerTuning { get; set; }
+    /// <summary>True only after the user has explicitly chosen the TEMP-cleanup setting.</summary>
+    public bool TempCleanupConsentSet { get; set; }
 
     public DateTimeOffset? LastCleanupAt { get; set; }
 
@@ -73,7 +72,12 @@ public static class BlessedProfileStore
             if (!File.Exists(ProfileFile))
                 return new BlessedProfile();
             var json = File.ReadAllText(ProfileFile);
-            return JsonSerializer.Deserialize<BlessedProfile>(json, SerializerOptions) ?? new BlessedProfile();
+            var profile = JsonSerializer.Deserialize<BlessedProfile>(json, SerializerOptions) ?? new BlessedProfile();
+            // v1.0.3 enabled TEMP cleanup for new profiles without a separate opt-in.
+            // Require a fresh, explicit choice before allowing unattended deletion.
+            if (!profile.TempCleanupConsentSet)
+                profile.AllowTempCleanup = false;
+            return profile;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or NotSupportedException)
         {

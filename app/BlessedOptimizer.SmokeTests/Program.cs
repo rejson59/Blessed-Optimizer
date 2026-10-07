@@ -30,6 +30,10 @@ var tempScan = MaintenanceService.ScanTemp(TimeSpan.FromDays(2));
 if (tempScan.FileCount < 0 || tempScan.SizeMb < 0)
     throw new InvalidOperationException("Skan plików tymczasowych zwrócił ujemny wynik.");
 
+var freshProfile = new BlessedProfile();
+if (freshProfile.AllowTempCleanup || freshProfile.TempCleanupConsentSet)
+    throw new InvalidOperationException("Automatyczne sprzątanie plików TEMP musi wymagać osobnej zgody użytkownika.");
+
 var profile = new BlessedProfile { Priority = BlessedPriority.Work };
 if (string.IsNullOrWhiteSpace(profile.PriorityLabel) || string.IsNullOrWhiteSpace(profile.PriorityPromise))
     throw new InvalidOperationException("Profil Blessed nie opisuje priorytetu użytkownika.");

@@ -272,6 +272,8 @@ public partial class MainWindow : Window
             nameof(ConnectionsNavButton) => "connections",
             nameof(ProposalsNavButton) => "proposals",
             nameof(PersonalizationNavButton) => "personalization",
+            nameof(SettingsNavButton) => "settings",
+            nameof(HistoryNavButton) => "history",
             nameof(GamingNavButton) => "gaming",
             _ => "care"
         };
@@ -294,6 +296,8 @@ public partial class MainWindow : Window
         ConnectionsNavButton.Tag = _currentPage == "connections" ? "active" : null;
         ProposalsNavButton.Tag = _currentPage == "proposals" ? "active" : null;
         PersonalizationNavButton.Tag = _currentPage == "personalization" ? "active" : null;
+        SettingsNavButton.Tag = _currentPage == "settings" ? "active" : null;
+        HistoryNavButton.Tag = _currentPage == "history" ? "active" : null;
     }
 
     private void RenderCurrentPage()
@@ -309,9 +313,12 @@ public partial class MainWindow : Window
             "connections" => BuildConnectionsPage(),
             "proposals" => BuildProposalsPage(),
             "personalization" => BuildPersonalizationPage(),
+            "settings" => BuildSettingsPage(),
+            "history" => BuildHistoryPage(),
             _ => BuildCarePage()
         };
         PageHost.Children.Add(page);
+        WorkspaceScrollViewer.ScrollToTop();
         AnimateIn(PageHost, 16);
         if (_currentPage == "processes")
         {
@@ -324,6 +331,46 @@ public partial class MainWindow : Window
         }
     }
 
+    private void WorkspaceScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (sender is not ScrollViewer workspace)
+            return;
+
+        // Let a nested control such as the processes table consume the wheel first.
+        // If it has reached its edge, continue scrolling the whole page instead of swallowing input.
+        var nested = FindNestedScrollViewer(e.OriginalSource as DependencyObject, workspace);
+        if (nested is not null && CanScrollInDirection(nested, e.Delta))
+            return;
+        if (!CanScrollInDirection(workspace, e.Delta))
+            return;
+
+        workspace.ScrollToVerticalOffset(workspace.VerticalOffset - e.Delta);
+        e.Handled = true;
+    }
+
+    private static ScrollViewer? FindNestedScrollViewer(DependencyObject? source, ScrollViewer workspace)
+    {
+        var current = source;
+        while (current is not null && !ReferenceEquals(current, workspace))
+        {
+            if (current is ScrollViewer scrollViewer)
+                return scrollViewer;
+
+            try
+            {
+                current = VisualTreeHelper.GetParent(current);
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+            {
+                current = LogicalTreeHelper.GetParent(current);
+            }
+        }
+        return null;
+    }
+
+    private static bool CanScrollInDirection(ScrollViewer viewer, int delta) =>
+        delta > 0 ? viewer.VerticalOffset > 0 : delta < 0 && viewer.VerticalOffset < viewer.ScrollableHeight;
+
     private void UpdateWorkspaceHeader()
     {
         var page = _currentPage switch
@@ -331,7 +378,9 @@ public partial class MainWindow : Window
             "gaming" => (Title: "Strefa gracza", Crumb: "STREFA GRACZA", Message: "Włącz czuwanie, aby obserwować użycie procesora i pamięci podczas gry."),
             "connections" => (Title: "Połączenia", Crumb: "POŁĄCZENIA", Message: "Sprawdzę stan kart sieciowych i wykonam test ping. Każdą zmianę zatwierdzasz Ty."),
             "proposals" => (Title: "Propozycje", Crumb: "PROPOZYCJE", Message: "Podpowiem, co warto sprawdzić, i zaprowadzę Cię prosto do właściwych ustawień Windows."),
-            "personalization" => (Title: "Personalizacja Windows", Crumb: "PERSONALIZACJA WINDOWS", Message: "Dopasuj wygląd Blessed do siebie — motyw i akcent zmieniają się od razu."),
+            "personalization" => (Title: "Wygląd", Crumb: "WYGLĄD", Message: "Dopasuj motyw i kolor Blessed. Ustawienia systemowe Windows otworzysz osobno."),
+            "settings" => (Title: "Ustawienia Blessed", Crumb: "USTAWIENIA", Message: "Wybierz swój priorytet i zdecyduj, które zadania Blessed może wykonywać automatycznie."),
+            "history" => (Title: "Historia", Crumb: "HISTORIA", Message: "Ostatnie przeglądy są zapisywane wyłącznie na tym komputerze."),
             "processes" => (Title: "Procesy", Crumb: "PROCESY", Message: "Pokażę zużycie CPU i pamięci przez każdy proces — czytelnie i na żywo."),
             "startup" => (Title: "Autostart", Crumb: "AUTOSTART", Message: "Przejrzyj wpisy autostartu swojego konta. Każda zmiana ma zapisaną kopię do przywrócenia."),
             "power" => (Title: "Zasilanie", Crumb: "ZASILANIE", Message: "Dostrój plan zasilania. Każdą zmianę potwierdzasz Ty i zawsze możesz ją cofnąć."),
@@ -852,8 +901,8 @@ public partial class MainWindow : Window
         page.Children.Add(WrapPanel(adaptersCard));
 
         var testCard = NewPanel();
-        testCard.Children.Add(Text("Jednorazowy test łączności", 16, "TextPrimaryBrush", FontWeights.SemiBold));
-        testCard.Children.Add(Text("Test mierzy czas odpowiedzi serwera 1.1.1.1 (ICMP). Ustawienia Wi-Fi, DNS i TCP pozostają bez zmian.", 11, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 12)));
+        testCard.Children.Add(Text("Seria testów stabilności połączenia", 16, "TextPrimaryBrush", FontWeights.SemiBold));
+        testCard.Children.Add(Text("Wykonuję 10 krótkich prób do 1.1.1.1 i podaję średnie opóźnienie, jego wahania oraz utracone odpowiedzi. Ping może być blokowany przez zaporę; ustawienia sieci pozostają bez zmian.", 11, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 12)));
         var testControls = new DockPanel { LastChildFill = false };
         _pingResult = Text("Test nie został uruchomiony.", 11, "TextSecondaryBrush");
         _pingResult.VerticalAlignment = VerticalAlignment.Center;
@@ -940,7 +989,7 @@ public partial class MainWindow : Window
     private UIElement BuildCarePage()
     {
         var page = NewPage("BLESSED CZUWA", "Zajmę się tym za Ciebie.", iconKey: "IconShield", description:
-            $"Sam sprawdzam dysk, pamięć, autostart, ekran, baterię i plan zasilania — co kilka minut, w tle. {_profile.PriorityPromise}");
+            $"Sam sprawdzam dysk, pamięć, autostart, ekran, baterię i plan zasilania co 3 minuty, gdy Blessed jest otwarty. {_profile.PriorityPromise}");
 
         if (!_profile.OnboardingCompleted)
             page.Children.Add(WrapPanel(BuildOnboardingCard()));
@@ -974,7 +1023,7 @@ public partial class MainWindow : Window
         page.Children.Add(WrapPanel(findings));
         RenderFindings();
 
-        page.Children.Add(WrapPanel(BuildPriorityCard()));
+        page.Children.Add(WrapPanel(BuildSettingsShortcutCard()));
         return page;
     }
 
@@ -985,7 +1034,7 @@ public partial class MainWindow : Window
             ? "za chwilę"
             : _lastReport.CompletedAt.ToString("HH:mm", CultureInfo.CurrentCulture), "IconClock"));
         grid.Children.Add(SpecCard("ZWOLNIŁEM DLA CIEBIE", _profile.TotalFreedMb >= 1 ? $"{_profile.TotalFreedMb:0} MB" : "jeszcze nic", "IconBroom"));
-        grid.Children.Add(SpecCard("CZUWANIE", _profile.WatchInBackground ? "W tle, co 3 minuty" : "Tylko na żądanie", "IconShield"));
+        grid.Children.Add(SpecCard("CZUWANIE", _profile.WatchInBackground ? "Co 3 minuty · program otwarty" : "Tylko ręcznie", "IconShield"));
         return grid;
     }
 
@@ -994,7 +1043,7 @@ public partial class MainWindow : Window
         var card = NewPanel();
         card.Children.Add(Text("ZANIM ZACZNIEMY", 9, "GoldBrush", FontWeights.Bold));
         card.Children.Add(Text("Powiedz mi, co jest dla Ciebie najważniejsze.", 17, "TextPrimaryBrush", FontWeights.SemiBold, new Thickness(0, 6, 0, 0)));
-        card.Children.Add(Text("Pod to dobiorę przegląd, kolejność spraw i to, czym zajmę się sam.", 11, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 13), lineHeight: 18));
+        card.Children.Add(Text("Pod to dobiorę treść podpowiedzi. Automatyczne działania włączysz osobno w Ustawieniach Blessed.", 11, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 13), lineHeight: 18));
         card.Children.Add(BuildPriorityChoices(completeOnboarding: true));
         return card;
     }
@@ -1002,22 +1051,174 @@ public partial class MainWindow : Window
     private StackPanel BuildPriorityCard()
     {
         var card = NewPanel();
-        card.Children.Add(Text("CO JEST DLA CIEBIE WAŻNE", 9, "AccentBrush", FontWeights.Bold));
-        card.Children.Add(Text($"Twój priorytet: {_profile.PriorityLabel}", 15, "TextPrimaryBrush", FontWeights.SemiBold, new Thickness(0, 6, 0, 0)));
+        card.Children.Add(Text("PRIORYTET BLESSED", 9, "AccentBrush", FontWeights.Bold));
+        card.Children.Add(Text($"Twój priorytet: {_profile.PriorityLabel}", 16, "TextPrimaryBrush", FontWeights.SemiBold, new Thickness(0, 6, 0, 0)));
         card.Children.Add(Text(_profile.PriorityPromise, 11, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 12), lineHeight: 18));
         card.Children.Add(BuildPriorityChoices(completeOnboarding: false));
+        card.Children.Add(Text("Priorytet zmienia kolejność i treść podpowiedzi. Nie zmienia samodzielnie ustawień Windows.", 10, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 0), lineHeight: 16));
+        return card;
+    }
 
-        card.Children.Add(PanelHeading("IconCheck", "Czym mogę zająć się sam?", "TextPrimaryBrush", 13, new Thickness(0, 17, 0, 9)));
-        card.Children.Add(AutomationSwitch("Czuwam w tle i sprawdzam komputer co kilka minut", _profile.WatchInBackground, value =>
+    private StackPanel BuildAutomationCard()
+    {
+        var card = NewPanel();
+        card.Children.Add(Text("AUTOMATYCZNE DZIAŁANIA", 9, "AccentBrush", FontWeights.Bold));
+        card.Children.Add(Text("Ty wybierasz, co może wydarzyć się bez kolejnego kliknięcia.", 14, "TextPrimaryBrush", FontWeights.SemiBold, new Thickness(0, 6, 0, 12)));
+        card.Children.Add(AutomationSwitch("Sprawdzaj komputer co 3 minuty, gdy Blessed jest otwarty", _profile.WatchInBackground, value =>
         {
             _profile.WatchInBackground = value;
             if (value) _careTimer.Start(); else _careTimer.Stop();
         }));
-        card.Children.Add(AutomationSwitch("Sprzątam pliki tymczasowe bez pytania", _profile.AllowTempCleanup, value => _profile.AllowTempCleanup = value));
-        card.Children.Add(AutomationSwitch("Pilnuję autostartu i sam zgłaszam zbędne wpisy", _profile.AllowStartupTuning, value => _profile.AllowStartupTuning = value));
-        card.Children.Add(AutomationSwitch("Pilnuję planu zasilania pod mój priorytet", _profile.AllowPowerTuning, value => _profile.AllowPowerTuning = value));
-        card.Children.Add(Text("Zmiany wymagające zgody Windows (UAC) zawsze pokażę przed wykonaniem, a oryginalne wartości zapiszę do przywrócenia.", 10, "TextSecondaryBrush", margin: new Thickness(0, 11, 0, 0), lineHeight: 16));
+        card.Children.Add(TempCleanupAutomationSwitch());
+        card.Children.Add(Text("Sprzątanie dotyczy plików tymczasowych starszych niż 2 dni, uruchamia się dopiero po zebraniu co najmniej 1 GB i pomija pliki używane przez inne programy. Usuniętych plików nie da się przywrócić. Autostart i ustawienia zasilania Blessed zmienia wyłącznie po osobnym działaniu i potwierdzeniu.", 10, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 0), lineHeight: 16));
         return card;
+    }
+
+    private CheckBox TempCleanupAutomationSwitch()
+    {
+        var box = new CheckBox
+        {
+            Content = "Automatycznie sprzątaj stare pliki tymczasowe",
+            IsChecked = _profile.AllowTempCleanup,
+            FontSize = 11,
+            Margin = new Thickness(0, 0, 0, 8)
+        };
+        box.SetResourceReference(Control.ForegroundProperty, "TextPrimaryBrush");
+        box.Checked += (_, _) => SetTempCleanupConsent(box, enabled: true);
+        box.Unchecked += (_, _) => SetTempCleanupConsent(box, enabled: false);
+        return box;
+    }
+
+    private void SetTempCleanupConsent(CheckBox control, bool enabled)
+    {
+        if (enabled)
+        {
+            var choice = MessageBox.Show(this,
+                "Blessed może automatycznie usuwać pliki tymczasowe starsze niż 2 dni, ale tylko wtedy, gdy ich łączny rozmiar przekroczy 1 GB. Pliki używane przez inne programy zostaną pominięte. Usuniętych plików nie da się przywrócić.\n\nCzy włączyć automatyczne sprzątanie?",
+                "Zgoda na automatyczne sprzątanie",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning,
+                MessageBoxResult.No);
+            if (choice != MessageBoxResult.Yes)
+            {
+                control.IsChecked = false;
+                return;
+            }
+        }
+
+        _profile.TempCleanupConsentSet = true;
+        _profile.AllowTempCleanup = enabled;
+        BlessedProfileStore.Save(_profile);
+    }
+
+    private StackPanel BuildSettingsShortcutCard()
+    {
+        var card = NewPanel();
+        card.Children.Add(Text("Twój profil i automatyzacje", 14, "TextPrimaryBrush", FontWeights.SemiBold));
+        card.Children.Add(Text($"Priorytet: {_profile.PriorityLabel}. W ustawieniach zdecydujesz też, czy Blessed może sprzątać pliki tymczasowe automatycznie.", 11, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 10), lineHeight: 17));
+        var button = new Button
+        {
+            Content = "Otwórz ustawienia Blessed",
+            Style = (Style)FindResource("SecondaryButton"),
+            HorizontalAlignment = HorizontalAlignment.Left,
+            Padding = new Thickness(12, 7, 12, 7)
+        };
+        button.Click += (_, _) => NavigateTo("settings");
+        card.Children.Add(button);
+        return card;
+    }
+
+    private UIElement BuildSettingsPage()
+    {
+        var page = NewPage("USTAWIENIA BLESSED", "Dopasuj pomoc do siebie.", iconKey: "IconSettings", description:
+            "Wybierz, na czym najbardziej Ci zależy, i osobno zdecyduj o automatycznych działaniach. Zmiany w Windows nadal wymagają Twojego potwierdzenia.");
+        page.Children.Add(WrapPanel(BuildPriorityCard()));
+        page.Children.Add(WrapPanel(BuildAutomationCard()));
+
+        var privacy = NewPanel();
+        privacy.Children.Add(PanelHeading("IconShield", "Prywatność i kontrola", "AccentBrush"));
+        privacy.Children.Add(Text("Ustawienia profilu i historia przeglądów są przechowywane lokalnie w Twoim profilu Windows. Blessed nie wysyła ich do serwera. Sprawdzenie aktualizacji jest oddzielne i łączy się z GitHub.", 10, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 0), lineHeight: 16));
+        page.Children.Add(WrapPanel(privacy));
+        return page;
+    }
+
+    private UIElement BuildHistoryPage()
+    {
+        var page = NewPage("HISTORIA LOKALNA", "Zobacz, co zmieniało się z czasem.", iconKey: "IconClock", description:
+            "Blessed przechowuje podsumowania ostatnich 30 dni wyłącznie na tym komputerze. Zapis obejmuje użycie CPU i RAM oraz liczbę znalezionych spraw.");
+        var entries = WatchHistoryStore.ReadRecent(1500);
+        var problemChecks = entries.Count(entry => entry.ProblemCount > 0);
+        var averageMemory = entries.Count == 0 ? "—" : $"{entries.Average(entry => entry.MemoryPercent):0}%";
+        var averageCpuSamples = entries.Where(entry => entry.CpuPercent.HasValue).Select(entry => entry.CpuPercent!.Value).ToArray();
+        var averageCpu = averageCpuSamples.Length == 0 ? "—" : $"{averageCpuSamples.Average():0}%";
+
+        var summary = new UniformGrid { Columns = 4, Rows = 1, Margin = new Thickness(0, 0, 0, 2) };
+        summary.Children.Add(SpecCard("ZAPISANE PRZEGLĄDY", entries.Count.ToString(CultureInfo.CurrentCulture), "IconClock"));
+        summary.Children.Add(SpecCard("Z PRZYPOMNIENIAMI", problemChecks.ToString(CultureInfo.CurrentCulture), "IconAlert"));
+        summary.Children.Add(SpecCard("ŚREDNIE CPU", averageCpu, "IconCpu"));
+        summary.Children.Add(SpecCard("ŚREDNIE UŻYCIE RAM", averageMemory, "IconMemory"));
+        page.Children.Add(summary);
+
+        var historyPanel = NewPanel();
+        var heading = new DockPanel { LastChildFill = true, Margin = new Thickness(0, 0, 0, 12) };
+        var clearButton = new Button
+        {
+            Content = "Wyczyść historię",
+            Style = (Style)FindResource("SecondaryButton"),
+            Padding = new Thickness(10, 6, 10, 6),
+            IsEnabled = entries.Count > 0
+        };
+        clearButton.Click += (_, _) =>
+        {
+            var choice = MessageBox.Show(this,
+                "Usunąć zapisaną historię przeglądów z tego komputera? Tej czynności nie można cofnąć.",
+                "Wyczyścić historię?",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question,
+                MessageBoxResult.No);
+            if (choice == MessageBoxResult.Yes)
+            {
+                FooterStatusText.Text = WatchHistoryStore.Clear() ? "Historia przeglądów została usunięta." : "Nie udało się usunąć historii.";
+                RenderCurrentPage();
+            }
+        };
+        DockPanel.SetDock(clearButton, Dock.Right);
+        heading.Children.Add(clearButton);
+        heading.Children.Add(Text("Ostatnie przeglądy", 15, "TextPrimaryBrush", FontWeights.SemiBold, new Thickness(0, 6, 0, 0)));
+        historyPanel.Children.Add(heading);
+
+        if (entries.Count == 0)
+        {
+            historyPanel.Children.Add(Text("Gdy Blessed wykona kilka przeglądów, znajdziesz je tutaj. Historia pozostaje na tym komputerze i możesz ją w każdej chwili wyczyścić.", 11, "TextSecondaryBrush", lineHeight: 18));
+        }
+        else
+        {
+            foreach (var entry in entries.Take(24))
+            {
+                var detail = entry.Findings.Count == 0 ? "Bez spraw wymagających uwagi" : string.Join(" · ", entry.Findings);
+                var row = new Border
+                {
+                    Padding = new Thickness(12, 10, 12, 10),
+                    Margin = new Thickness(0, 0, 0, 8),
+                    CornerRadius = new CornerRadius(11),
+                    BorderThickness = new Thickness(1)
+                };
+                row.SetResourceReference(Border.BackgroundProperty, "SurfaceRaisedBrush");
+                row.SetResourceReference(Border.BorderBrushProperty, "BorderBrush");
+                var content = new StackPanel();
+                content.Children.Add(Text(entry.CompletedAt.ToLocalTime().ToString("dd MMM yyyy · HH:mm", CultureInfo.CurrentCulture), 9, "AccentBrush", FontWeights.Bold));
+                content.Children.Add(Text(entry.Headline, 12, "TextPrimaryBrush", FontWeights.SemiBold, new Thickness(0, 4, 0, 0)));
+                content.Children.Add(Text(detail, 10, "TextSecondaryBrush", margin: new Thickness(0, 3, 0, 0), lineHeight: 15));
+                var cpu = entry.CpuPercent is { } cpuValue ? $"CPU {cpuValue:0}%" : "CPU —";
+                content.Children.Add(Text($"{cpu} · RAM {entry.MemoryPercent:0}%", 9, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 0)));
+                row.Child = content;
+                historyPanel.Children.Add(row);
+            }
+            if (entries.Count > 24)
+                historyPanel.Children.Add(Text("Pokazuję 24 najnowsze wpisy. Starsze podsumowania są nadal przechowywane do 30 dni.", 9, "TextSecondaryBrush", margin: new Thickness(0, 2, 0, 0)));
+        }
+        page.Children.Add(WrapPanel(historyPanel));
+        return page;
     }
 
     private WrapPanel BuildPriorityChoices(bool completeOnboarding)
@@ -1213,6 +1414,9 @@ public partial class MainWindow : Window
                 _lastReport = await _watchService.InspectAsync(_snapshot, _profile, usage, _lifetime.Token);
             }
 
+            if (_lastReport is not null)
+                WatchHistoryStore.Record(_lastReport, usage);
+
             RenderFindings();
             UpdateCareBadge();
             SetCareStatus(DescribeWatchStatus());
@@ -1251,9 +1455,36 @@ public partial class MainWindow : Window
 
     private async Task RunTempCleanupAsync(bool auto)
     {
-        SetCareStatus("Sprzątam pliki tymczasowe…");
+        SetCareStatus(auto ? "Sprzątam pliki tymczasowe…" : "Sprawdzam, co można bezpiecznie posprzątać…");
         try
         {
+            if (!auto)
+            {
+                var preview = await MaintenanceService.ScanTempAsync(TimeSpan.FromDays(2), _lifetime.Token);
+                if (preview.FileCount == 0 || preview.SizeMb <= 0)
+                {
+                    MessageBox.Show(this,
+                        "Nie znalazłem starych plików tymczasowych do usunięcia.",
+                        "Blessed — sprzątanie",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                    SetCareStatus("Nie ma starych plików do sprzątnięcia.");
+                    return;
+                }
+
+                var choice = MessageBox.Show(this,
+                    $"Podgląd sprzątania:\n\n• {preview.FileCount:N0} plików starszych niż 2 dni\n• około {preview.SizeMb:0} MB do usunięcia\n• pliki używane przez inne programy zostaną pominięte\n\nUsuniętych plików nie da się przywrócić. Kontynuować?",
+                    "Zanim Blessed posprząta",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning,
+                    MessageBoxResult.No);
+                if (choice != MessageBoxResult.Yes)
+                {
+                    SetCareStatus("Sprzątanie anulowano.");
+                    return;
+                }
+            }
+
             var result = await MaintenanceService.CleanTempAsync(TimeSpan.FromDays(2), _lifetime.Token);
             _watchService.InvalidateTempScan();
             _profile.LastCleanupAt = DateTimeOffset.Now;
@@ -1662,11 +1893,11 @@ public partial class MainWindow : Window
     {
         if (_pingButton is null || _pingResult is null) return;
         _pingButton.IsEnabled = false;
-        _pingResult.Text = "Wysyłam jedno zapytanie ping…";
+        _pingResult.Text = "Wykonuję 10 krótkich prób połączenia…";
         try
         {
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
-            timeout.CancelAfter(TimeSpan.FromSeconds(4));
+            timeout.CancelAfter(TimeSpan.FromSeconds(15));
             _pingResult.Text = await NetworkDiagnostics.TestConnectivityAsync(timeout.Token);
         }
         finally
@@ -1688,7 +1919,7 @@ public partial class MainWindow : Window
         UpdateStatusText.Text = "Sprawdzam wydania GitHub…";
         try
         {
-            var current = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(1, 0, 2);
+            var current = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(1, 0, 4);
             var result = await UpdateService.CheckLatestAsync(current, _lifetime.Token);
             UpdateStatusText.Text = result.Message;
             if (result.HasUpdate)
@@ -1829,7 +2060,7 @@ public partial class MainWindow : Window
 
     private static string GetCurrentVersion()
     {
-        var version = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(1, 0, 2);
+        var version = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(1, 0, 4);
         return $"{version.Major}.{version.Minor}.{Math.Max(0, version.Build)}";
     }
 
