@@ -38,6 +38,28 @@
     <SolidColorBrush x:Key="AccentTextBrush" Color="#08213B" />
     <SolidColorBrush x:Key="GoldBrush" Color="#F1D28D" />
 
+
+    <!-- Wektorowe ikony Blessed (siatka 24x24, rysowane obrysem) -->
+    <PathGeometry x:Key="IconShield" Figures="M 12 2.6 20 6 v 6.1 c 0 4.9 -3.3 8.4 -8 9.8 -4.7 -1.4 -8 -4.9 -8 -9.8 V 6 l 8 -3.4 Z M 8.3 11.9 11 14.6 l 5 -5.2" />
+    <PathGeometry x:Key="IconGame" Figures="M 7.2 8.2 h 9.6 c 1.5 0 2.7 .9 3.1 2.2 l 1.2 3.5 c .5 1.7 -1.5 3.1 -3 2.1 l -2.2 -1.6 H 8.1 l -2.2 1.6 c -1.5 1 -3.5 -.4 -3 -2.1 l 1.2 -3.5 c .4 -1.3 1.6 -2.2 3.1 -2.2 Z M 7.6 10.3 v 3.6 M 5.8 12.1 h 3.6 M 15.4 11.3 h .1 M 17.3 13.2 h .1" />
+    <PathGeometry x:Key="IconSignal" Figures="M 2.4 8.4 c 5.4 -4.6 13.8 -4.6 19.2 0 M 5.4 11.6 c 3.8 -3.1 9.4 -3.1 13.2 0 M 8.6 14.8 c 2 -1.6 4.8 -1.6 6.8 0 M 12 18.6 h .1" />
+    <PathGeometry x:Key="IconSpark" Figures="M 12 2.6 14.2 9 20.6 11.2 14.2 13.4 12 19.8 9.8 13.4 3.4 11.2 9.8 9 Z M 18.8 17.4 l .9 2.3 2.3 .9 -2.3 .9 -.9 2.3 -.9 -2.3 -2.3 -.9 2.3 -.9 Z" />
+    <PathGeometry x:Key="IconPalette" Figures="M 4 4.4 h 16 v 15.2 H 4 Z M 8 8.6 h 8 M 8 12 h 5 M 8 15.4 h 8" />
+    <PathGeometry x:Key="IconList" Figures="M 3.6 4.6 h 16.8 v 14.8 H 3.6 Z M 3.6 9.2 h 16.8 M 9 9.2 v 10.2 M 12.4 12.6 h 5.4 M 12.4 15.8 h 5.4" />
+    <PathGeometry x:Key="IconRestart" Figures="M 4.4 9.4 V 4.6 M 4.4 9.4 h 4.8 M 5.2 8.2 A 8 8 0 1 1 4.2 13" />
+    <PathGeometry x:Key="IconBolt" Figures="M 13.4 2.4 5.6 13.6 h 5.2 l -.8 8 7.8 -11.2 h -5.2 Z" />
+    <PathGeometry x:Key="IconDisk" Figures="M 3.6 6.6 c 0 -1.6 3.8 -2.8 8.4 -2.8 s 8.4 1.2 8.4 2.8 -3.8 2.8 -8.4 2.8 -8.4 -1.2 -8.4 -2.8 Z M 3.6 6.6 v 10.8 c 0 1.6 3.8 2.8 8.4 2.8 s 8.4 -1.2 8.4 -2.8 V 6.6 M 3.6 12 c 0 1.6 3.8 2.8 8.4 2.8 s 8.4 -1.2 8.4 -2.8" />
+    <PathGeometry x:Key="IconMemory" Figures="M 4.2 7.4 h 15.6 v 9.2 H 4.2 Z M 8 7.4 v 9.2 M 12 7.4 v 9.2 M 16 7.4 v 9.2 M 7 4.6 v 2.8 M 12 4.6 v 2.8 M 17 4.6 v 2.8 M 7 16.6 v 2.8 M 12 16.6 v 2.8 M 17 16.6 v 2.8" />
+    <PathGeometry x:Key="IconClock" Figures="M 12 3.4 a 8.6 8.6 0 1 0 0 17.2 8.6 8.6 0 0 0 0 -17.2 Z M 12 7.2 v 5.2 l 3.4 2" />
+    <PathGeometry x:Key="IconDisplay" Figures="M 3.4 4.8 h 17.2 v 11.4 H 3.4 Z M 9 20 h 6 M 12 16.2 V 20 M 7.4 8.4 h 4.2 M 7.4 11.6 h 8.4" />
+    <PathGeometry x:Key="IconBattery" Figures="M 3.2 7.6 h 15 v 8.8 h -15 Z M 20.4 10.6 v 2.8 M 5.6 9.8 h 5.4 v 4.4 H 5.6 Z" />
+    <PathGeometry x:Key="IconBroom" Figures="M 14.6 3.4 9.4 8.6 M 12.8 6.2 l 5 5 M 10.6 7.6 4.2 14 c -1.4 1.4 -1.4 3.6 0 5 l .8 .8 9.6 -9.6 Z M 16.8 15.2 l 1 2.6 2.6 1 -2.6 1 -1 2.6 -1 -2.6 -2.6 -1 2.6 -1 Z" />
+    <PathGeometry x:Key="IconSearch" Figures="M 10.8 3.6 a 7.2 7.2 0 1 0 0 14.4 7.2 7.2 0 0 0 0 -14.4 Z M 16.2 16.2 20.6 20.6" />
+    <PathGeometry x:Key="IconCheck" Figures="M 4.6 12.6 9.6 17.6 19.4 6.8" />
+    <PathGeometry x:Key="IconAlert" Figures="M 12 3.6 21.4 20 H 2.6 Z M 12 9.8 v 4.6 M 12 17.2 h .1" />
+    <PathGeometry x:Key="IconHeart" Figures="M 12 20.4 4.6 13.2 C 2.4 11 2.6 7.4 5 5.6 c 2 -1.5 4.8 -1 6.4 1 l .6 .8 .6 -.8 c 1.6 -2 4.4 -2.5 6.4 -1 2.4 1.8 2.6 5.4 .4 7.6 Z" />
+    <PathGeometry x:Key="IconCpu" Figures="M 7.4 7.4 h 9.2 v 9.2 H 7.4 Z M 10.4 10.4 h 3.2 v 3.2 h -3.2 Z M 12 3.6 v 3.8 M 12 16.6 v 3.8 M 3.6 12 h 3.8 M 16.6 12 h 3.8" />
+
     <Style x:Key="PrimaryButton" TargetType="Button">
       <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
       <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
@@ -49,11 +71,32 @@
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="Button">
-            <Border x:Name="ButtonBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10" Padding="{TemplateBinding Padding}">
+            <Border x:Name="ButtonBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10" Padding="{TemplateBinding Padding}" RenderTransformOrigin="0.5,0.5">
+              <Border.RenderTransform>
+                <ScaleTransform ScaleX="1" ScaleY="1" />
+              </Border.RenderTransform>
               <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True" />
             </Border>
             <ControlTemplate.Triggers>
-              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource AccentHoverBrush}" /></Trigger>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource AccentHoverBrush}" />
+                <Trigger.EnterActions>
+                  <BeginStoryboard>
+                    <Storyboard>
+                      <DoubleAnimation Storyboard.TargetName="ButtonBorder" Storyboard.TargetProperty="RenderTransform.ScaleX" To="1.035" Duration="0:0:0.16" />
+                      <DoubleAnimation Storyboard.TargetName="ButtonBorder" Storyboard.TargetProperty="RenderTransform.ScaleY" To="1.035" Duration="0:0:0.16" />
+                    </Storyboard>
+                  </BeginStoryboard>
+                </Trigger.EnterActions>
+                <Trigger.ExitActions>
+                  <BeginStoryboard>
+                    <Storyboard>
+                      <DoubleAnimation Storyboard.TargetName="ButtonBorder" Storyboard.TargetProperty="RenderTransform.ScaleX" To="1" Duration="0:0:0.2" />
+                      <DoubleAnimation Storyboard.TargetName="ButtonBorder" Storyboard.TargetProperty="RenderTransform.ScaleY" To="1" Duration="0:0:0.2" />
+                    </Storyboard>
+                  </BeginStoryboard>
+                </Trigger.ExitActions>
+              </Trigger>
               <Trigger Property="IsPressed" Value="True"><Setter TargetName="ButtonBorder" Property="Opacity" Value="0.82" /></Trigger>
               <Trigger Property="IsEnabled" Value="False"><Setter TargetName="ButtonBorder" Property="Opacity" Value="0.45" /></Trigger>
             </ControlTemplate.Triggers>
@@ -85,10 +128,30 @@
         <Setter.Value>
           <ControlTemplate TargetType="Button">
             <Border x:Name="NavBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="999" Padding="{TemplateBinding Padding}">
+              <Border.RenderTransform>
+                <TranslateTransform X="0" Y="0" />
+              </Border.RenderTransform>
               <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
             </Border>
             <ControlTemplate.Triggers>
-              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="NavBorder" Property="Background" Value="{DynamicResource SurfaceRaisedBrush}" /><Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" /></Trigger>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="NavBorder" Property="Background" Value="{DynamicResource SurfaceRaisedBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+                <Trigger.EnterActions>
+                  <BeginStoryboard>
+                    <Storyboard>
+                      <DoubleAnimation Storyboard.TargetName="NavBorder" Storyboard.TargetProperty="RenderTransform.Y" To="-2" Duration="0:0:0.16" />
+                    </Storyboard>
+                  </BeginStoryboard>
+                </Trigger.EnterActions>
+                <Trigger.ExitActions>
+                  <BeginStoryboard>
+                    <Storyboard>
+                      <DoubleAnimation Storyboard.TargetName="NavBorder" Storyboard.TargetProperty="RenderTransform.Y" To="0" Duration="0:0:0.22" />
+                    </Storyboard>
+                  </BeginStoryboard>
+                </Trigger.ExitActions>
+              </Trigger>
               <Trigger Property="Tag" Value="active"><Setter TargetName="NavBorder" Property="Background" Value="{DynamicResource SurfaceRaisedBrush}" /><Setter TargetName="NavBorder" Property="BorderBrush" Value="{DynamicResource BorderBrush}" /><Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" /></Trigger>
             </ControlTemplate.Triggers>
           </ControlTemplate>
@@ -130,6 +193,26 @@
           </ControlTemplate>
         </Setter.Value>
       </Setter>
+    </Style>
+
+    <Style x:Key="BlessedIcon" TargetType="Path">
+      <Setter Property="Stretch" Value="Uniform" />
+      <Setter Property="Fill" Value="{x:Null}" />
+      <Setter Property="StrokeThickness" Value="1.7" />
+      <Setter Property="StrokeLineJoin" Value="Round" />
+      <Setter Property="StrokeStartLineCap" Value="Round" />
+      <Setter Property="StrokeEndLineCap" Value="Round" />
+      <Setter Property="Stroke" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="Width" Value="16" />
+      <Setter Property="Height" Value="16" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="SnapsToDevicePixels" Value="True" />
+    </Style>
+
+    <Style x:Key="NavIcon" TargetType="Path" BasedOn="{StaticResource BlessedIcon}">
+      <Setter Property="Margin" Value="0,0,8,0" />
+      <Setter Property="Width" Value="15" />
+      <Setter Property="Height" Value="15" />
     </Style>
 
     <Style x:Key="EyebrowText" TargetType="TextBlock">

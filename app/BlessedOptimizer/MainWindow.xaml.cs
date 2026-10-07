@@ -10,6 +10,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 using System.Windows.Threading;
 using BlessedOptimizer.Models;
@@ -56,6 +57,8 @@ public partial class MainWindow : Window
     private bool _powerOperationBusy;
     private HwndSource? _windowSource;
     private readonly TranslateTransform _cursorWingsPosition = new();
+    private readonly ScaleTransform _guideLogoScale = new(1, 1);
+    private readonly ScaleTransform _careBadgeScale = new(1, 1);
     private bool _mouseLeaveTrackingRequested;
     private bool _mouseLeaveTrackingIsNonClient;
 
@@ -107,6 +110,10 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         CursorWingsAnchor.RenderTransform = _cursorWingsPosition;
+        GuideLogo.RenderTransformOrigin = new Point(0.5, 0.5);
+        GuideLogo.RenderTransform = _guideLogoScale;
+        CareBadge.RenderTransformOrigin = new Point(0.5, 0.5);
+        CareBadge.RenderTransform = _careBadgeScale;
         _snapshot = initialSnapshot;
         _isPortable = isPortable;
         _skipUpdateCheck = skipUpdateCheck;
@@ -305,6 +312,7 @@ public partial class MainWindow : Window
             _ => BuildCarePage()
         };
         PageHost.Children.Add(page);
+        AnimateIn(PageHost, 16);
         if (_currentPage == "processes")
         {
             _processTimer.Start();
@@ -341,7 +349,7 @@ public partial class MainWindow : Window
 
     private UIElement BuildGamingPage()
     {
-        var page = NewPage("STREFA GRACZA · DANE LOKALNE", "Razem po spokojniejszą rozgrywkę.",
+        var page = NewPage("STREFA GRACZA · DANE LOKALNE", "Razem po spokojniejszą rozgrywkę.", iconKey: "IconGame", description:
             "Monitoruj użycie procesora i pamięci podczas gry. Czuwanie włączasz i zatrzymujesz jednym kliknięciem.");
 
         var monitor = NewPanel();
@@ -368,17 +376,17 @@ public partial class MainWindow : Window
         var hardware = NewPanel();
         hardware.Children.Add(Text("O TYM URZĄDZENIU", 10, "AccentBrush", FontWeights.Bold, new Thickness(0, 0, 0, 12)));
         var specs = new UniformGrid { Columns = 2, Rows = 2 };
-        specs.Children.Add(SpecCard("PROCESOR", _snapshot?.ProcessorName ?? "Odczyt w toku"));
-        specs.Children.Add(SpecCard("PAMIĘĆ", _snapshot is null ? "—" : $"{_snapshot.TotalMemoryGb:0.#} GB RAM · {_snapshot.AvailableMemoryGb:0.#} GB dostępne"));
-        specs.Children.Add(SpecCard("KARTA GRAFICZNA", _snapshot?.GraphicsAdapters ?? "Odczyt w toku"));
-        specs.Children.Add(SpecCard("WINDOWS", _snapshot is null ? "—" : $"{_snapshot.OperatingSystem} · kompilacja {_snapshot.OperatingSystemBuild}"));
+        specs.Children.Add(SpecCard("PROCESOR", _snapshot?.ProcessorName ?? "Odczyt w toku", "IconCpu"));
+        specs.Children.Add(SpecCard("PAMIĘĆ", _snapshot is null ? "—" : $"{_snapshot.TotalMemoryGb:0.#} GB RAM · {_snapshot.AvailableMemoryGb:0.#} GB dostępne", "IconMemory"));
+        specs.Children.Add(SpecCard("KARTA GRAFICZNA", _snapshot?.GraphicsAdapters ?? "Odczyt w toku", "IconDisplay"));
+        specs.Children.Add(SpecCard("WINDOWS", _snapshot is null ? "—" : $"{_snapshot.OperatingSystem} · kompilacja {_snapshot.OperatingSystemBuild}", "IconShield"));
         hardware.Children.Add(specs);
         if (_snapshot?.SystemDriveFreeGb is { } freeGb)
             hardware.Children.Add(Text($"Dysk systemowy: około {freeGb:0.#} GB wolnego miejsca.", 11, "TextSecondaryBrush", margin: new Thickness(0, 13, 0, 0)));
         page.Children.Add(WrapPanel(hardware));
 
         var note = NewPanel();
-        note.Children.Add(Text("Ważne", 13, "GoldBrush", FontWeights.SemiBold));
+        note.Children.Add(PanelHeading("IconAlert", "Ważne"));
         note.Children.Add(Text("Usługi, zabezpieczenia, sterowniki i Windows Update zostają nietknięte. Autostart Twojego konta i ukryte opcje zasilania zmieniasz świadomie — z opisem skutków i zapisaną kopią do przywrócenia.", 11, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 0)));
         page.Children.Add(WrapPanel(note));
         return page;
@@ -386,7 +394,7 @@ public partial class MainWindow : Window
 
     private UIElement BuildProcessesPage()
     {
-        var page = NewPage("PROCESY", "Zobacz, co naprawdę zajmuje zasoby.",
+        var page = NewPage("PROCESY", "Zobacz, co naprawdę zajmuje zasoby.", iconKey: "IconList", description:
             "Podgląd CPU, pamięci i czasu uruchomienia każdego procesu. Lista odświeża się co 2 sekundy, gdy ta karta jest otwarta.");
         var panel = NewPanel();
         var toolbar = new DockPanel { LastChildFill = false, Margin = new Thickness(0, 0, 0, 12) };
@@ -449,7 +457,7 @@ public partial class MainWindow : Window
         page.Children.Add(WrapPanel(panel));
 
         var safety = NewPanel();
-        safety.Children.Add(Text("Pełny obraz zasobów", 13, "GoldBrush", FontWeights.SemiBold));
+        safety.Children.Add(PanelHeading("IconCpu", "Pełny obraz zasobów"));
         safety.Children.Add(Text("Widzisz, co realnie zajmuje procesor i pamięć — bez ingerencji w działające programy i zabezpieczenia Windows.", 11, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 0)));
         page.Children.Add(WrapPanel(safety));
         return page;
@@ -496,7 +504,7 @@ public partial class MainWindow : Window
 
     private UIElement BuildStartupPage()
     {
-        var page = NewPage("AUTOSTART", "Wybierz, co startuje razem z Windowsem.",
+        var page = NewPage("AUTOSTART", "Wybierz, co startuje razem z Windowsem.", iconKey: "IconRestart", description:
             "Lista obejmuje wpisy Run i RunOnce Twojego konta. Wyłączenie zapisuje kopię i usuwa samą rejestrację autostartu — każdą pozycję przywrócisz jednym kliknięciem.");
         var panel = NewPanel();
         var heading = new DockPanel { LastChildFill = true, Margin = new Thickness(0, 0, 0, 12) };
@@ -542,7 +550,7 @@ public partial class MainWindow : Window
         }
 
         var note = NewPanel();
-        note.Children.Add(Text("Zakres zmian", 12, "GoldBrush", FontWeights.SemiBold));
+        note.Children.Add(PanelHeading("IconList", "Zakres zmian", fontSize: 12));
         note.Children.Add(Text("Blessed nie wyłącza autostartu maszynowego (HKLM), usług, zadań systemowych, sterowników, Windows Update ani zabezpieczeń. Zmiana dotyczy wyłącznie wpisu konkretnej aplikacji dla zalogowanego konta. Przed wyłączeniem sprawdź polecenie; nie wyłączaj ochrony antywirusowej, kopii zapasowych, synchronizacji, narzędzi dostępności ani sterowników, jeśli nie masz pewności co do skutków.", 10, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 0)));
         panel.Children.Add(WrapPanel(note));
         page.Children.Add(WrapPanel(panel));
@@ -575,7 +583,7 @@ public partial class MainWindow : Window
 
     private UIElement BuildPowerPage()
     {
-        var page = NewPage("UKRYTE OPCJE ZASILANIA", "Ustawienia planu bez polowania po Panelu sterowania.",
+        var page = NewPage("UKRYTE OPCJE ZASILANIA", "Ustawienia planu bez polowania po Panelu sterowania.", iconKey: "IconBolt", description:
             "Odczytuję prawdziwe wartości aktywnego planu Windows. Zmiany dotyczą osobno zasilania z sieci i baterii, są poprzedzone wyjaśnieniem i zgodą oraz mają zapisaną kopię do cofnięcia.");
 
         PowerPlanSnapshot snapshot;
@@ -608,7 +616,7 @@ public partial class MainWindow : Window
             page.Children.Add(BuildPowerSettingCard(snapshot, state));
 
         var note = NewPanel();
-        note.Children.Add(Text("Cofnięcie zmian", 12, "GoldBrush", FontWeights.SemiBold));
+        note.Children.Add(PanelHeading("IconRestart", "Cofnięcie zmian", fontSize: 12));
         note.Children.Add(Text("Pierwsza zmiana danej opcji zapisuje oryginalne wartości AC i baterii w profilu użytkownika. Przycisk „Przywróć oryginał” odtwarza te wartości; samo przełączanie profilu nie kasuje kopii.", 10, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 0)));
         page.Children.Add(WrapPanel(note));
         return page;
@@ -793,7 +801,7 @@ public partial class MainWindow : Window
 
     private UIElement BuildConnectionsPage()
     {
-        var page = NewPage("POŁĄCZENIA · DANE LOKALNE", "Sprawdzę, co jest nie tak.",
+        var page = NewPage("POŁĄCZENIA · DANE LOKALNE", "Sprawdzę, co jest nie tak.", iconKey: "IconSignal", description:
             "Lista kart pochodzi bezpośrednio z Windows: Wi-Fi, Ethernet oraz Bluetooth PAN, jeśli system wystawia go jako adapter sieciowy. Test ping wysyła jedno zapytanie do 1.1.1.1 po kliknięciu.");
 
         var adaptersCard = NewPanel();
@@ -858,7 +866,7 @@ public partial class MainWindow : Window
         page.Children.Add(WrapPanel(testCard));
 
         var safety = NewPanel();
-        safety.Children.Add(Text("Naprawa sieci wymaga Twojej zgody", 13, "GoldBrush", FontWeights.SemiBold));
+        safety.Children.Add(PanelHeading("IconSignal", "Naprawa sieci wymaga Twojej zgody"));
         safety.Children.Add(Text("Blessed diagnozuje połączenie i tłumaczy wynik prostym językiem. Ustawienia sieci pozostają w Twoich rękach.", 11, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 0)));
         page.Children.Add(WrapPanel(safety));
         return page;
@@ -866,7 +874,7 @@ public partial class MainWindow : Window
 
     private UIElement BuildProposalsPage()
     {
-        var page = NewPage("PROPOZYCJE BLESSED", "Małe rzeczy warte sprawdzenia.",
+        var page = NewPage("PROPOZYCJE BLESSED", "Małe rzeczy warte sprawdzenia.", iconKey: "IconSpark", description:
             "Poniższe przyciski prowadzą prosto do właściwej strony Ustawień Windows. Nic nie dzieje się w tle — decyzja należy do Ciebie.");
 
         if (_snapshot is { TotalMemoryGb: > 0 and < 8 })
@@ -882,7 +890,7 @@ public partial class MainWindow : Window
 
     private UIElement BuildPersonalizationPage()
     {
-        var page = NewPage("PERSONALIZACJA WINDOWS", "Niech komputer będzie bardziej Twój.",
+        var page = NewPage("PERSONALIZACJA WINDOWS", "Niech komputer będzie bardziej Twój.", iconKey: "IconPalette", description:
             "Motyw i akcent zmieniają wygląd Blessed Optimizer od razu. Ustawienia systemowe Windows otwierasz osobno.");
 
         var appThemeCard = NewPanel();
@@ -892,7 +900,7 @@ public partial class MainWindow : Window
         modes.Children.Add(ChoiceButton("Ciemny", () => ApplyTheme("dark", null)));
         modes.Children.Add(ChoiceButton("Jasny", () => ApplyTheme("light", null)));
         appThemeCard.Children.Add(modes);
-        appThemeCard.Children.Add(Text("Kolor akcentu", 12, "TextPrimaryBrush", FontWeights.SemiBold, new Thickness(0, 16, 0, 8)));
+        appThemeCard.Children.Add(PanelHeading("IconPalette", "Kolor akcentu", "TextPrimaryBrush", 12, new Thickness(0, 16, 0, 8)));
         var colors = new WrapPanel();
         colors.Children.Add(ChoiceButton("Błękit", () => ApplyTheme(null, "sky")));
         colors.Children.Add(ChoiceButton("Złoto", () => ApplyTheme(null, "gold")));
@@ -921,7 +929,7 @@ public partial class MainWindow : Window
         page.Children.Add(personalizationLayout);
 
         var privacy = NewPanel();
-        privacy.Children.Add(Text("Twoje wybory nie opuszczają aplikacji", 13, "GoldBrush", FontWeights.SemiBold));
+        privacy.Children.Add(PanelHeading("IconShield", "Twoje wybory nie opuszczają aplikacji"));
         privacy.Children.Add(Text("Cała diagnostyka działa lokalnie. Żadne odczyty ani ustawienia wyglądu nie opuszczają Twojego komputera.", 11, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 0)));
         page.Children.Add(WrapPanel(privacy));
         return page;
@@ -931,7 +939,7 @@ public partial class MainWindow : Window
 
     private UIElement BuildCarePage()
     {
-        var page = NewPage("BLESSED CZUWA", "Zajmę się tym za Ciebie.",
+        var page = NewPage("BLESSED CZUWA", "Zajmę się tym za Ciebie.", iconKey: "IconShield", description:
             $"Sam sprawdzam dysk, pamięć, autostart, ekran, baterię i plan zasilania — co kilka minut, w tle. {_profile.PriorityPromise}");
 
         if (!_profile.OnboardingCompleted)
@@ -946,7 +954,7 @@ public partial class MainWindow : Window
         statusBar.Children.Add(statusCopy);
         _careScanButton = new Button
         {
-            Content = "Sprawdź teraz",
+            Content = ButtonContent("IconSearch", "Sprawdź teraz", "AccentTextBrush"),
             Style = (Style)FindResource("PrimaryButton"),
             Margin = new Thickness(12, 0, 0, 0),
             VerticalAlignment = VerticalAlignment.Center,
@@ -975,9 +983,9 @@ public partial class MainWindow : Window
         var grid = new UniformGrid { Columns = 3, Rows = 1 };
         grid.Children.Add(SpecCard("OSTATNI PRZEGLĄD", _lastReport is null
             ? "za chwilę"
-            : _lastReport.CompletedAt.ToString("HH:mm", CultureInfo.CurrentCulture)));
-        grid.Children.Add(SpecCard("ZWOLNIŁEM DLA CIEBIE", _profile.TotalFreedMb >= 1 ? $"{_profile.TotalFreedMb:0} MB" : "jeszcze nic"));
-        grid.Children.Add(SpecCard("CZUWANIE", _profile.WatchInBackground ? "W tle, co 3 minuty" : "Tylko na żądanie"));
+            : _lastReport.CompletedAt.ToString("HH:mm", CultureInfo.CurrentCulture), "IconClock"));
+        grid.Children.Add(SpecCard("ZWOLNIŁEM DLA CIEBIE", _profile.TotalFreedMb >= 1 ? $"{_profile.TotalFreedMb:0} MB" : "jeszcze nic", "IconBroom"));
+        grid.Children.Add(SpecCard("CZUWANIE", _profile.WatchInBackground ? "W tle, co 3 minuty" : "Tylko na żądanie", "IconShield"));
         return grid;
     }
 
@@ -999,7 +1007,7 @@ public partial class MainWindow : Window
         card.Children.Add(Text(_profile.PriorityPromise, 11, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 12), lineHeight: 18));
         card.Children.Add(BuildPriorityChoices(completeOnboarding: false));
 
-        card.Children.Add(Text("Czym mogę zająć się sam?", 13, "TextPrimaryBrush", FontWeights.SemiBold, new Thickness(0, 17, 0, 9)));
+        card.Children.Add(PanelHeading("IconCheck", "Czym mogę zająć się sam?", "TextPrimaryBrush", 13, new Thickness(0, 17, 0, 9)));
         card.Children.Add(AutomationSwitch("Czuwam w tle i sprawdzam komputer co kilka minut", _profile.WatchInBackground, value =>
         {
             _profile.WatchInBackground = value;
@@ -1065,8 +1073,14 @@ public partial class MainWindow : Window
             _careFindingsHost.Children.Add(Text("Robię pierwszy przegląd Twojego komputera…", 11, "TextSecondaryBrush"));
             return;
         }
+        var index = 0;
         foreach (var finding in _lastReport.Findings)
-            _careFindingsHost.Children.Add(BuildFindingCard(finding));
+        {
+            var card = BuildFindingCard(finding);
+            _careFindingsHost.Children.Add(card);
+            AnimateIn(card, 12, index * 55, 260);
+            index++;
+        }
     }
 
     private Border BuildFindingCard(BlessedFinding finding)
@@ -1082,26 +1096,33 @@ public partial class MainWindow : Window
         var layout = new Grid();
         layout.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         layout.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        layout.Children.Add(new Border
-        {
-            Width = 10,
-            Height = 10,
-            CornerRadius = new CornerRadius(5),
-            Background = BrushFrom(accent.Item1),
-            VerticalAlignment = VerticalAlignment.Top,
-            Margin = new Thickness(0, 7, 12, 0)
-        });
+        layout.Children.Add(SeverityBadge(FindingIconKey(finding), accent.Item1));
 
         var copy = new StackPanel();
-        copy.Children.Add(Text(accent.Item2, 8, "TextSecondaryBrush", FontWeights.Bold));
+        var labelRow = new StackPanel { Orientation = Orientation.Horizontal };
+        labelRow.Children.Add(new Border
+        {
+            Width = 6,
+            Height = 6,
+            CornerRadius = new CornerRadius(3),
+            Background = BrushFrom(accent.Item1),
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 7, 0)
+        });
+        labelRow.Children.Add(Text(accent.Item2, 8, "TextSecondaryBrush", FontWeights.Bold));
+        copy.Children.Add(labelRow);
         copy.Children.Add(Text(finding.Title, 14, "TextPrimaryBrush", FontWeights.SemiBold, new Thickness(0, 5, 0, 0)));
         copy.Children.Add(Text(finding.Message, 11, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 0), lineHeight: 18));
         if (finding.Action != FindingAction.None && finding.ActionLabel is { } actionLabel)
         {
+            var isAutomatic = finding.Action == FindingAction.BlessedHandlesIt;
             var button = new Button
             {
-                Content = actionLabel,
-                Style = (Style)FindResource(finding.Action == FindingAction.BlessedHandlesIt ? "PrimaryButton" : "SecondaryButton"),
+                Content = ButtonContent(
+                    isAutomatic ? "IconBroom" : finding.Action == FindingAction.OpenPage ? "IconList" : "IconSpark",
+                    actionLabel,
+                    isAutomatic ? "AccentTextBrush" : "TextPrimaryBrush"),
+                Style = (Style)FindResource(isAutomatic ? "PrimaryButton" : "SecondaryButton"),
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Margin = new Thickness(0, 12, 0, 0),
                 Padding = new Thickness(13, 8, 13, 8)
@@ -1122,8 +1143,25 @@ public partial class MainWindow : Window
         };
         card.SetResourceReference(Border.BackgroundProperty, "SurfaceRaisedBrush");
         card.SetResourceReference(Border.BorderBrushProperty, "BorderBrush");
+        AddHoverLift(card);
         return card;
     }
+
+    private static string FindingIconKey(BlessedFinding finding) => finding.Id switch
+    {
+        "disk-space" => "IconDisk",
+        "temp-files" => "IconBroom",
+        "memory-pressure" => "IconMemory",
+        "cpu-pressure" => "IconCpu",
+        "uptime" => "IconClock",
+        "startup-crowd" => "IconRestart",
+        "display-hz" => "IconDisplay",
+        "power-cpu-limit" or "power-battery" => "IconBolt",
+        "battery-low" or "battery-full" => "IconBattery",
+        "drive-health" => "IconHeart",
+        "all-clear" => "IconCheck",
+        _ => "IconSpark"
+    };
 
     private async Task HandleFindingAsync(BlessedFinding finding)
     {
@@ -1160,6 +1198,7 @@ public partial class MainWindow : Window
         if (_careBusy) return;
         _careBusy = true;
         if (_careScanButton is not null) _careScanButton.IsEnabled = false;
+        SetScanningIndicator(true);
         SetCareStatus("Sprawdzam Twój komputer…");
         try
         {
@@ -1193,6 +1232,7 @@ public partial class MainWindow : Window
         finally
         {
             _careBusy = false;
+            SetScanningIndicator(false);
             if (_careScanButton is not null) _careScanButton.IsEnabled = true;
         }
     }
@@ -1254,20 +1294,199 @@ public partial class MainWindow : Window
     private void UpdateCareBadge()
     {
         var count = _lastReport?.ProblemCount ?? 0;
+        var hadBadge = CareBadge.Visibility == Visibility.Visible;
         CareBadge.Visibility = count > 0 ? Visibility.Visible : Visibility.Collapsed;
         CareBadgeText.Text = count.ToString(CultureInfo.InvariantCulture);
+        if (count > 0 && !hadBadge)
+            PopCareBadge();
         WorkspaceStatusText.Text = count == 0 ? "Blessed czuwa · czysto" : $"Blessed znalazł {count}";
     }
 
-    private static StackPanel NewPage(string kicker, string title, string description)
+    private static StackPanel NewPage(string kicker, string title, string description, string? iconKey = null)
     {
         var page = new StackPanel();
-        var heading = new StackPanel { Margin = new Thickness(0, 2, 0, 14) };
+        var heading = new StackPanel();
         heading.Children.Add(Text(kicker, 9, "AccentBrush", FontWeights.Bold));
         heading.Children.Add(Text(title, 19, "TextPrimaryBrush", FontWeights.SemiBold, new Thickness(0, 6, 0, 0)));
         heading.Children.Add(Text(description, 11, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 0), lineHeight: 18));
-        page.Children.Add(heading);
+
+        if (iconKey is null)
+        {
+            heading.Margin = new Thickness(0, 2, 0, 14);
+            page.Children.Add(heading);
+            return page;
+        }
+
+        var row = new DockPanel { Margin = new Thickness(0, 2, 0, 14) };
+        var badge = IconBadge(iconKey, "GoldBrush", 44);
+        badge.Margin = new Thickness(0, 2, 14, 0);
+        DockPanel.SetDock(badge, Dock.Left);
+        row.Children.Add(badge);
+        row.Children.Add(heading);
+        page.Children.Add(row);
         return page;
+    }
+
+    // ----- Ikony i animacje -----
+
+    private static System.Windows.Shapes.Path IconPath(string geometryKey, double size = 16, string brushKey = "AccentBrush", Thickness? margin = null)
+    {
+        var icon = new System.Windows.Shapes.Path
+        {
+            Data = (Geometry)Application.Current.FindResource(geometryKey),
+            Style = (Style)Application.Current.FindResource("BlessedIcon"),
+            Width = size,
+            Height = size,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = margin ?? new Thickness(0)
+        };
+        icon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, brushKey);
+        return icon;
+    }
+
+    private static Border IconBadge(string geometryKey, string brushKey, double size = 34)
+    {
+        var badge = new Border
+        {
+            Width = size,
+            Height = size,
+            CornerRadius = new CornerRadius(size / 3),
+            BorderThickness = new Thickness(1),
+            VerticalAlignment = VerticalAlignment.Top,
+            Child = IconPath(geometryKey, Math.Round(size * 0.52), brushKey)
+        };
+        badge.SetResourceReference(Border.BackgroundProperty, "SurfaceRaisedBrush");
+        badge.SetResourceReference(Border.BorderBrushProperty, "BorderBrush");
+        return badge;
+    }
+
+    private static Border SeverityBadge(string geometryKey, string hex, double size = 36)
+    {
+        var color = ColorFrom(hex);
+        var icon = IconPath(geometryKey, Math.Round(size * 0.52));
+        icon.Stroke = new SolidColorBrush(color);
+        return new Border
+        {
+            Width = size,
+            Height = size,
+            CornerRadius = new CornerRadius(size / 3),
+            Background = new SolidColorBrush(Color.FromArgb(42, color.R, color.G, color.B)),
+            BorderBrush = new SolidColorBrush(Color.FromArgb(96, color.R, color.G, color.B)),
+            BorderThickness = new Thickness(1),
+            VerticalAlignment = VerticalAlignment.Top,
+            Margin = new Thickness(0, 1, 13, 0),
+            Child = icon
+        };
+    }
+
+    private static DockPanel PanelHeading(string iconKey, string title, string brushKey = "GoldBrush", double fontSize = 13, Thickness? margin = null)
+    {
+        var row = new DockPanel { Margin = margin ?? new Thickness(0) };
+        var icon = IconPath(iconKey, fontSize + 3, brushKey, new Thickness(0, 0, 9, 0));
+        DockPanel.SetDock(icon, Dock.Left);
+        row.Children.Add(icon);
+        row.Children.Add(Text(title, fontSize, brushKey, FontWeights.SemiBold));
+        return row;
+    }
+
+    private static StackPanel ButtonContent(string geometryKey, string label, string brushKey)
+    {
+        var content = new StackPanel { Orientation = Orientation.Horizontal };
+        content.Children.Add(IconPath(geometryKey, 14, brushKey, new Thickness(0, 0, 8, 0)));
+        content.Children.Add(new TextBlock { Text = label, VerticalAlignment = VerticalAlignment.Center });
+        return content;
+    }
+
+    private static void AnimateIn(FrameworkElement element, double offset = 14, int delayMs = 0, int durationMs = 290)
+    {
+        var slide = new TranslateTransform(0, offset);
+        if (element.RenderTransform is Transform existing && existing != Transform.Identity)
+        {
+            var group = new TransformGroup();
+            group.Children.Add(existing);
+            group.Children.Add(slide);
+            element.RenderTransform = group;
+        }
+        else
+        {
+            element.RenderTransform = slide;
+        }
+
+        element.Opacity = 0;
+        var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+        var begin = TimeSpan.FromMilliseconds(delayMs);
+        element.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(durationMs))
+        {
+            BeginTime = begin,
+            EasingFunction = ease
+        });
+        slide.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(offset, 0, TimeSpan.FromMilliseconds(durationMs + 70))
+        {
+            BeginTime = begin,
+            EasingFunction = ease
+        });
+    }
+
+    private static void AnimateBar(ProgressBar? bar, double value)
+    {
+        if (bar is null) return;
+        bar.BeginAnimation(RangeBase.ValueProperty, new DoubleAnimation(Math.Clamp(value, 0, 100), TimeSpan.FromMilliseconds(430))
+        {
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        });
+    }
+
+    private static void AddHoverLift(FrameworkElement element)
+    {
+        var lift = new TranslateTransform();
+        element.RenderTransform = lift;
+        element.MouseEnter += (_, _) => lift.BeginAnimation(TranslateTransform.YProperty,
+            new DoubleAnimation(-3, TimeSpan.FromMilliseconds(150)) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } });
+        element.MouseLeave += (_, _) => lift.BeginAnimation(TranslateTransform.YProperty,
+            new DoubleAnimation(0, TimeSpan.FromMilliseconds(190)) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } });
+    }
+
+    private void SetScanningIndicator(bool active)
+    {
+        if (active)
+        {
+            var ease = new SineEase { EasingMode = EasingMode.EaseInOut };
+            var opacity = new DoubleAnimation(1, 0.4, TimeSpan.FromMilliseconds(720))
+            {
+                AutoReverse = true,
+                RepeatBehavior = RepeatBehavior.Forever,
+                EasingFunction = ease
+            };
+            var scale = new DoubleAnimation(1, 1.12, TimeSpan.FromMilliseconds(720))
+            {
+                AutoReverse = true,
+                RepeatBehavior = RepeatBehavior.Forever,
+                EasingFunction = ease
+            };
+            GuideLogo.BeginAnimation(OpacityProperty, opacity);
+            _guideLogoScale.BeginAnimation(ScaleTransform.ScaleXProperty, scale);
+            _guideLogoScale.BeginAnimation(ScaleTransform.ScaleYProperty, scale);
+        }
+        else
+        {
+            GuideLogo.BeginAnimation(OpacityProperty, null);
+            _guideLogoScale.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+            _guideLogoScale.BeginAnimation(ScaleTransform.ScaleYProperty, null);
+            GuideLogo.Opacity = 1;
+            _guideLogoScale.ScaleX = 1;
+            _guideLogoScale.ScaleY = 1;
+        }
+    }
+
+    private void PopCareBadge()
+    {
+        var pop = new DoubleAnimation(0.7, 1, TimeSpan.FromMilliseconds(420))
+        {
+            EasingFunction = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.6 }
+        };
+        _careBadgeScale.BeginAnimation(ScaleTransform.ScaleXProperty, pop);
+        _careBadgeScale.BeginAnimation(ScaleTransform.ScaleYProperty, pop);
     }
 
     private static StackPanel NewPanel()
@@ -1311,12 +1530,23 @@ public partial class MainWindow : Window
         return text;
     }
 
-    private static Border SpecCard(string title, string value)
+    private static Border SpecCard(string title, string value, string? iconKey = null)
     {
         var content = new StackPanel();
         content.Children.Add(Text(title, 9, "AccentBrush", FontWeights.Bold));
         content.Children.Add(Text(value, 11, "TextPrimaryBrush", FontWeights.Medium, new Thickness(0, 5, 0, 0)));
-        var border = new Border { Child = content, Padding = new Thickness(12), Margin = new Thickness(0, 0, 9, 9), CornerRadius = new CornerRadius(12), BorderThickness = new Thickness(1) };
+        UIElement body = content;
+        if (iconKey is not null)
+        {
+            var row = new DockPanel();
+            var icon = IconPath(iconKey, 17, "AccentBrush", new Thickness(0, 1, 11, 0));
+            icon.VerticalAlignment = VerticalAlignment.Top;
+            DockPanel.SetDock(icon, Dock.Left);
+            row.Children.Add(icon);
+            row.Children.Add(content);
+            body = row;
+        }
+        var border = new Border { Child = body, Padding = new Thickness(12), Margin = new Thickness(0, 0, 9, 9), CornerRadius = new CornerRadius(12), BorderThickness = new Thickness(1) };
         border.SetResourceReference(Border.BackgroundProperty, "SurfaceRaisedBrush");
         border.SetResourceReference(Border.BorderBrushProperty, "BorderBrush");
         return border;
@@ -1410,8 +1640,8 @@ public partial class MainWindow : Window
         FooterStatusText.Text = "Czuwanie zatrzymane · możesz je włączyć w każdej chwili";
         if (_cpuValue is not null) _cpuValue.Text = "—";
         if (_memoryValue is not null) _memoryValue.Text = "—";
-        if (_cpuBar is not null) _cpuBar.Value = 0;
-        if (_memoryBar is not null) _memoryBar.Value = 0;
+        AnimateBar(_cpuBar, 0);
+        AnimateBar(_memoryBar, 0);
     }
 
     private void WatchTimer_Tick(object? sender, EventArgs e) => UpdateLiveUsage();
@@ -1424,8 +1654,8 @@ public partial class MainWindow : Window
         _memoryValue.Text = usage.MemoryTotalGb > 0
             ? $"{usage.MemoryUsedGb:0.#} / {usage.MemoryTotalGb:0.#} GB · {usage.MemoryPercent:0}%"
             : "Brak odczytu";
-        _cpuBar.Value = usage.CpuPercent ?? 0;
-        _memoryBar.Value = usage.MemoryPercent;
+        AnimateBar(_cpuBar, usage.CpuPercent ?? 0);
+        AnimateBar(_memoryBar, usage.MemoryPercent);
     }
 
     private async void Ping_Click(object sender, RoutedEventArgs e)
@@ -1585,14 +1815,16 @@ public partial class MainWindow : Window
         }
     }
 
-    private static SolidColorBrush BrushFrom(string hex)
+    private static SolidColorBrush BrushFrom(string hex) => new(ColorFrom(hex));
+
+    private static Color ColorFrom(string hex)
     {
         var value = hex.TrimStart('#');
         if (value.Length != 6) throw new FormatException("Nieprawidłowy kolor motywu.");
         var red = byte.Parse(value[..2], System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture);
         var green = byte.Parse(value[2..4], System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture);
         var blue = byte.Parse(value[4..6], System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture);
-        return new SolidColorBrush(Color.FromRgb(red, green, blue));
+        return Color.FromRgb(red, green, blue);
     }
 
     private static string GetCurrentVersion()
