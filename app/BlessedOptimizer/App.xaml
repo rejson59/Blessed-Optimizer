@@ -60,6 +60,9 @@
     <PathGeometry x:Key="IconAlert" Figures="M 12 3.6 21.4 20 H 2.6 Z M 12 9.8 v 4.6 M 12 17.2 h .1" />
     <PathGeometry x:Key="IconHeart" Figures="M 12 20.4 4.6 13.2 C 2.4 11 2.6 7.4 5 5.6 c 2 -1.5 4.8 -1 6.4 1 l .6 .8 .6 -.8 c 1.6 -2 4.4 -2.5 6.4 -1 2.4 1.8 2.6 5.4 .4 7.6 Z" />
     <PathGeometry x:Key="IconCpu" Figures="M 7.4 7.4 h 9.2 v 9.2 H 7.4 Z M 10.4 10.4 h 3.2 v 3.2 h -3.2 Z M 12 3.6 v 3.8 M 12 16.6 v 3.8 M 3.6 12 h 3.8 M 16.6 12 h 3.8" />
+    <PathGeometry x:Key="IconUpdate" Figures="M 12 3.4 v 10.2 M 7.6 9.6 l 4.4 4.4 4.4 -4.4 M 4.4 17.4 v 1.8 a 1.4 1.4 0 0 0 1.4 1.4 h 12.8 a 1.4 1.4 0 0 0 1.4 -1.4 v -1.8" />
+    <PathGeometry x:Key="IconMoon" Figures="M 19.4 13.6 A 8.2 8.2 0 1 1 10.4 4.6 a 6.8 6.8 0 0 0 9 9 Z" />
+    <PathGeometry x:Key="IconTrash" Figures="M 5 6.4 h 14 M 9.4 6.4 V 4.6 h 5.2 v 1.8 M 6.6 6.4 l .8 12.2 a 1.6 1.6 0 0 0 1.6 1.5 h 5.6 a 1.6 1.6 0 0 0 1.6 -1.5 l .8 -12.2 M 10.2 10 v 6 M 13.8 10 v 6" />
 
     <Style x:Key="PrimaryButton" TargetType="Button">
       <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}" />

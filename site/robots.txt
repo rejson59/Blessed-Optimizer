@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://rejson59.github.io/Blessed-Optimizer/sitemap.xml

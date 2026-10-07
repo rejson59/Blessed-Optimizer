@@ -44,4 +44,27 @@ if (report.Findings.Count == 0)
 if (report.ProblemCount < 0)
     throw new InvalidOperationException("Liczba znalezionych spraw nie może być ujemna.");
 
+var recycleScan = MaintenanceService.ScanRecycleBin();
+if (recycleScan.FileCount < 0 || recycleScan.SizeMb < 0)
+    throw new InvalidOperationException("Skan koszy zwrócił ujemny wynik.");
+
+var appxPackages = await AppxInventoryService.ReadUserPackagesAsync(TimeSpan.FromSeconds(30), CancellationToken.None);
+if (appxPackages.Any(package => string.IsNullOrWhiteSpace(package.Name) || string.IsNullOrWhiteSpace(package.PackageFullName)))
+    throw new InvalidOperationException("Lista aplikacji AppX zawiera pozycję bez nazwy lub pełnej nazwy pakietu.");
+
+var rebootPending = SecurityDiagnostics.IsUpdateRebootPending();
+var lastUpdate = SecurityDiagnostics.TryGetLastUpdateInstallDate();
+if (lastUpdate > DateTime.Now)
+    throw new InvalidOperationException("Data ostatniej aktualizacji nie może być z przyszłości.");
+
+var defender = SecurityDiagnostics.ReadDefenderStatus();
+var disabledFirewallProfiles = SecurityDiagnostics.ReadDisabledFirewallProfiles();
+var timeSyncDisabled = SecurityDiagnostics.IsTimeSyncDisabled();
+
+var mutedProfile = new BlessedProfile { MutedFindingIds = new List<string> { "all-clear" } };
+var mutedReport = await new BlessedWatchService().InspectAsync(null, mutedProfile, null, CancellationToken.None);
+if (mutedReport.Findings.Any(finding => mutedProfile.MutedFindingIds.Contains(finding.Id)))
+    throw new InvalidOperationException("Wyciszona sprawa nie może pojawić się w raporcie.");
+
 Console.WriteLine($"Blessed watch smoke checks passed: findings={report.Findings.Count}, problems={report.ProblemCount}, tempFiles={tempScan.FileCount}, display={(display is null ? "n/a" : $"{display.CurrentHz}/{display.MaximumHz} Hz")}.");
+Console.WriteLine($"Security read-only smoke checks passed: rebootPending={rebootPending}, lastUpdate={(lastUpdate?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) ?? "n/a")}, defender={(defender is null ? "n/a" : $"realTime={defender.RealTimeProtectionEnabled}, signature={(defender.SignatureUpdatedAt?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) ?? "n/a")}")}, disabledFirewallProfiles={disabledFirewallProfiles.Count}, timeSyncDisabled={timeSyncDisabled}, recycleBinFiles={recycleScan.FileCount}, recycleBinMb={recycleScan.SizeMb:0}, mutedFindings={mutedReport.Findings.Count}, appxPackages={appxPackages.Count}.");

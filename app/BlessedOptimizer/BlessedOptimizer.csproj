@@ -7,9 +7,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>BlessedOptimizer</AssemblyName>
     <RootNamespace>BlessedOptimizer</RootNamespace>
-    <Version>1.0.4</Version>
-    <AssemblyVersion>1.0.4.0</AssemblyVersion>
-    <FileVersion>1.0.4.0</FileVersion>
+    <Version>1.2.0</Version>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
     <Company>Blessed Optimizer</Company>
     <Product>Blessed Optimizer</Product>
     <Description>Local Windows diagnostics and user-consented reversible startup and power settings.</Description>
@@ -23,5 +23,9 @@
   <ItemGroup>
     <PackageReference Include="System.Management" Version="10.0.0" />
     <Resource Include="Assets\blessed-optimizer-logo-no-background.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="BlessedOptimizer.Tests" />
   </ItemGroup>
 </Project>

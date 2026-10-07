@@ -28,7 +28,8 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
       - name: Check JavaScript syntax
-        run: node --check site/script.js
+        run: |
+          node --check site/script.js
       - name: Verify local HTML assets
         shell: bash
         run: |
@@ -46,17 +47,22 @@ jobs:
                       if name not in {"href", "src"} or not value:
                           continue
                       parsed = urlsplit(value)
+                      # External URLs and fragment-only links are not local assets.
                       if not parsed.path or parsed.scheme or parsed.netloc:
                           continue
                       asset = root / unquote(parsed.path)
                       if not asset.is_file():
                           errors.append(f"Missing local asset: {value}")
 
-          parser = LocalAssetChecker()
-          parser.feed((root / "index.html").read_text(encoding="utf-8"))
+          pages = sorted(root.glob("*.html"))
+          if not pages:
+              raise SystemExit("No HTML pages found in site/.")
+          for page in pages:
+              parser = LocalAssetChecker()
+              parser.feed(page.read_text(encoding="utf-8"))
           if errors:
               raise SystemExit("\n".join(errors))
-          print("All local HTML assets exist.")
+          print(f"All local HTML assets exist across {len(pages)} pages.")
           PY
 
   deploy:

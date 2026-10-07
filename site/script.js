@@ -71,7 +71,8 @@
 
         downloadCta.href = assetUrl.href;
         downloadLabel.textContent = 'Pobierz Blessed Optimizer';
-        downloadNote.textContent = 'Windows 10/11 x64 · samodzielny plik .exe · bezpośrednie pobranie najnowszego wydania.';
+        const versionTag = typeof release.tag_name === 'string' && release.tag_name ? release.tag_name : 'najnowsza';
+        downloadNote.textContent = `Windows 10/11 x64 · samodzielny plik .exe · wersja ${versionTag} — zawsze najnowsze wydanie.`;
       })
       .catch((error) => {
         const message = error?.message === 'no-release'
@@ -220,36 +221,88 @@
     });
   }
 
-  // Clickable Windows app-layout preview inside the Simulator tab.
-  const programWindow = document.querySelector('.program-window');
-  const programViewContent = document.getElementById('program-view-content');
-  const programViewTitle = document.getElementById('program-view-title');
-  const programCrumbTitle = document.getElementById('program-crumb-title');
-  const programBlessedMessage = document.getElementById('program-blessed-message');
-  const programNavButtons = Array.from(document.querySelectorAll('[data-program-view]'));
-  const programViews = {
-    gaming: { title: 'Strefa gracza', crumb: 'STREFA GRACZA', template: 'program-template-gaming', message: 'Polepszę działanie Twojego komputera — krok po kroku i tylko za Twoją zgodą. Zaczniemy od tego, co ma znaczenie podczas gry.' },
-    connections: { title: 'Połączenia', crumb: 'POŁĄCZENIA', template: 'program-template-connections', message: 'Sprawdzę, co jest nie tak z połączeniem. Jeśli znajdziemy bezpieczną poprawkę, naprawię to z Tobą — po Twojej zgodzie.' },
-    proposals: { title: 'Propozycje', crumb: 'PROPOZYCJE', template: 'program-template-proposals', message: 'Znalazłem kilka pomysłów na ulepszenia. Wybierz jeden, a opowiem Ci prostym językiem, co może dać i jak wrócić.' },
-    personalization: { title: 'Personalizacja Windows', crumb: 'PERSONALIZACJA', template: 'program-template-personalization', message: 'Chcesz zmienić klimat? Pokażę Ci podgląd Windowsa i wyglądu programu, zanim cokolwiek zatwierdzisz.' },
-    processes: { title: 'Procesy', crumb: 'PROCESY', template: 'program-template-processes', message: 'Pokażę lokalne zużycie procesora i pamięci — czytelnie i w czasie rzeczywistym.' },
-    startup: { title: 'Autostart', crumb: 'AUTOSTART', template: 'program-template-startup', message: 'Przejrzysz wpisy autostartu bieżącego konta. Przed zmianą program zapisuje kopię i pozwala ją przywrócić.' },
-    power: { title: 'Zasilanie', crumb: 'ZASILANIE', template: 'program-template-power', message: 'Odczytasz ustawienia aktywnego planu. Każda zmiana wymaga osobnego potwierdzenia i może zostać cofnięta.' }
+  // Faithful 1:1 mock of the Blessed Optimizer app window inside the Simulator tab.
+  // Every page mirrors the real app: same titles, same flows, demo data only.
+  const mockWindow = document.getElementById('mock-window');
+  const mockPage = document.getElementById('mock-page');
+  const mockViewTitle = document.getElementById('mock-view-title');
+  const mockViewCrumb = document.getElementById('mock-view-crumb');
+  const mockGuideMessage = document.getElementById('mock-guide-message');
+  const mockNavButtons = Array.from(document.querySelectorAll('[data-mock-view]'));
+  const mockCareBadge = document.getElementById('mock-care-badge');
+  const mockStatusPill = document.getElementById('mock-status-pill');
+  const mockStatusPillText = document.getElementById('mock-status-pill-text');
+  const mockViews = {
+    care: { title: 'Blessed czuwa', crumb: 'BLESSED CZUWA', template: 'mock-template-care', message: 'Znalazłem 2 rzeczy warte zajęcia się.' },
+    gaming: { title: 'Strefa gracza', crumb: 'STREFA GRACZA', template: 'mock-template-gaming', message: 'Włącz czuwanie, aby obserwować użycie procesora i pamięci podczas gry.' },
+    processes: { title: 'Procesy', crumb: 'PROCESY', template: 'mock-template-processes', message: 'Pokażę zużycie CPU i pamięci przez każdy proces — czytelnie i na żywo.' },
+    connections: { title: 'Połączenia', crumb: 'POŁĄCZENIA', template: 'mock-template-connections', message: 'Sprawdzę stan kart sieciowych i wykonam test ping. Każdą zmianę zatwierdzasz Ty.' },
+    proposals: { title: 'Propozycje', crumb: 'PROPOZYCJE', template: 'mock-template-proposals', message: 'Podpowiem, co warto sprawdzić, i zaprowadzę Cię prosto do właściwych ustawień Windows.' },
+    history: { title: 'Historia', crumb: 'HISTORIA', template: 'mock-template-history', message: 'Ostatnie przeglądy są zapisywane wyłącznie na tym komputerze.' },
+    startup: { title: 'Autostart', crumb: 'AUTOSTART', template: 'mock-template-startup', message: 'Przejrzyj wpisy autostartu swojego konta. Każda zmiana ma zapisaną kopię do przywrócenia.' },
+    cleanup: { title: 'Porządki', crumb: 'PORZĄDKI', template: 'mock-template-cleanup', message: 'Przejrzyj aplikacje swojego konta i odinstaluj te, których nie używasz. Aplikacje wracają przez Microsoft Store.' },
+    power: { title: 'Zasilanie', crumb: 'ZASILANIE', template: 'mock-template-power', message: 'Dostrój plan zasilania. Każdą zmianę potwierdzasz Ty i zawsze możesz ją cofnąć.' },
+    personalization: { title: 'Wygląd', crumb: 'WYGLĄD', template: 'mock-template-personalization', message: 'Dopasuj motyw i kolor Blessed. Ustawienia systemowe Windows otworzysz osobno.' },
+    settings: { title: 'Ustawienia Blessed', crumb: 'USTAWIENIA', template: 'mock-template-settings', message: 'Wybierz swój priorytet i zdecyduj, które zadania Blessed może wykonywać automatycznie.' }
   };
+  const mockPriorities = {
+    gaming: { label: 'Granie i maksymalna płynność', promise: 'Pilnuję, żeby procesor i pamięć były gotowe na grę, zanim ją odpalisz.' },
+    work: { label: 'Praca i skupienie', promise: 'Pilnuję, żeby nic nie zwalniało Ci pracy i żeby komputer startował szybko.' },
+    battery: { label: 'Długa praca na baterii', promise: 'Pilnuję zużycia energii i podpowiadam, co niepotrzebnie zjada baterię.' },
+    quiet: { label: 'Cisza i chłód', promise: 'Pilnuję obciążenia, żeby wentylatory nie miały powodu do pracy.' }
+  };
+  let mockWatchTimer = 0;
 
-  function setProgramView(viewName) {
-    const view = programViews[viewName];
+  function mockHeadline(count) {
+    if (count === 0) return 'Wszystko gra — nic nie wymaga Twojej uwagi.';
+    if (count === 1) return 'Znalazłem 1 rzecz wartą zajęcia się.';
+    return `Znalazłem ${count} rzeczy warte zajęcia się.`;
+  }
+
+  function mockProblemCount() {
+    if (!mockPage) return 0;
+    return Array.from(mockPage.querySelectorAll('.mock-finding:not(.is-done)'))
+      .filter((card) => card.dataset.severity === 'warning' || card.dataset.severity === 'critical').length;
+  }
+
+  function mockRefreshCareState() {
+    const count = mockProblemCount();
+    const careActive = Boolean(mockPage?.querySelector('#mock-findings'));
+    const time = new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+    if (mockCareBadge) {
+      mockCareBadge.textContent = String(count);
+      mockCareBadge.style.display = count > 0 ? '' : 'none';
+    }
+    if (mockStatusPillText) mockStatusPillText.textContent = count === 0 ? 'Blessed czuwa · czysto' : `Blessed znalazł ${count}`;
+    const oneClickButton = document.getElementById('mock-oneclick-button');
+    if (oneClickButton && careActive) oneClickButton.style.display = count > 0 ? '' : 'none';
+    if (careActive) {
+      const careStatus = mockPage.querySelector('#mock-care-status');
+      const specTime = mockPage.querySelector('#mock-spec-time');
+      if (careStatus) careStatus.textContent = `${mockHeadline(count)} · przegląd o ${time}`;
+      if (specTime) specTime.textContent = time;
+      if (mockGuideMessage) mockGuideMessage.textContent = mockHeadline(count);
+    }
+  }
+
+  function setMockView(viewName) {
+    const view = mockViews[viewName];
     const template = view && document.getElementById(view.template);
-    const selectedButton = programNavButtons.find((button) => button.dataset.programView === viewName);
-    if (!programViewContent || !view || !template || !selectedButton) return;
-    programViewContent.classList.remove('view-switch');
-    programViewContent.replaceChildren(template.content.cloneNode(true));
-    window.requestAnimationFrame(() => programViewContent.classList.add('view-switch'));
-    programViewContent.setAttribute('aria-labelledby', selectedButton.id);
-    if (programViewTitle) programViewTitle.textContent = view.title;
-    if (programCrumbTitle) programCrumbTitle.textContent = view.crumb;
-    if (programBlessedMessage) programBlessedMessage.textContent = view.message;
-    programNavButtons.forEach((button) => {
+    const selectedButton = mockNavButtons.find((button) => button.dataset.mockView === viewName);
+    if (!mockPage || !view || !template || !selectedButton) return;
+    window.clearInterval(mockWatchTimer);
+    mockWatchTimer = 0;
+    mockPage.classList.remove('view-switch');
+    mockPage.replaceChildren(template.content.cloneNode(true));
+    window.requestAnimationFrame(() => mockPage.classList.add('view-switch'));
+    mockPage.setAttribute('aria-labelledby', selectedButton.id);
+    mockPage.querySelectorAll('.mock-pill').forEach((button) => {
+      button.setAttribute('aria-pressed', String(button.classList.contains('is-selected')));
+    });
+    if (mockViewTitle) mockViewTitle.textContent = view.title;
+    if (mockViewCrumb) mockViewCrumb.textContent = view.crumb;
+    if (mockGuideMessage) mockGuideMessage.textContent = view.message;
+    mockNavButtons.forEach((button) => {
       const selected = button === selectedButton;
       button.classList.toggle('is-active', selected);
       button.setAttribute('aria-selected', String(selected));
@@ -257,150 +310,364 @@
       if (selected) button.setAttribute('aria-current', 'page');
       else button.removeAttribute('aria-current');
     });
+    if (viewName === 'care') mockRefreshCareState();
   }
 
-  programNavButtons.forEach((button) => {
-    button.addEventListener('click', () => setProgramView(button.dataset.programView));
+  mockNavButtons.forEach((button) => {
+    button.addEventListener('click', () => setMockView(button.dataset.mockView));
     button.addEventListener('keydown', (event) => {
-      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+      if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
       event.preventDefault();
-      const index = programNavButtons.indexOf(button);
+      const index = mockNavButtons.indexOf(button);
       const next = event.key === 'Home' ? 0
-        : event.key === 'End' ? programNavButtons.length - 1
-          : (index + (event.key === 'ArrowRight' ? 1 : -1) + programNavButtons.length) % programNavButtons.length;
-      programNavButtons[next].focus();
-      const category = programNavButtons[next].dataset.programView;
-      setProgramView(category);
-      selectScenario(category);
+        : event.key === 'End' ? mockNavButtons.length - 1
+          : (index + (['ArrowRight', 'ArrowDown'].includes(event.key) ? 1 : -1) + mockNavButtons.length) % mockNavButtons.length;
+      mockNavButtons[next].focus();
+      setMockView(mockNavButtons[next].dataset.mockView);
     });
   });
-  setProgramView('gaming');
+  setMockView('care');
 
-  if (programWindow) {
-    programWindow.addEventListener('click', (event) => {
-      const target = event.target instanceof Element ? event.target : null;
-      if (!target) return;
-      const simulatorLink = target.closest('[data-preview-to-sim]');
-      if (simulatorLink) {
-        document.getElementById('symulator')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  function mockRunScan() {
+    const careStatus = mockPage ? mockPage.querySelector('#mock-care-status') : null;
+    if (careStatus) {
+      careStatus.textContent = 'Sprawdzam Twój komputer…';
+      careStatus.classList.add('is-scanning');
+    }
+    if (mockStatusPill) mockStatusPill.classList.add('is-scanning');
+    window.setTimeout(() => {
+      const liveCareStatus = mockPage ? mockPage.querySelector('#mock-care-status') : null;
+      if (liveCareStatus) liveCareStatus.classList.remove('is-scanning');
+      if (mockStatusPill) mockStatusPill.classList.remove('is-scanning');
+      mockRefreshCareState();
+      showToast('Przegląd gotowy — to makieta, więc wyniki są przykładowe.');
+    }, 1200);
+  }
+
+  function mockToggleWatch(button) {
+    const enabled = button.getAttribute('aria-checked') !== 'true';
+    button.setAttribute('aria-checked', String(enabled));
+    button.classList.toggle('is-on', enabled);
+    const state = button.closest('.mock-setting-row')?.querySelector('.mock-setting-state');
+    if (state) state.textContent = enabled ? 'Włączone w makiecie' : 'Wyłączone w makiecie';
+    const cpuValue = mockPage.querySelector('[data-meter="cpu"]');
+    const ramValue = mockPage.querySelector('[data-meter="ram"]');
+    const cpuBar = mockPage.querySelector('[data-meter-bar="cpu"]');
+    const ramBar = mockPage.querySelector('[data-meter-bar="ram"]');
+    window.clearInterval(mockWatchTimer);
+    mockWatchTimer = 0;
+    if (!enabled) {
+      if (cpuValue) cpuValue.textContent = '—';
+      if (ramValue) ramValue.textContent = '—';
+      if (cpuBar) cpuBar.style.width = '0%';
+      if (ramBar) ramBar.style.width = '0%';
+      showToast('Czuwanie wyłączone — makieta przestała „mierzyć”.');
+      return;
+    }
+    const tick = () => {
+      const cpu = 28 + Math.round(Math.random() * 22);
+      const ram = 52 + Math.round(Math.random() * 14);
+      if (cpuValue) cpuValue.textContent = `${cpu}%`;
+      if (ramValue) ramValue.textContent = `${ram}%`;
+      if (cpuBar) cpuBar.style.width = `${cpu}%`;
+      if (ramBar) ramBar.style.width = `${ram}%`;
+    };
+    tick();
+    mockWatchTimer = window.setInterval(tick, 2000);
+    showToast('Czuwanie włączone — makieta pokazuje przykładowe odczyty co 2 sekundy.');
+  }
+
+  function mockRunPing() {
+    const result = document.getElementById('mock-ping-result');
+    const button = document.getElementById('mock-ping');
+    if (!result || !button || button.disabled) return;
+    button.disabled = true;
+    result.textContent = 'Wysyłam 10 prób do 1.1.1.1…';
+    window.setTimeout(() => {
+      const average = 18 + Math.round(Math.random() * 14);
+      const jitter = 2 + Math.round(Math.random() * 4);
+      result.textContent = `Średnia ${average} ms · wahania ±${jitter} ms · utracone 0%`;
+      button.disabled = false;
+    }, 1100);
+  }
+
+  function mockApplyPower() {
+    const ac = document.getElementById('mock-power-ac');
+    const dc = document.getElementById('mock-power-dc');
+    const nowAc = document.getElementById('mock-power-now-ac');
+    const nowDc = document.getElementById('mock-power-now-dc');
+    const feedback = document.getElementById('mock-power-feedback');
+    if (!ac || !nowAc || !feedback) return;
+    const acValue = ac.value.replace(' · bieżąca wartość', '');
+    const dcValue = dc ? dc.value.replace(' · bieżąca wartość', '') : '';
+    nowAc.textContent = acValue;
+    if (nowDc && dcValue) nowDc.textContent = dcValue;
+    feedback.textContent = 'W aplikacji Windows poprosiłby teraz o zgodę (UAC), a oryginalne wartości zapisałyby się do przywrócenia.';
+  }
+
+  function mockRunOneClick() {
+    const plan = document.getElementById('mock-oneclick-plan');
+    const progress = document.getElementById('mock-oneclick-progress');
+    const results = document.getElementById('mock-oneclick-results');
+    if (!plan || !progress || !results) return;
+    plan.hidden = true;
+    progress.hidden = false;
+    const steps = Array.from(progress.querySelectorAll('li'));
+    steps.forEach((step) => step.classList.remove('is-active', 'is-done'));
+    let index = 0;
+    const tick = () => {
+      if (index > 0) steps[index - 1].classList.replace('is-active', 'is-done');
+      if (index >= steps.length) {
+        progress.hidden = true;
+        results.hidden = false;
         return;
       }
+      steps[index].classList.add('is-active');
+      index += 1;
+      window.setTimeout(tick, 750);
+    };
+    tick();
+  }
 
-      const connectionButton = target.closest('[data-connection-type]');
-      if (connectionButton) {
-        programWindow.querySelectorAll('[data-connection-type]').forEach((button) => {
-          const selected = button === connectionButton;
-          button.classList.toggle('is-selected', selected);
-          button.setAttribute('aria-pressed', String(selected));
-        });
-        const name = document.getElementById('connection-name');
-        const description = document.getElementById('connection-description');
-        const state = document.getElementById('connection-state');
-        if (name) name.textContent = connectionButton.dataset.connectionName;
-        if (description) description.textContent = connectionButton.dataset.connectionDescription;
-        if (state) state.textContent = connectionButton.dataset.connectionState;
-        return;
+  function mockFinishOneClick() {
+    const panel = document.getElementById('mock-oneclick');
+    if (panel) panel.hidden = true;
+    mockPage.querySelectorAll('.mock-finding').forEach((card) => {
+      if (!['temp-files', 'recycle-bin', 'power-cpu-limit'].includes(card.dataset.finding)) return;
+      card.classList.add('is-done');
+      const tag = card.querySelector('.mock-finding-tag');
+      if (tag) {
+        tag.textContent = 'W PORZĄDKU';
+        tag.style.setProperty('--sev', '#78D7B5');
       }
-
-      const auditDemoButton = target.closest('[data-program-audit]');
-      if (auditDemoButton) {
-        if (auditDemoButton.disabled) return;
-        const feedback = document.getElementById('program-audit-feedback');
-        const progressMessage = auditDemoButton.dataset.progressMessage || 'Przeglądam przykładowe karty interfejsu…';
-        const successMessage = auditDemoButton.dataset.successMessage || 'Gotowe — przykładowy raport. Nie odczytaliśmy żadnych danych z Windowsa.';
-        const finishLabel = auditDemoButton.dataset.finishLabel || 'Uruchom ponownie';
-        auditDemoButton.disabled = true;
-        auditDemoButton.setAttribute('aria-busy', 'true');
-        auditDemoButton.textContent = 'Przygotowuję pokaz…';
-        if (feedback) {
-          feedback.classList.remove('is-complete');
-          feedback.textContent = progressMessage;
-        }
-        window.setTimeout(() => {
-          auditDemoButton.disabled = false;
-          auditDemoButton.removeAttribute('aria-busy');
-          auditDemoButton.textContent = finishLabel;
-          if (feedback) {
-            feedback.textContent = successMessage;
-            feedback.classList.add('is-complete');
-          }
-        }, 850);
-        return;
+      const severity = card.querySelector('.mock-severity');
+      if (severity) severity.classList.add('mock-severity-good');
+      const action = card.querySelector('.mock-finding-body .mock-button');
+      if (action) {
+        action.disabled = true;
+        action.textContent = '✓ Załatwione';
+        action.classList.remove('mock-button-primary', 'mock-button-secondary');
+        action.classList.add('mock-button-done');
       }
+    });
+    const specFreed = mockPage.querySelector('#mock-spec-freed');
+    if (specFreed) specFreed.textContent = '13,5 GB';
+    mockRefreshCareState();
+    showToast('Jednym kliknięciem — w aplikacji dokładnie tak wygląda podsumowanie.');
+  }
 
-      const previewSwitch = target.closest('.program-switch');
-      if (previewSwitch) {
-        const enabled = previewSwitch.getAttribute('aria-checked') !== 'true';
-        previewSwitch.setAttribute('aria-checked', String(enabled));
-        previewSwitch.classList.toggle('is-on', enabled);
-        const state = previewSwitch.closest('.program-setting-row')?.querySelector('.program-setting-state');
-        if (state) state.textContent = enabled ? 'Włączone w makiecie' : 'Wyłączone w makiecie';
-        if (previewSwitch.dataset.programSwitch === 'standby') {
-          const activity = document.getElementById('standby-activity-card');
-          const activityMessage = document.getElementById('standby-activity-message');
-          const activityState = document.getElementById('standby-activity-state');
-          if (activity) activity.dataset.state = enabled ? 'on' : 'off';
-          if (activityMessage) activityMessage.textContent = enabled
-            ? 'Sprawdzam przykładowe wskaźniki gry…'
-            : 'Czuwanie wyłączone w makiecie; nic nie jest monitorowane.';
-          if (activityState) activityState.textContent = enabled ? 'DEMO AKTYWNE' : 'OCZEKUJE';
-          if (enabled) {
-            window.setTimeout(() => {
-              if (activity?.isConnected && previewSwitch.getAttribute('aria-checked') === 'true' && activityMessage) {
-                activityMessage.textContent = 'Przykład: aplikacja w tle do sprawdzenia. Niczego nie zamykam — najpierw pytam Ciebie.';
-              }
-            }, 1100);
-          }
-          showToast('To tylko pokaz czuwania — komputer i procesy pozostały nietknięte.');
-        } else {
-          showToast('Styl zastosowany w podglądzie.');
-        }
-        return;
+  function mockAppxBoxes() {
+    return Array.from(mockPage.querySelectorAll('[data-mock-appx]'));
+  }
+
+  function mockRefreshAppxCounter() {
+    const counter = document.getElementById('mock-cleanup-counter');
+    if (!counter) return;
+    const boxes = mockAppxBoxes().filter((box) => !box.closest('.mock-appx').classList.contains('is-removed'));
+    const checked = boxes.filter((box) => box.checked).length;
+    counter.textContent = `${boxes.length} aplikacje · ${checked} zaznaczonych`;
+  }
+
+  function mockSetAllAppx(checked) {
+    mockAppxBoxes().forEach((box) => {
+      if (!box.closest('.mock-appx').classList.contains('is-removed')) box.checked = checked;
+    });
+    mockRefreshAppxCounter();
+  }
+
+  function mockShowUninstallConfirm() {
+    const confirm = document.getElementById('mock-cleanup-confirm');
+    const text = document.getElementById('mock-cleanup-confirm-text');
+    if (!confirm) return;
+    const boxes = mockAppxBoxes().filter((box) => box.checked && !box.closest('.mock-appx').classList.contains('is-removed'));
+    if (boxes.length === 0) {
+      showToast('Zaznacz najpierw aplikacje, które chcesz odinstalować.');
+      return;
+    }
+    if (text) {
+      const names = boxes.slice(0, 3).map((box) => box.closest('.mock-appx').querySelector('strong')?.textContent || '');
+      const suffix = boxes.length > 3 ? ` i jeszcze ${boxes.length - 3}` : '';
+      text.textContent = `Odinstalować ${boxes.length} aplikacji bieżącego konta? ${names.join(', ')}${suffix}. Aplikacje wgrasz z powrotem przez Microsoft Store.`;
+    }
+    confirm.hidden = false;
+  }
+
+  function mockRunUninstall() {
+    const confirm = document.getElementById('mock-cleanup-confirm');
+    const summary = document.getElementById('mock-cleanup-summary');
+    if (confirm) confirm.hidden = true;
+    const boxes = mockAppxBoxes().filter((box) => box.checked && !box.closest('.mock-appx').classList.contains('is-removed'));
+    boxes.forEach((box) => {
+      const row = box.closest('.mock-appx');
+      if (row) row.classList.add('is-removed');
+      box.checked = false;
+      box.disabled = true;
+    });
+    mockRefreshAppxCounter();
+    if (summary) {
+      summary.hidden = false;
+      summary.textContent = `Gotowe. Odinstalowano ${boxes.length} aplikacji z Twojego konta — wgrasz je z powrotem przez Microsoft Store, kiedy zechcesz.`;
+    }
+    showToast('Makieta: aplikacje „odinstalowane”. W aplikacji wykona to Remove-AppxPackage dla Twojego konta.');
+  }
+
+  function mockHandleClick(event) {
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target) return;
+
+    const toastElement = target.closest('[data-toast]');
+    if (toastElement) {
+      showToast(toastElement.dataset.toast);
+      return;
+    }
+
+    const gotoElement = target.closest('[data-mock-goto]');
+    if (gotoElement) {
+      setMockView(gotoElement.dataset.mockGoto);
+      return;
+    }
+
+    const muteButton = target.closest('[data-mock-mute]');
+    if (muteButton) {
+      const card = muteButton.closest('.mock-finding');
+      if (card) {
+        const wasProblem = card.dataset.severity === 'warning' || card.dataset.severity === 'critical';
+        card.remove();
+        if (wasProblem) mockRefreshCareState();
+        showToast('Sprawa wyciszona — w aplikacji znika z przeglądu na stałe.');
       }
+      return;
+    }
 
-      const themeTarget = target.closest('[data-theme-target]');
-      if (themeTarget) {
-        const preview = document.getElementById('program-theme-preview');
-        const isWindows = themeTarget.dataset.themeTarget === 'windows';
-        programWindow.querySelectorAll('[data-theme-target]').forEach((button) => {
-          const selected = button === themeTarget;
-          button.classList.toggle('is-selected', selected);
-          button.setAttribute('aria-pressed', String(selected));
-        });
-        if (preview) preview.dataset.target = themeTarget.dataset.themeTarget;
-        const label = document.getElementById('program-theme-target-label');
-        const description = document.getElementById('theme-target-description');
-        if (label) label.textContent = isWindows ? 'Motyw systemu Windows' : 'Wygląd Blessed Optimizer';
-        if (description) description.textContent = isWindows
-          ? 'Wygląd Windows ustawisz w aplikacji — tutaj zobaczysz, jak zadziała.'
-          : 'Ten styl dotyczyłby samego interfejsu Blessed — podgląd zmienia się od razu.';
-        return;
+    if (target.closest('#mock-scan')) {
+      mockRunScan();
+      return;
+    }
+    if (target.closest('#mock-oneclick-button')) {
+      const panel = document.getElementById('mock-oneclick');
+      if (panel) panel.hidden = false;
+      return;
+    }
+    if (target.closest('#mock-plan-run')) {
+      mockRunOneClick();
+      return;
+    }
+    if (target.closest('#mock-plan-cancel')) {
+      const panel = document.getElementById('mock-oneclick');
+      if (panel) panel.hidden = true;
+      return;
+    }
+    if (target.closest('#mock-plan-done')) {
+      mockFinishOneClick();
+      return;
+    }
+
+    const watchSwitch = target.closest('[data-mock-watch]');
+    if (watchSwitch) {
+      mockToggleWatch(watchSwitch);
+      return;
+    }
+
+    if (target.closest('#mock-ping')) {
+      mockRunPing();
+      return;
+    }
+    if (target.closest('#mock-apply-power')) {
+      mockApplyPower();
+      return;
+    }
+
+    if (target.closest('#mock-uninstall')) {
+      mockShowUninstallConfirm();
+      return;
+    }
+    if (target.closest('#mock-cleanup-run')) {
+      mockRunUninstall();
+      return;
+    }
+    if (target.closest('#mock-cleanup-cancel')) {
+      const confirm = document.getElementById('mock-cleanup-confirm');
+      if (confirm) confirm.hidden = true;
+      return;
+    }
+    if (target.closest('[data-mock-check-all]')) {
+      mockSetAllAppx(true);
+      return;
+    }
+    if (target.closest('[data-mock-check-none]')) {
+      mockSetAllAppx(false);
+      return;
+    }
+
+    const themePill = target.closest('button[data-mock-theme]');
+    if (themePill && mockWindow) {
+      mockWindow.dataset.mockTheme = themePill.dataset.mockTheme;
+      mockPage.querySelectorAll('[data-mock-theme]').forEach((button) => {
+        const selected = button === themePill;
+        button.classList.toggle('is-selected', selected);
+        button.setAttribute('aria-pressed', String(selected));
+      });
+      return;
+    }
+
+    const accentPill = target.closest('button[data-mock-accent]');
+    if (accentPill && mockWindow) {
+      mockWindow.dataset.mockAccent = accentPill.dataset.mockAccent;
+      mockPage.querySelectorAll('[data-mock-accent]').forEach((button) => {
+        const selected = button === accentPill;
+        button.classList.toggle('is-selected', selected);
+        button.setAttribute('aria-pressed', String(selected));
+      });
+      return;
+    }
+
+    const priorityPill = target.closest('button[data-mock-priority]');
+    if (priorityPill) {
+      const priority = mockPriorities[priorityPill.dataset.mockPriority];
+      if (priority) {
+        const label = document.getElementById('mock-priority-label');
+        const promise = document.getElementById('mock-priority-promise');
+        if (label) label.textContent = priority.label;
+        if (promise) promise.textContent = priority.promise;
       }
+      mockPage.querySelectorAll('[data-mock-priority]').forEach((button) => {
+        const selected = button === priorityPill;
+        button.classList.toggle('is-selected', selected);
+        button.setAttribute('aria-pressed', String(selected));
+      });
+      return;
+    }
 
-      const themeMode = target.closest('[data-theme-mode]');
-      if (themeMode) {
-        const preview = document.getElementById('program-theme-preview');
-        programWindow.querySelectorAll('[data-theme-mode]').forEach((button) => {
-          const selected = button === themeMode;
-          button.classList.toggle('is-selected', selected);
-          button.setAttribute('aria-pressed', String(selected));
-        });
-        if (preview) preview.dataset.theme = themeMode.dataset.themeMode;
-        return;
+    const genericSwitch = target.closest('.mock-switch:not([disabled])');
+    if (genericSwitch && !genericSwitch.hasAttribute('data-mock-watch')) {
+      const enabled = genericSwitch.getAttribute('aria-checked') !== 'true';
+      genericSwitch.setAttribute('aria-checked', String(enabled));
+      genericSwitch.classList.toggle('is-on', enabled);
+      const state = genericSwitch.closest('.mock-setting-row')?.querySelector('.mock-setting-state');
+      if (state) state.textContent = enabled ? 'Włączone w makiecie' : 'Wyłączone w makiecie';
+      if (genericSwitch.closest('.mock-startup-row')) {
+        showToast(enabled
+          ? 'Wpis włączony — w aplikacji Blessed najpierw zapisuje kopię do przywrócenia.'
+          : 'Wpis wyłączony — kopia pozwoli go przywrócić jednym kliknięciem.');
       }
+    }
+  }
 
-      const accent = target.closest('[data-accent-choice]');
-      if (accent) {
-        const preview = document.getElementById('program-theme-preview');
-        programWindow.querySelectorAll('[data-accent-choice]').forEach((button) => {
-          const selected = button === accent;
-          button.classList.toggle('is-selected', selected);
-          button.setAttribute('aria-pressed', String(selected));
-        });
-        if (preview) preview.dataset.accent = accent.dataset.accentChoice;
+  if (mockPage) {
+    mockPage.addEventListener('click', mockHandleClick);
+    mockPage.addEventListener('change', (event) => {
+      if (event.target instanceof HTMLInputElement && event.target.hasAttribute('data-mock-appx')) {
+        mockRefreshAppxCounter();
       }
     });
   }
+
+  document.querySelectorAll('.mock-try-item[data-mock-goto]').forEach((button) => {
+    button.addEventListener('click', () => setMockView(button.dataset.mockGoto));
+  });
+  document.querySelectorAll('.mock-title-check[data-toast]').forEach((button) => {
+    button.addEventListener('click', () => showToast(button.dataset.toast));
+  });
 
   // Reveal sections as they enter the viewport. Hidden-tab sections reveal when shown.
   const revealItems = document.querySelectorAll('.reveal');
@@ -492,182 +759,4 @@
     });
   }
 
-  // These are made-up demo values, never local-device measurements.
-  const scenarios = {
-    gaming: {
-      title: 'Strefa gracza',
-      metrics: [
-        { title: 'Aplikacje w tle', before: '8 pozycji', after: '5 · przykład', foot: 'Zostawiasz tylko to, czego używasz. Każdą pozycję zatwierdzasz sam.', progress: 58 },
-        { title: 'Zasoby w grze', before: 'CPU 64% · przykład', after: 'CPU 48% · przykład', foot: 'Czuwanie pokazuje zużycie CPU i RAM na żywo, kiedy grasz.', progress: 74 }
-      ]
-    },
-    connections: {
-      title: 'Połączenia',
-      metrics: [
-        { title: 'Stan połączenia', before: 'Wi-Fi 5 GHz', after: 'Stabilne · przykład', foot: 'Aplikacja rozpoznaje karty Wi-Fi, Ethernet i Bluetooth PAN.', progress: 82 },
-        { title: 'Ping', before: '38 ms · przykład', after: '24 ms · przykład', foot: 'Prawdziwy pomiar uruchomisz jednym kliknięciem w aplikacji.', progress: 68 }
-      ]
-    },
-    proposals: {
-      title: 'Propozycje',
-      metrics: [
-        { title: 'Pozycje autostartu', before: '12 pozycji', after: '9 · przykład', foot: 'Wyłączone wpisy mają zapisaną kopię — przywrócisz je w sekundę.', progress: 70 },
-        { title: 'Częstotliwość ekranu', before: '60 Hz · przykład', after: '144 Hz · przykład', foot: 'Blessed pokaże tryby obsługiwane przez Twój monitor.', progress: 88 }
-      ]
-    },
-    personalization: {
-      title: 'Personalizacja Windows',
-      metrics: [
-        { title: 'Motyw Windows', before: 'Systemowy', after: 'Ciemny · demo', foot: 'Motyw zmieniasz świadomie — i w każdej chwili wracasz do poprzedniego.', progress: 72 },
-        { title: 'Wygląd Blessed', before: 'Błękitny', after: 'Wybrany akcent', foot: 'Akcent zmienia wygląd całego Blessed Optimizer.', progress: 84 }
-      ]
-    }
-  };
-
-  const scenarioButtons = Array.from(document.querySelectorAll('[data-scenario]'));
-  const resultsContainer = document.getElementById('simulation-results');
-  const simulationTitle = document.getElementById('simulation-title');
-  const simulationState = document.getElementById('simulation-state');
-  const simulationFeedback = document.getElementById('simulation-feedback');
-  const runButton = document.getElementById('run-simulation');
-  const undoButton = document.getElementById('undo-simulation');
-  const simulatorCard = document.querySelector('.simulator-card');
-  let activeScenario = 'gaming';
-  let simulationComplete = false;
-
-  function createCompareCard(metric, completed) {
-    const card = document.createElement('article');
-    card.className = `compare-card${metric.progress === null ? ' no-change' : ''}`;
-
-    const heading = document.createElement('div');
-    heading.className = 'compare-title';
-    const title = document.createElement('span');
-    title.textContent = metric.title;
-    const exampleLabel = document.createElement('span');
-    exampleLabel.className = 'example-label';
-    exampleLabel.textContent = 'DANE DEMO';
-    heading.append(title, exampleLabel);
-
-    const values = document.createElement('div');
-    values.className = 'compare-values';
-    const before = document.createElement('div');
-    before.className = 'compare-value';
-    const beforeLabel = document.createElement('small');
-    beforeLabel.textContent = 'PRZED';
-    const beforeValue = document.createElement('strong');
-    beforeValue.textContent = metric.before;
-    before.append(beforeLabel, beforeValue);
-
-    const arrow = document.createElement('span');
-    arrow.className = 'compare-arrow';
-    arrow.setAttribute('aria-hidden', 'true');
-    arrow.textContent = '→';
-
-    const after = document.createElement('div');
-    after.className = 'compare-value after';
-    const afterLabel = document.createElement('small');
-    afterLabel.textContent = 'PO · DEMO';
-    const afterValue = document.createElement('strong');
-    afterValue.textContent = completed ? metric.after : '—';
-    after.append(afterLabel, afterValue);
-    values.append(before, arrow, after);
-
-    const track = document.createElement('div');
-    track.className = `compare-track${metric.progress === null ? ' no-fill' : ''}`;
-    track.setAttribute('aria-hidden', 'true');
-    const fill = document.createElement('span');
-    if (completed && metric.progress !== null) fill.style.width = `${metric.progress}%`;
-    track.appendChild(fill);
-
-    const foot = document.createElement('p');
-    foot.className = 'compare-foot';
-    foot.textContent = completed ? metric.foot : 'Wybierz „Pokaż przykład”, aby odsłonić wynik demo.';
-    card.append(heading, values, track, foot);
-    return card;
-  }
-
-  function renderScenario() {
-    const scenario = scenarios[activeScenario];
-    if (!scenario || !resultsContainer) return;
-    if (simulationTitle) simulationTitle.textContent = scenario.title;
-    resultsContainer.replaceChildren(...scenario.metrics.map((metric) => createCompareCard(metric, simulationComplete)));
-    scenarioButtons.forEach((button) => {
-      const selected = button.dataset.scenario === activeScenario;
-      button.classList.toggle('is-selected', selected);
-      button.setAttribute('aria-checked', String(selected));
-      button.tabIndex = selected ? 0 : -1;
-    });
-    if (simulationState) {
-      simulationState.classList.toggle('is-complete', simulationComplete);
-      simulationState.replaceChildren();
-      const dot = document.createElement('i');
-      simulationState.append(dot, document.createTextNode(simulationComplete ? ' Gotowe · demo' : ' Gotowe'));
-    }
-    if (runButton) {
-      runButton.innerHTML = simulationComplete
-        ? '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16 10a6 6 0 1 1-1.8-4.3M16 4v4h-4"/></svg> Pokaż ponownie'
-        : '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7.5 4.5 8 5.5-8 5.5v-11Z" fill="currentColor" stroke="none"/></svg> Pokaż przykład';
-    }
-    if (undoButton) undoButton.disabled = !simulationComplete;
-    if (simulationFeedback && !simulationComplete) {
-      simulationFeedback.textContent = 'Wybierz kategorię, aby zobaczyć przykładowy raport.';
-      simulationFeedback.classList.remove('is-success');
-    }
-  }
-
-  function selectScenario(name) {
-    if (!scenarios[name]) return;
-    activeScenario = name;
-    simulationComplete = false;
-    if (simulatorCard) simulatorCard.classList.remove('just-ran');
-    renderScenario();
-  }
-
-  scenarioButtons.forEach((button) => button.addEventListener('click', () => {
-    const category = button.dataset.scenario;
-    selectScenario(category);
-    setProgramView(category);
-  }));
-  programNavButtons.forEach((button) => button.addEventListener('click', () => selectScenario(button.dataset.programView)));
-  const scenarioList = document.querySelector('.scenario-list');
-  if (scenarioList) {
-    scenarioList.addEventListener('keydown', (event) => {
-      if (!['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].includes(event.key)) return;
-      event.preventDefault();
-      const currentIndex = scenarioButtons.indexOf(document.activeElement);
-      const direction = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : -1;
-      const nextIndex = (currentIndex + direction + scenarioButtons.length) % scenarioButtons.length;
-      scenarioButtons[nextIndex].focus();
-      const category = scenarioButtons[nextIndex].dataset.scenario;
-      selectScenario(category);
-      setProgramView(category);
-    });
-  }
-
-  if (runButton) {
-    runButton.addEventListener('click', () => {
-      simulationComplete = true;
-      renderScenario();
-      if (simulationFeedback) {
-        simulationFeedback.textContent = 'Gotowe — to raport przykładowy, nie wynik z Twojego PC. Windows pozostał bez zmian.';
-        simulationFeedback.classList.add('is-success');
-      }
-      if (simulatorCard) {
-        simulatorCard.classList.remove('just-ran');
-        window.requestAnimationFrame(() => simulatorCard.classList.add('just-ran'));
-      }
-    });
-  }
-  if (undoButton) {
-    undoButton.addEventListener('click', () => {
-      simulationComplete = false;
-      if (simulatorCard) simulatorCard.classList.remove('just-ran');
-      renderScenario();
-      if (simulationFeedback) {
-        simulationFeedback.textContent = 'Podgląd cofnięty — wróciłeś do stanu wyjściowego.';
-        simulationFeedback.classList.add('is-success');
-      }
-    });
-  }
-  renderScenario();
 })();

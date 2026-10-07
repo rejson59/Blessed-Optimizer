@@ -35,6 +35,19 @@ public sealed class BlessedProfile
 
     public int HandledCount { get; set; }
 
+    /// <summary>Finding ids the user muted; those cards stop appearing in the watch list.</summary>
+    public List<string> MutedFindingIds { get; set; } = new();
+
+    /// <summary>
+    /// v1.0.3 enabled TEMP cleanup for new profiles without a separate opt-in.
+    /// Require a fresh, explicit choice before allowing unattended deletion.
+    /// </summary>
+    internal void EnforceConsentDefaults()
+    {
+        if (!TempCleanupConsentSet)
+            AllowTempCleanup = false;
+    }
+
     public string PriorityLabel => Priority switch
     {
         BlessedPriority.Work => "Praca i skupienie",
@@ -73,10 +86,7 @@ public static class BlessedProfileStore
                 return new BlessedProfile();
             var json = File.ReadAllText(ProfileFile);
             var profile = JsonSerializer.Deserialize<BlessedProfile>(json, SerializerOptions) ?? new BlessedProfile();
-            // v1.0.3 enabled TEMP cleanup for new profiles without a separate opt-in.
-            // Require a fresh, explicit choice before allowing unattended deletion.
-            if (!profile.TempCleanupConsentSet)
-                profile.AllowTempCleanup = false;
+            profile.EnforceConsentDefaults();
             return profile;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or NotSupportedException)
