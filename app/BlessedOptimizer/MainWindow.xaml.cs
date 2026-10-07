@@ -1414,16 +1414,20 @@ public partial class MainWindow : Window
                 _lastReport = await _watchService.InspectAsync(_snapshot, _profile, usage, _lifetime.Token);
             }
 
-            if (_lastReport is not null)
-                WatchHistoryStore.Record(_lastReport, usage);
+            var completedReport = _lastReport;
+            if (completedReport is not null)
+                WatchHistoryStore.Record(completedReport, usage);
 
             RenderFindings();
             UpdateCareBadge();
             SetCareStatus(DescribeWatchStatus());
-            if (_currentPage == "care")
-                BlessedMessage.Text = _lastReport.Headline;
-            else if (_lastReport.ProblemCount > 0)
-                BlessedMessage.Text = $"{_lastReport.Headline} Zajrzyj do zakładki „Blessed czuwa” — mam gotowe rozwiązania.";
+            if (completedReport is not null)
+            {
+                if (_currentPage == "care")
+                    BlessedMessage.Text = completedReport.Headline;
+                else if (completedReport.ProblemCount > 0)
+                    BlessedMessage.Text = $"{completedReport.Headline} Zajrzyj do zakładki „Blessed czuwa” — mam gotowe rozwiązania.";
+            }
         }
         catch (OperationCanceledException)
         {
