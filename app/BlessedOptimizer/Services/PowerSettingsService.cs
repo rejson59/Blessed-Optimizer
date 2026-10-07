@@ -52,7 +52,7 @@ public static class PowerSettingsService
         new PowerSettingDescriptor(
             "processor-max",
             "Limit procesora",
-            "Maksymalny stan procesora w tym planie. Niższy limit może ograniczyć temperaturę i hałas, ale też wydajność; nie wyłącza zabezpieczeń termicznych.",
+            "Maksymalny stan procesora w tym planie. Wyższy limit to więcej mocy, niższy — chłodniejsza i cichsza praca.",
             ProcessorSubgroup,
             new Guid("bc5038f7-23e0-4960-96da-33abaf5935ec"),
             0,
@@ -62,7 +62,7 @@ public static class PowerSettingsService
         new PowerSettingDescriptor(
             "usb-selective-suspend",
             "Oszczędzanie energii USB",
-            "Zezwala Windowsowi na usypianie nieużywanych urządzeń USB. Wyłączenie może pomóc przy rozłączających się urządzeniach, ale zwiększa pobór energii.",
+            "Zezwala Windowsowi na usypianie nieużywanych urządzeń USB. Wyłącz, jeśli myszka, pad lub dysk USB potrafią się rozłączać.",
             UsbSubgroup,
             new Guid("48e6b7a6-50f5-4782-a5d4-53bb8f07e226"),
             0,
@@ -72,7 +72,7 @@ public static class PowerSettingsService
         new PowerSettingDescriptor(
             "pcie-link-state",
             "Oszczędzanie energii PCI Express",
-            "Steruje oszczędzaniem energii łącza PCIe. Mniejsze oszczędzanie może ograniczyć opóźnienie wybudzania, ale skrócić czas pracy na baterii.",
+            "Steruje oszczędzaniem energii łącza PCIe. Mniejsze oszczędzanie to szybsze wybudzanie karty graficznej i dysku NVMe.",
             PcieSubgroup,
             new Guid("ee12f906-d277-404b-b6da-e5fa1a576df5"),
             0,

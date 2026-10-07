@@ -36,15 +36,15 @@
           </Border>
           <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0,12,0">
             <TextBlock Text="Blessed Optimizer" FontSize="17" FontWeight="Bold" />
-            <TextBlock x:Name="HeaderSummary" Text="Twój lokalny panel diagnostyczny Windows" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" Margin="0,3,0,0" TextTrimming="CharacterEllipsis" />
+            <TextBlock x:Name="HeaderSummary" Text="Blessed pilnuje Twojego Windowsa" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" Margin="0,3,0,0" TextTrimming="CharacterEllipsis" />
           </StackPanel>
           <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,12,0" Width="230">
             <TextBlock Text="AKTUALIZACJE" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="8" FontWeight="Bold" HorizontalAlignment="Right" />
-            <TextBlock x:Name="UpdateStatusText" Text="Sprawdzę przy uruchomieniu" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" Margin="0,3,0,0" HorizontalAlignment="Right" MaxWidth="230" TextTrimming="CharacterEllipsis" />
+            <TextBlock x:Name="UpdateStatusText" Text="Sprawdzam przy uruchomieniu" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" Margin="0,3,0,0" HorizontalAlignment="Right" MaxWidth="230" TextTrimming="CharacterEllipsis" />
           </StackPanel>
           <Button x:Name="CheckUpdateButton" Grid.Column="3" Content="Sprawdź" Style="{StaticResource SecondaryButton}" Click="CheckUpdate_Click" Padding="12,8" Margin="0,0,12,0" shell:WindowChrome.IsHitTestVisibleInChrome="True" />
           <Border Grid.Column="4" Margin="0,0,10,0" Padding="9,6" CornerRadius="999" Background="#203D5B" VerticalAlignment="Center">
-            <TextBlock x:Name="VersionText" Text="v1.0.2" Foreground="{DynamicResource GoldBrush}" FontSize="10" FontWeight="Bold" />
+            <TextBlock x:Name="VersionText" Text="v1.0.3" Foreground="{DynamicResource GoldBrush}" FontSize="10" FontWeight="Bold" />
           </Border>
           <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center" shell:WindowChrome.IsHitTestVisibleInChrome="True">
             <Button Content="−" Style="{StaticResource WindowControlButton}" ToolTip="Minimalizuj" Click="MinimizeWindow_Click" shell:WindowChrome.IsHitTestVisibleInChrome="True" />
@@ -59,16 +59,19 @@
       <Border Grid.Row="1" Margin="15,10,15,0" Padding="10,7" CornerRadius="15" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
         <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" CanContentScroll="True">
           <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-            <Button x:Name="GamingNavButton" Tag="active" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Monitorowanie odczytów CPU i RAM podczas gry">
+            <Button x:Name="CareNavButton" Tag="active" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Blessed sam sprawdza komputer i mówi, czym się zająć">
+              <StackPanel Orientation="Horizontal"><TextBlock Text="❖" Foreground="{DynamicResource GoldBrush}" Margin="0,0,7,0"/><TextBlock Text="Blessed czuwa" /><Border x:Name="CareBadge" Margin="8,0,0,0" Padding="6,2" CornerRadius="999" Background="#C0453B" Visibility="Collapsed" VerticalAlignment="Center"><TextBlock x:Name="CareBadgeText" Text="0" Foreground="#FFFFFF" FontSize="9" FontWeight="Bold" /></Border></StackPanel>
+            </Button>
+            <Button x:Name="GamingNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Podgląd CPU i RAM w czasie gry">
               <StackPanel Orientation="Horizontal"><TextBlock Text="✦" Foreground="{DynamicResource AccentBrush}" Margin="0,0,7,0"/><TextBlock Text="Strefa gracza" /></StackPanel>
             </Button>
-            <Button x:Name="ConnectionsNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Lokalny podgląd adapterów i test ping po kliknięciu">
+            <Button x:Name="ConnectionsNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Stan kart sieciowych i test opóźnienia">
               <StackPanel Orientation="Horizontal"><TextBlock Text="⌁" Foreground="{DynamicResource AccentBrush}" Margin="0,0,7,0"/><TextBlock Text="Połączenia" /></StackPanel>
             </Button>
-            <Button x:Name="ProposalsNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Ręczne propozycje wymagające Twojej decyzji">
+            <Button x:Name="ProposalsNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Gotowe usprawnienia dobrane pod Twoje priorytety">
               <StackPanel Orientation="Horizontal"><TextBlock Text="✧" Foreground="{DynamicResource GoldBrush}" Margin="0,0,7,0"/><TextBlock Text="Propozycje" /></StackPanel>
             </Button>
-            <Button x:Name="PersonalizationNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Zmień wygląd aplikacji; ustawienia Windows pozostają nietknięte">
+            <Button x:Name="PersonalizationNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Dopasuj wygląd Blessed i skocz do ustawień wyglądu Windows">
               <StackPanel Orientation="Horizontal"><TextBlock Text="◈" Foreground="{DynamicResource AccentBrush}" Margin="0,0,7,0"/><TextBlock Text="Personalizacja Windows" /></StackPanel>
             </Button>
 
@@ -77,10 +80,10 @@
               <TextBlock Text="DODATKOWE" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="7" FontWeight="Bold" />
               <TextBlock Text="NARZĘDZIA" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="7" FontWeight="Bold" Margin="0,2,0,0" />
             </StackPanel>
-            <Button x:Name="ProcessesNavButton" Style="{StaticResource NavigationToolButton}" Click="Navigate_Click" ToolTip="Szczegółowy, lokalny podgląd CPU i pamięci każdego procesu">
+            <Button x:Name="ProcessesNavButton" Style="{StaticResource NavigationToolButton}" Click="Navigate_Click" ToolTip="Co naprawdę zajmuje procesor i pamięć">
               <StackPanel Orientation="Horizontal"><TextBlock Text="▤" Foreground="{DynamicResource AccentBrush}" Margin="0,0,6,0"/><TextBlock Text="Procesy" /></StackPanel>
             </Button>
-            <Button x:Name="StartupNavButton" Style="{StaticResource NavigationToolButton}" Click="Navigate_Click" ToolTip="Autostart bieżącego użytkownika z kopią i przywracaniem">
+            <Button x:Name="StartupNavButton" Style="{StaticResource NavigationToolButton}" Click="Navigate_Click" ToolTip="Co startuje z Windowsem — z kopią i przywracaniem">
               <StackPanel Orientation="Horizontal"><TextBlock Text="↻" Foreground="{DynamicResource AccentBrush}" Margin="0,0,6,0"/><TextBlock Text="Autostart" /></StackPanel>
             </Button>
             <Button x:Name="PowerNavButton" Style="{StaticResource NavigationToolButton}" Click="Navigate_Click" ToolTip="Zaawansowane ustawienia planu zasilania AC i baterii">
@@ -104,7 +107,7 @@
               <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
               <StackPanel VerticalAlignment="Center">
                 <TextBlock x:Name="WorkspaceKicker" Text="TWÓJ PANEL · DANE NA ŻYWO" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="9" FontWeight="Bold" />
-                <TextBlock x:Name="WorkspaceTitle" Text="Strefa gracza" FontSize="22" FontWeight="Bold" Margin="0,4,0,0" />
+                <TextBlock x:Name="WorkspaceTitle" Text="Blessed czuwa" FontSize="22" FontWeight="Bold" Margin="0,4,0,0" />
               </StackPanel>
               <Border Grid.Column="1" Padding="10,7" CornerRadius="999" Background="{DynamicResource StatusBrush}" BorderBrush="#39816B" BorderThickness="1" VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal">
@@ -122,10 +125,10 @@
                 </Border>
                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="11,0,12,0">
                   <TextBlock Text="BLESSED · TWÓJ POMOCNIK" Foreground="{DynamicResource GoldBrush}" FontSize="8" FontWeight="Bold" />
-                  <TextBlock x:Name="BlessedMessage" Text="Poprowadzę Cię krok po kroku, zawsze za Twoją zgodą." Foreground="{DynamicResource TextPrimaryBrush}" FontSize="11" TextWrapping="Wrap" LineHeight="16" Margin="0,4,0,0" />
+                  <TextBlock x:Name="BlessedMessage" Text="Sprawdzam Twój komputer w tle i sam mówię, czym się zająć." Foreground="{DynamicResource TextPrimaryBrush}" FontSize="11" TextWrapping="Wrap" LineHeight="16" Margin="0,4,0,0" />
                 </StackPanel>
                 <Border Grid.Column="2" Padding="9,6" CornerRadius="999" Background="{DynamicResource SurfaceRaisedBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" VerticalAlignment="Center">
-                  <TextBlock Text="TY DECYDUJESZ" Foreground="{DynamicResource AccentBrush}" FontSize="8" FontWeight="Bold" />
+                  <TextBlock x:Name="GuideBadgeText" Text="BLESSED OGARNIA" Foreground="{DynamicResource GoldBrush}" FontSize="8" FontWeight="Bold" />
                 </Border>
               </Grid>
             </Border>
@@ -133,7 +136,7 @@
             <DockPanel Grid.Row="2" LastChildFill="False" Margin="2,13,2,10" MinHeight="26">
               <TextBlock Text="WYBRANA KATEGORIA" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="8" FontWeight="Bold" VerticalAlignment="Center" />
               <TextBlock Text="›" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="15" Margin="9,0" VerticalAlignment="Center" />
-              <TextBlock x:Name="CrumbTitle" Text="STREFA GRACZA" Foreground="{DynamicResource AccentBrush}" FontSize="8" FontWeight="Bold" VerticalAlignment="Center" />
+              <TextBlock x:Name="CrumbTitle" Text="BLESSED CZUWA" Foreground="{DynamicResource AccentBrush}" FontSize="8" FontWeight="Bold" VerticalAlignment="Center" />
               <Border DockPanel.Dock="Right" Padding="8,4" CornerRadius="999" Background="{DynamicResource SurfaceRaisedBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" VerticalAlignment="Center">
                 <TextBlock Text="LOKALNIE · BEZ TELEMETRII" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="7" FontWeight="Bold" />
               </Border>
@@ -148,7 +151,7 @@
 
       <DockPanel Grid.Row="3" LastChildFill="False" Margin="10,0,10,0" MinHeight="25">
         <TextBlock Text="✦" Foreground="{DynamicResource GoldBrush}" FontSize="13" Margin="0,0,7,0" VerticalAlignment="Center" />
-        <TextBlock x:Name="FooterStatusText" Text="Działa lokalnie · każda zmiana wymaga Twojej zgody" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" VerticalAlignment="Center" />
+        <TextBlock x:Name="FooterStatusText" Text="Blessed czuwa w tle · wszystko liczone lokalnie" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" VerticalAlignment="Center" />
         <TextBlock x:Name="InstallModeText" Text="Instalacja dla bieżącego użytkownika" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" VerticalAlignment="Center" HorizontalAlignment="Right" DockPanel.Dock="Right" />
       </DockPanel>
 

@@ -19,3 +19,25 @@ if (processes.Count == 0 || processes.All(process => process.ProcessId != Enviro
 
 var startupEntries = StartupManagerService.ReadEntries();
 Console.WriteLine($"Windows read-only smoke checks passed: plan={plan.SchemeId:D}, settings={plan.Settings.Count}, processes={processes.Count}, startupEntries={startupEntries.Count}.");
+
+var display = DisplayDiagnostics.ReadPrimaryDisplay();
+if (display is { CurrentHz: <= 0 })
+    throw new InvalidOperationException("Windows zwrócił nieprawidłową częstotliwość odświeżania ekranu.");
+if (display is not null && display.MaximumHz < display.CurrentHz)
+    throw new InvalidOperationException("Maksymalne odświeżanie nie może być niższe od bieżącego.");
+
+var tempScan = MaintenanceService.ScanTemp(TimeSpan.FromDays(2));
+if (tempScan.FileCount < 0 || tempScan.SizeMb < 0)
+    throw new InvalidOperationException("Skan plików tymczasowych zwrócił ujemny wynik.");
+
+var profile = new BlessedProfile { Priority = BlessedPriority.Work };
+if (string.IsNullOrWhiteSpace(profile.PriorityLabel) || string.IsNullOrWhiteSpace(profile.PriorityPromise))
+    throw new InvalidOperationException("Profil Blessed nie opisuje priorytetu użytkownika.");
+
+var report = await new BlessedWatchService().InspectAsync(null, profile, null, CancellationToken.None);
+if (report.Findings.Count == 0)
+    throw new InvalidOperationException("Przegląd Blessed musi zwrócić przynajmniej jedną informację.");
+if (report.ProblemCount < 0)
+    throw new InvalidOperationException("Liczba znalezionych spraw nie może być ujemna.");
+
+Console.WriteLine($"Blessed watch smoke checks passed: findings={report.Findings.Count}, problems={report.ProblemCount}, tempFiles={tempScan.FileCount}, display={(display is null ? "n/a" : $"{display.CurrentHz}/{display.MaximumHz} Hz")}.");
