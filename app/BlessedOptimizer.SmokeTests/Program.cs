@@ -21,6 +21,10 @@ var startupEntries = StartupManagerService.ReadEntries();
 Console.WriteLine($"Windows read-only smoke checks passed: plan={plan.SchemeId:D}, settings={plan.Settings.Count}, processes={processes.Count}, startupEntries={startupEntries.Count}.");
 
 var display = DisplayDiagnostics.ReadPrimaryDisplay();
+var peripherals = PeripheralDiagnostics.ReadPresentDevices();
+if (peripherals.Count > 128 || peripherals.Any(device => string.IsNullOrWhiteSpace(device.Name) || string.IsNullOrWhiteSpace(device.Category)))
+    throw new InvalidOperationException("Odczyt urządzeń peryferyjnych zwrócił nieprawidłową pozycję.");
+Console.WriteLine($"Peripheral read-only smoke check passed: presentSupportedDevices={peripherals.Count}, reportedProblems={peripherals.Count(device => device.HasReportedProblem)}.");
 if (display is { CurrentHz: <= 0 })
     throw new InvalidOperationException("Windows zwrócił nieprawidłową częstotliwość odświeżania ekranu.");
 if (display is not null && display.MaximumHz < display.CurrentHz)

@@ -6,18 +6,28 @@ using System.Text.Json;
 namespace BlessedOptimizer.Services;
 
 /// <summary>A per-user Microsoft Store app (AppX package) visible in the cleanup list.</summary>
-public sealed record AppxPackage(string Name, string PackageFullName, string Version);
+public sealed record AppxPackage(
+    string Name,
+    string PackageFullName,
+    string Version,
+    string PublisherDisplayName = "",
+    bool IsFramework = false,
+    bool IsResourcePackage = false,
+    bool NonRemovable = false)
+{
+    public AppxSafetyAssessment Safety => AppxSafetyPolicy.Assess(this);
+}
 
 /// <summary>
 /// Reads and removes the current user's Store apps (AppX packages). Everything here is
 /// scoped to the logged-in account: no admin rights, no system components, no other
-/// users. Removed apps can be installed again from the Microsoft Store at any time.
+/// users. Availability of a later reinstall depends on the publisher and the Microsoft Store.
 /// </summary>
 [SupportedOSPlatform("windows")]
 public static class AppxInventoryService
 {
     private const string ListCommand =
-        "Get-AppxPackage | Select-Object Name, PackageFullName, @{n='Version';e={$_.Version.ToString()}} | ConvertTo-Json -Compress";
+        "Get-AppxPackage | Select-Object Name, PackageFullName, @{n='Version';e={$_.Version.ToString()}}, PublisherDisplayName, IsFramework, IsResourcePackage, NonRemovable | ConvertTo-Json -Compress";
 
     /// <summary>Lists the current user's installed Store apps. Empty when PowerShell is unavailable.</summary>
     public static async Task<IReadOnlyList<AppxPackage>> ReadUserPackagesAsync(TimeSpan timeout, CancellationToken cancellationToken = default)
@@ -44,15 +54,22 @@ public static class AppxInventoryService
 
     /// <summary>Removes the given packages one by one. Returns the PackageFullNames that failed.</summary>
     public static async Task<IReadOnlyList<string>> RemovePackagesAsync(
-        IEnumerable<string> packageFullNames,
+        IEnumerable<AppxPackage> packages,
         IProgress<string>? progress = null,
         CancellationToken cancellationToken = default)
     {
+        var selected = packages.ToArray();
         var failed = new List<string>();
-        foreach (var packageFullName in packageFullNames)
+        var currentPackages = await ReadUserPackagesAsync(TimeSpan.FromSeconds(30), cancellationToken).ConfigureAwait(false);
+        var currentByFullName = currentPackages
+            .GroupBy(package => package.PackageFullName, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
+        foreach (var package in selected)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            if (!await RemovePackageAsync(packageFullName, cancellationToken).ConfigureAwait(false))
+            var packageFullName = package.PackageFullName;
+            var stillInstalled = currentByFullName.TryGetValue(packageFullName, out var current);
+            if (!stillInstalled || current!.Safety.IsProtected || !await RemovePackageAsync(packageFullName, cancellationToken).ConfigureAwait(false))
                 failed.Add(packageFullName);
             progress?.Report(packageFullName);
         }
@@ -119,8 +136,25 @@ public static class AppxInventoryService
             var version = element.TryGetProperty("Version", out var versionElement) && versionElement.ValueKind == JsonValueKind.String
                 ? versionElement.GetString()
                 : null;
+            var publisher = element.TryGetProperty("PublisherDisplayName", out var publisherElement) && publisherElement.ValueKind == JsonValueKind.String
+                ? publisherElement.GetString()
+                : string.Empty;
+            var isFramework = ReadBoolean(element, "IsFramework");
+            var isResourcePackage = ReadBoolean(element, "IsResourcePackage");
+            var nonRemovable = ReadBoolean(element, "NonRemovable");
             if (!string.IsNullOrWhiteSpace(name) && !string.IsNullOrWhiteSpace(fullName))
-                packages.Add(new AppxPackage(name, fullName, version ?? string.Empty));
+                packages.Add(new AppxPackage(name, fullName, version ?? string.Empty, publisher ?? string.Empty, isFramework, isResourcePackage, nonRemovable));
+        }
+
+        static bool ReadBoolean(JsonElement element, string propertyName)
+        {
+            if (!element.TryGetProperty(propertyName, out var value))
+                return false;
+            if (value.ValueKind == JsonValueKind.True)
+                return true;
+            if (value.ValueKind == JsonValueKind.False || value.ValueKind == JsonValueKind.Null)
+                return false;
+            return value.ValueKind == JsonValueKind.String && bool.TryParse(value.GetString(), out var parsed) && parsed;
         }
     }
 

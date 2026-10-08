@@ -43,7 +43,7 @@
           </StackPanel>
           <Button x:Name="CheckUpdateButton" Grid.Column="3" Content="Sprawdź" Style="{StaticResource SecondaryButton}" Click="CheckUpdate_Click" Padding="12,8" Margin="0,0,12,0" shell:WindowChrome.IsHitTestVisibleInChrome="True" />
           <Border Grid.Column="4" Margin="0,0,10,0" Padding="9,6" CornerRadius="999" Background="#203D5B" VerticalAlignment="Center">
-            <TextBlock x:Name="VersionText" Text="v1.2.0" Foreground="{DynamicResource GoldBrush}" FontSize="10" FontWeight="Bold" />
+            <TextBlock x:Name="VersionText" Text="v1.3.0" Foreground="{DynamicResource GoldBrush}" FontSize="10" FontWeight="Bold" />
           </Border>
           <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center" shell:WindowChrome.IsHitTestVisibleInChrome="True">
             <Button Content="−" Style="{StaticResource WindowControlButton}" ToolTip="Minimalizuj" Click="MinimizeWindow_Click" shell:WindowChrome.IsHitTestVisibleInChrome="True" />
@@ -71,50 +71,82 @@
             </Grid.RowDefinitions>
             <StackPanel Grid.Row="0" Margin="3,3,0,12">
               <TextBlock Text="NAWIGACJA" Foreground="{DynamicResource AccentBrush}" FontSize="9" FontWeight="Bold" />
-              <TextBlock Text="Wybierz, czym się zająć" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" Margin="0,4,0,0" />
+              <TextBlock Text="Każda rzecz ma swoje miejsce" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10" Margin="0,4,0,0" />
             </StackPanel>
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" CanContentScroll="False" Focusable="False">
               <StackPanel>
-                <TextBlock Text="OPIEKA" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="8" FontWeight="Bold" Margin="8,5,0,5" />
-                <Button x:Name="CareNavButton" Tag="active" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Blessed sprawdza komputer i podpowiada, czym się zająć">
-                  <StackPanel Orientation="Horizontal"><Path Style="{StaticResource NavIcon}" Data="{StaticResource IconShield}" Stroke="{DynamicResource GoldBrush}" /><TextBlock Text="Blessed czuwa" VerticalAlignment="Center" /><Border x:Name="CareBadge" Margin="8,0,0,0" Padding="6,2" CornerRadius="999" Background="#C0453B" Visibility="Collapsed" VerticalAlignment="Center"><TextBlock x:Name="CareBadgeText" Text="0" Foreground="#FFFFFF" FontSize="9" FontWeight="Bold" /></Border></StackPanel>
+                <TextBlock Text="ODNOWA" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="8" FontWeight="Bold" Margin="8,5,0,4" />
+                <Button x:Name="BlessingNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Przygotuj osobisty plan odnowy komputera">
+                  <StackPanel Orientation="Horizontal"><Path Style="{StaticResource NavIcon}" Data="{StaticResource IconSpark}" Stroke="{DynamicResource GoldBrush}" /><TextBlock Text="Rytuał odnowy" VerticalAlignment="Center" /></StackPanel>
                 </Button>
 
-                <TextBlock Text="WYDAJNOŚĆ" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="8" FontWeight="Bold" Margin="8,14,0,5" />
-                <Button x:Name="GamingNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Podgląd użycia procesora i pamięci podczas gry">
-                  <StackPanel Orientation="Horizontal"><Path Style="{StaticResource NavIcon}" Data="{StaticResource IconGame}" /><TextBlock Text="Strefa gracza" VerticalAlignment="Center" /></StackPanel>
+                <Button x:Name="CareGroupButton" CommandParameter="care" Style="{StaticResource NavigationCategoryButton}" Click="ToggleNavigationGroup_Click" ToolTip="Przeglądy i historia">
+                  <DockPanel LastChildFill="True"><TextBlock x:Name="CareGroupChevron" Text="›" DockPanel.Dock="Right" Margin="8,0,0,0" VerticalAlignment="Center" /><TextBlock Text="OPIEKA" VerticalAlignment="Center" /></DockPanel>
                 </Button>
-                <Button x:Name="ProcessesNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Zobacz, które procesy zajmują procesor i pamięć">
-                  <StackPanel Orientation="Horizontal"><Path Style="{StaticResource NavIcon}" Data="{StaticResource IconList}" /><TextBlock Text="Procesy" VerticalAlignment="Center" /></StackPanel>
+                <StackPanel x:Name="CareNavItems" Visibility="Collapsed" Margin="0,0,0,5">
+                  <Button x:Name="CareNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Blessed sprawdza komputer i podpowiada, czym się zająć">
+                    <StackPanel Orientation="Horizontal"><Path Style="{StaticResource NavIcon}" Data="{StaticResource IconShield}" Stroke="{DynamicResource GoldBrush}" /><TextBlock Text="Blessed czuwa" VerticalAlignment="Center" /><Border x:Name="CareBadge" Margin="8,0,0,0" Padding="6,2" CornerRadius="999" Background="#C0453B" Visibility="Collapsed" VerticalAlignment="Center"><TextBlock x:Name="CareBadgeText" Text="0" Foreground="#FFFFFF" FontSize="9" FontWeight="Bold" /></Border></StackPanel>
+                  </Button>
+                  <Button x:Name="HistoryNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Historia ostatnich przeglądów komputera">
+                    <StackPanel Orientation="Horizontal"><Path Style="{StaticResource NavIcon}" Data="{StaticResource IconClock}" /><TextBlock Text="Historia" VerticalAlignment="Center" /></StackPanel>
+                  </Button>
+                </StackPanel>
+
+                <Button x:Name="PerformanceGroupButton" CommandParameter="performance" Style="{StaticResource NavigationCategoryButton}" Click="ToggleNavigationGroup_Click" ToolTip="Strefa gracza i procesy">
+                  <DockPanel LastChildFill="True"><TextBlock x:Name="PerformanceGroupChevron" Text="›" DockPanel.Dock="Right" Margin="8,0,0,0" VerticalAlignment="Center" /><TextBlock Text="WYDAJNOŚĆ" VerticalAlignment="Center" /></DockPanel>
+                </Button>
+                <StackPanel x:Name="PerformanceNavItems" Visibility="Collapsed" Margin="0,0,0,5">
+                  <Button x:Name="GamingNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Podgląd użycia procesora i pamięci podczas gry">
+                    <StackPanel Orientation="Horizontal"><Path Style="{StaticResource NavIcon}" Data="{StaticResource IconGame}" /><TextBlock Text="Strefa gracza" VerticalAlignment="Center" /></StackPanel>
+                  </Button>
+                  <Button x:Name="ProcessesNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Zobacz, które procesy zajmują procesor i pamięć">
+                    <StackPanel Orientation="Horizontal"><Path Style="{StaticResource NavIcon}" Data="{StaticResource IconList}" /><TextBlock Text="Procesy" VerticalAlignment="Center" /></StackPanel>
+                  </Button>
+                </StackPanel>
+
+                <TextBlock Text="SPRZĘT" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="8" FontWeight="Bold" Margin="8,11,0,4" />
+                <Button x:Name="DevicesNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Monitory, klawiatury, myszy, kamery, audio i kontrolery">
+                  <StackPanel Orientation="Horizontal"><Path Style="{StaticResource NavIcon}" Data="{StaticResource IconDisplay}" /><TextBlock Text="Urządzenia" VerticalAlignment="Center" /></StackPanel>
                 </Button>
 
-                <TextBlock Text="DIAGNOSTYKA" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="8" FontWeight="Bold" Margin="8,14,0,5" />
-                <Button x:Name="ConnectionsNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Stan kart sieciowych i test połączenia">
-                  <StackPanel Orientation="Horizontal"><Path Style="{StaticResource NavIcon}" Data="{StaticResource IconSignal}" /><TextBlock Text="Połączenia" VerticalAlignment="Center" /></StackPanel>
+                <Button x:Name="DiagnosticsGroupButton" CommandParameter="diagnostics" Style="{StaticResource NavigationCategoryButton}" Click="ToggleNavigationGroup_Click" ToolTip="Połączenia i podpowiedzi Blessed">
+                  <DockPanel LastChildFill="True"><TextBlock x:Name="DiagnosticsGroupChevron" Text="›" DockPanel.Dock="Right" Margin="8,0,0,0" VerticalAlignment="Center" /><TextBlock Text="DIAGNOSTYKA" VerticalAlignment="Center" /></DockPanel>
                 </Button>
-                <Button x:Name="ProposalsNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Przydatne wskazówki i odnośniki do ustawień Windows">
-                  <StackPanel Orientation="Horizontal"><Path Style="{StaticResource NavIcon}" Data="{StaticResource IconSpark}" Stroke="{DynamicResource GoldBrush}" /><TextBlock Text="Propozycje" VerticalAlignment="Center" /></StackPanel>
-                </Button>
-                <Button x:Name="HistoryNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Lokalna historia ostatnich przeglądów komputera">
-                  <StackPanel Orientation="Horizontal"><Path Style="{StaticResource NavIcon}" Data="{StaticResource IconClock}" /><TextBlock Text="Historia" VerticalAlignment="Center" /></StackPanel>
-                </Button>
+                <StackPanel x:Name="DiagnosticsNavItems" Visibility="Collapsed" Margin="0,0,0,5">
+                  <Button x:Name="ConnectionsNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Stan kart sieciowych i test połączenia">
+                    <StackPanel Orientation="Horizontal"><Path Style="{StaticResource NavIcon}" Data="{StaticResource IconSignal}" /><TextBlock Text="Połączenia" VerticalAlignment="Center" /></StackPanel>
+                  </Button>
+                  <Button x:Name="ProposalsNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Przydatne wskazówki i odnośniki do ustawień Windows">
+                    <StackPanel Orientation="Horizontal"><Path Style="{StaticResource NavIcon}" Data="{StaticResource IconSpark}" Stroke="{DynamicResource GoldBrush}" /><TextBlock Text="Podpowiedzi" VerticalAlignment="Center" /></StackPanel>
+                  </Button>
+                </StackPanel>
 
-                <TextBlock Text="WINDOWS I BLESSED" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="8" FontWeight="Bold" Margin="8,14,0,5" />
-                <Button x:Name="StartupNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Zarządzaj wpisami autostartu swojego konta">
-                  <StackPanel Orientation="Horizontal"><Path Style="{StaticResource NavIcon}" Data="{StaticResource IconRestart}" /><TextBlock Text="Autostart" VerticalAlignment="Center" /></StackPanel>
+                <Button x:Name="WindowsGroupButton" CommandParameter="windows" Style="{StaticResource NavigationCategoryButton}" Click="ToggleNavigationGroup_Click" ToolTip="Zasilanie, autostart i porządki">
+                  <DockPanel LastChildFill="True"><TextBlock x:Name="WindowsGroupChevron" Text="›" DockPanel.Dock="Right" Margin="8,0,0,0" VerticalAlignment="Center" /><TextBlock Text="WINDOWS" VerticalAlignment="Center" /></DockPanel>
                 </Button>
-                <Button x:Name="CleanupNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Przejrzyj i odinstaluj nieużywane aplikacje swojego konta">
-                  <StackPanel Orientation="Horizontal"><Path Style="{StaticResource NavIcon}" Data="{StaticResource IconBroom}" /><TextBlock Text="Porządki" VerticalAlignment="Center" /></StackPanel>
+                <StackPanel x:Name="WindowsNavItems" Visibility="Collapsed" Margin="0,0,0,5">
+                  <Button x:Name="PowerNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Odczytaj i dostrój plan zasilania Windows">
+                    <StackPanel Orientation="Horizontal"><Path Style="{StaticResource NavIcon}" Data="{StaticResource IconBolt}" Stroke="{DynamicResource GoldBrush}" /><TextBlock Text="Zasilanie" VerticalAlignment="Center" /></StackPanel>
+                  </Button>
+                  <Button x:Name="StartupNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Zarządzaj wpisami autostartu swojego konta">
+                    <StackPanel Orientation="Horizontal"><Path Style="{StaticResource NavIcon}" Data="{StaticResource IconRestart}" /><TextBlock Text="Autostart" VerticalAlignment="Center" /></StackPanel>
+                  </Button>
+                  <Button x:Name="CleanupNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Przejrzyj aplikacje, których już nie używasz">
+                    <StackPanel Orientation="Horizontal"><Path Style="{StaticResource NavIcon}" Data="{StaticResource IconBroom}" /><TextBlock Text="Porządki" VerticalAlignment="Center" /></StackPanel>
+                  </Button>
+                </StackPanel>
+
+                <Button x:Name="AppearanceGroupButton" CommandParameter="appearance" Style="{StaticResource NavigationCategoryButton}" Click="ToggleNavigationGroup_Click" ToolTip="Personalizacja i ustawienia Blessed">
+                  <DockPanel LastChildFill="True"><TextBlock x:Name="AppearanceGroupChevron" Text="›" DockPanel.Dock="Right" Margin="8,0,0,0" VerticalAlignment="Center" /><TextBlock Text="DOPASOWANIE" VerticalAlignment="Center" /></DockPanel>
                 </Button>
-                <Button x:Name="PowerNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Odczytaj i dostrój plan zasilania Windows">
-                  <StackPanel Orientation="Horizontal"><Path Style="{StaticResource NavIcon}" Data="{StaticResource IconBolt}" Stroke="{DynamicResource GoldBrush}" /><TextBlock Text="Zasilanie" VerticalAlignment="Center" /></StackPanel>
-                </Button>
-                <Button x:Name="PersonalizationNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Dopasuj motyw Blessed i otwórz personalizację Windows">
-                  <StackPanel Orientation="Horizontal"><Path Style="{StaticResource NavIcon}" Data="{StaticResource IconPalette}" /><TextBlock Text="Wygląd" VerticalAlignment="Center" /></StackPanel>
-                </Button>
-                <Button x:Name="SettingsNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Ustaw priorytet i automatyzacje Blessed">
-                  <StackPanel Orientation="Horizontal"><Path Style="{StaticResource NavIcon}" Data="{StaticResource IconSettings}" /><TextBlock Text="Ustawienia" VerticalAlignment="Center" /></StackPanel>
-                </Button>
+                <StackPanel x:Name="AppearanceNavItems" Visibility="Collapsed" Margin="0,0,0,5">
+                  <Button x:Name="PersonalizationNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Dopasuj motyw Blessed i otwórz personalizację Windows">
+                    <StackPanel Orientation="Horizontal"><Path Style="{StaticResource NavIcon}" Data="{StaticResource IconPalette}" /><TextBlock Text="Personalizacja" VerticalAlignment="Center" /></StackPanel>
+                  </Button>
+                  <Button x:Name="SettingsNavButton" Style="{StaticResource NavigationButton}" Click="Navigate_Click" ToolTip="Ustaw cel i sposób działania Blessed">
+                    <StackPanel Orientation="Horizontal"><Path Style="{StaticResource NavIcon}" Data="{StaticResource IconSettings}" /><TextBlock Text="Ustawienia" VerticalAlignment="Center" /></StackPanel>
+                  </Button>
+                </StackPanel>
               </StackPanel>
             </ScrollViewer>
             <Border Grid.Row="2" Margin="1,10,1,1" Padding="10,9" CornerRadius="12" Background="{DynamicResource SurfaceRaisedBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">

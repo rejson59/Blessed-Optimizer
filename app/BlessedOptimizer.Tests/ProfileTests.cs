@@ -47,9 +47,11 @@ public sealed class ProfileTests
         var profile = new BlessedProfile
         {
             Priority = BlessedPriority.Battery,
+            FirstBlessingCompletedAt = new DateTimeOffset(2026, 10, 7, 12, 30, 0, TimeSpan.Zero),
             AllowTempCleanup = true,
             TempCleanupConsentSet = true,
             MutedFindingIds = new List<string> { "uptime", "battery-full" },
+            ImportantProcessNames = new List<string> { "notepad", "chrome" },
             TotalFreedMb = 1234.5,
             HandledCount = 7
         };
@@ -59,9 +61,11 @@ public sealed class ProfileTests
 
         Assert.NotNull(restored);
         Assert.Equal(BlessedPriority.Battery, restored.Priority);
+        Assert.Equal(new DateTimeOffset(2026, 10, 7, 12, 30, 0, TimeSpan.Zero), restored.FirstBlessingCompletedAt);
         Assert.True(restored.AllowTempCleanup);
         Assert.True(restored.TempCleanupConsentSet);
         Assert.Equal(new[] { "uptime", "battery-full" }, restored.MutedFindingIds);
+        Assert.Equal(new[] { "notepad", "chrome" }, restored.ImportantProcessNames);
         Assert.Equal(1234.5, restored.TotalFreedMb);
         Assert.Equal(7, restored.HandledCount);
     }
@@ -75,5 +79,7 @@ public sealed class ProfileTests
         Assert.Equal(BlessedPriority.Work, restored.Priority);
         Assert.NotNull(restored.MutedFindingIds);
         Assert.Empty(restored.MutedFindingIds);
+        Assert.NotNull(restored.ImportantProcessNames);
+        Assert.Empty(restored.ImportantProcessNames);
     }
 }

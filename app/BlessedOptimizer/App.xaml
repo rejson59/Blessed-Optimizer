@@ -115,6 +115,41 @@
       <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
     </Style>
 
+    <Style x:Key="HelpIconButton" TargetType="Button">
+      <Setter Property="Width" Value="21" />
+      <Setter Property="Height" Value="21" />
+      <Setter Property="MinWidth" Value="21" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="5,0,0,0" />
+      <Setter Property="Background" Value="{DynamicResource SurfaceRaisedBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="HelpBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="999">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="HelpBorder" Property="Background" Value="{DynamicResource AccentBrush}" /><Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}" /></Trigger>
+              <Trigger Property="IsPressed" Value="True"><Setter TargetName="HelpBorder" Property="Opacity" Value="0.72" /></Trigger>
+              <Trigger Property="IsEnabled" Value="False"><Setter TargetName="HelpBorder" Property="Opacity" Value="0.5" /></Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+      <Setter Property="Background" Value="#3A202B" />
+      <Setter Property="BorderBrush" Value="#8C4757" />
+      <Setter Property="Foreground" Value="#FFDCE1" />
+    </Style>
+
     <Style x:Key="NavigationButton" TargetType="Button">
       <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
       <Setter Property="Background" Value="Transparent" />
@@ -154,6 +189,19 @@
           </ControlTemplate>
         </Setter.Value>
       </Setter>
+    </Style>
+
+    <Style x:Key="NavigationCategoryButton" TargetType="Button" BasedOn="{StaticResource NavigationButton}">
+      <Setter Property="Padding" Value="8,5" />
+      <Setter Property="Margin" Value="0,3,0,1" />
+      <Setter Property="MinHeight" Value="31" />
+      <Setter Property="FontSize" Value="8" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Style.Triggers>
+        <Trigger Property="Tag" Value="expanded">
+          <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        </Trigger>
+      </Style.Triggers>
     </Style>
 
     <Style x:Key="NavigationToolButton" TargetType="Button" BasedOn="{StaticResource NavigationButton}">

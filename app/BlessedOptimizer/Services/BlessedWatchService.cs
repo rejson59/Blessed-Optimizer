@@ -632,7 +632,7 @@ public sealed class BlessedWatchService
             "appx-crowd",
             FindingSeverity.Info,
             $"Masz {count} aplikacji z Microsoft Store",
-            "Część aplikacji mogła zostać po próbowaniu — zajmują miejsce i aktualizują się w tle. Przejrzyj listę i odinstaluj to, czego nie używasz; każdą aplikację wgrasz z powrotem przez Microsoft Store.",
+            "Część aplikacji mogła zostać po próbowaniu — zajmują miejsce i aktualizują się w tle. Przejrzyj listę i odinstaluj to, czego nie używasz; ponowna instalacja zależy od dostępności u wydawcy lub w Microsoft Store.",
             "Przejrzyj aplikacje",
             FindingAction.OpenPage,
             "cleanup"));

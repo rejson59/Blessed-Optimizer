@@ -50,11 +50,28 @@ public partial class MainWindow : Window
     private Button? _watchButton;
     private Button? _pingButton;
     private TextBlock? _pingResult;
+    private FirstBlessingReport? _firstBlessingReport;
+    private TextBlock? _blessingStatusText;
+    private StackPanel? _blessingResultsHost;
+    private Button? _blessingRunButton;
+    private bool _firstBlessingBusy;
+    private IReadOnlyList<PeripheralDevice>? _deviceInventory;
+    private bool _deviceInventoryAvailable;
+    private string? _deviceInventoryMessage;
+    private DisplayModeInfo? _primaryDisplay;
+    private TextBlock? _deviceDisplayDetails;
+    private TextBlock? _deviceDisplayRecommendation;
+    private StackPanel? _deviceInventoryHost;
+    private Button? _deviceRefreshButton;
+    private bool _deviceRefreshBusy;
     private DataGrid? _processGrid;
     private TextBox? _processSearch;
     private TextBlock? _processStatus;
+    private Button? _processCloseButton;
+    private Button? _processForceCloseButton;
     private IReadOnlyList<ProcessUsageSnapshot> _processRows = Array.Empty<ProcessUsageSnapshot>();
     private bool _processRefreshBusy;
+    private bool _processActionBusy;
     private bool _powerOperationBusy;
     private HwndSource? _windowSource;
     private readonly TranslateTransform _cursorWingsPosition = new();
@@ -129,6 +146,8 @@ public partial class MainWindow : Window
         _processTimer.Tick += ProcessTimer_Tick;
         _careTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(3) };
         _careTimer.Tick += CareTimer_Tick;
+        _currentPage = _profile.FirstBlessingCompletedAt is null ? "blessing" : "care";
+        UpdateNavigationState();
         RenderCurrentPage();
     }
 
@@ -266,7 +285,9 @@ public partial class MainWindow : Window
         if (sender is not Button button) return;
         var nextPage = button.Name switch
         {
+            nameof(BlessingNavButton) => "blessing",
             nameof(CareNavButton) => "care",
+            nameof(DevicesNavButton) => "devices",
             nameof(ProcessesNavButton) => "processes",
             nameof(StartupNavButton) => "startup",
             nameof(CleanupNavButton) => "cleanup",
@@ -288,9 +309,59 @@ public partial class MainWindow : Window
         RenderCurrentPage();
     }
 
+    private void ToggleNavigationGroup_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button button || button.CommandParameter is not string group)
+            return;
+
+        var items = group switch
+        {
+            "care" => CareNavItems,
+            "performance" => PerformanceNavItems,
+            "diagnostics" => DiagnosticsNavItems,
+            "windows" => WindowsNavItems,
+            "appearance" => AppearanceNavItems,
+            _ => null
+        };
+        if (items is null)
+            return;
+
+        var expand = items.Visibility != Visibility.Visible;
+        if (expand)
+        {
+            foreach (var otherGroup in new[] { "care", "performance", "diagnostics", "windows", "appearance" })
+            {
+                if (otherGroup != group)
+                    SetNavigationGroupExpanded(otherGroup, false);
+            }
+        }
+        SetNavigationGroupExpanded(group, expand);
+    }
+
+    private void SetNavigationGroupExpanded(string group, bool expanded)
+    {
+        var (button, items, chevron) = group switch
+        {
+            "care" => (CareGroupButton, CareNavItems, CareGroupChevron),
+            "performance" => (PerformanceGroupButton, PerformanceNavItems, PerformanceGroupChevron),
+            "diagnostics" => (DiagnosticsGroupButton, DiagnosticsNavItems, DiagnosticsGroupChevron),
+            "windows" => (WindowsGroupButton, WindowsNavItems, WindowsGroupChevron),
+            "appearance" => (AppearanceGroupButton, AppearanceNavItems, AppearanceGroupChevron),
+            _ => ((Button)null!, (StackPanel)null!, (TextBlock)null!)
+        };
+        if (button is null)
+            return;
+
+        items.Visibility = expanded ? Visibility.Visible : Visibility.Collapsed;
+        button.Tag = expanded ? "expanded" : null;
+        chevron.Text = expanded ? "⌄" : "›";
+    }
+
     private void UpdateNavigationState()
     {
+        BlessingNavButton.Tag = _currentPage == "blessing" ? "active" : null;
         CareNavButton.Tag = _currentPage == "care" ? "active" : null;
+        DevicesNavButton.Tag = _currentPage == "devices" ? "active" : null;
         GamingNavButton.Tag = _currentPage == "gaming" ? "active" : null;
         ProcessesNavButton.Tag = _currentPage == "processes" ? "active" : null;
         StartupNavButton.Tag = _currentPage == "startup" ? "active" : null;
@@ -301,6 +372,18 @@ public partial class MainWindow : Window
         PersonalizationNavButton.Tag = _currentPage == "personalization" ? "active" : null;
         SettingsNavButton.Tag = _currentPage == "settings" ? "active" : null;
         HistoryNavButton.Tag = _currentPage == "history" ? "active" : null;
+
+        var activeGroup = _currentPage switch
+        {
+            "care" or "history" => "care",
+            "gaming" or "processes" => "performance",
+            "connections" or "proposals" => "diagnostics",
+            "power" or "startup" or "cleanup" => "windows",
+            "personalization" or "settings" => "appearance",
+            _ => null
+        };
+        foreach (var group in new[] { "care", "performance", "diagnostics", "windows", "appearance" })
+            SetNavigationGroupExpanded(group, group == activeGroup);
     }
 
     private void RenderCurrentPage()
@@ -309,6 +392,8 @@ public partial class MainWindow : Window
         PageHost.Children.Clear();
         var page = _currentPage switch
         {
+            "blessing" => BuildFirstBlessingPage(),
+            "devices" => BuildDevicesPage(),
             "gaming" => BuildGamingPage(),
             "processes" => BuildProcessesPage(),
             "startup" => BuildStartupPage(),
@@ -379,6 +464,10 @@ public partial class MainWindow : Window
     {
         var page = _currentPage switch
         {
+            "blessing" => (Title: "Czas na odnowę", Crumb: "BŁOGOSŁAWIEŃSTWO", Message: _firstBlessingReport is null
+                ? "Wybierz swój rytm. Przygotuję plan, który doda komputerowi lekkości."
+                : "Twój plan odnowy jest gotowy. Wybierz kroki, które pasują do Ciebie."),
+            "devices" => (Title: "Urządzenia", Crumb: "URZĄDZENIA", Message: "Zobacz, które monitory, klawiatury, myszy, kamery, urządzenia audio i kontrolery Windows widzi jako obecne."),
             "gaming" => (Title: "Strefa gracza", Crumb: "STREFA GRACZA", Message: "Włącz czuwanie, aby obserwować użycie procesora i pamięci podczas gry."),
             "connections" => (Title: "Połączenia", Crumb: "POŁĄCZENIA", Message: "Sprawdzę stan kart sieciowych i wykonam test ping. Każdą zmianę zatwierdzasz Ty."),
             "proposals" => (Title: "Propozycje", Crumb: "PROPOZYCJE", Message: "Podpowiem, co warto sprawdzić, i zaprowadzę Cię prosto do właściwych ustawień Windows."),
@@ -387,19 +476,427 @@ public partial class MainWindow : Window
             "history" => (Title: "Historia", Crumb: "HISTORIA", Message: "Ostatnie przeglądy są zapisywane wyłącznie na tym komputerze."),
             "processes" => (Title: "Procesy", Crumb: "PROCESY", Message: "Pokażę zużycie CPU i pamięci przez każdy proces — czytelnie i na żywo."),
             "startup" => (Title: "Autostart", Crumb: "AUTOSTART", Message: "Przejrzyj wpisy autostartu swojego konta. Każda zmiana ma zapisaną kopię do przywrócenia."),
-            "cleanup" => (Title: "Porządki", Crumb: "PORZĄDKI", Message: "Przejrzyj aplikacje swojego konta i odinstaluj te, których nie używasz. Aplikacje wracają przez Microsoft Store."),
+            "cleanup" => (Title: "Porządki", Crumb: "PORZĄDKI", Message: "Przejrzyj aplikacje swojego konta i odinstaluj te, których nie używasz. Ponowna instalacja zależy od dostępności u wydawcy lub w Microsoft Store."),
             "power" => (Title: "Zasilanie", Crumb: "ZASILANIE", Message: "Dostrój plan zasilania. Każdą zmianę potwierdzasz Ty i zawsze możesz ją cofnąć."),
             _ => (Title: "Blessed czuwa", Crumb: "BLESSED CZUWA", Message: _lastReport is null
                 ? "Robię przegląd Twojego komputera i zaraz powiem, czym się zająć."
                 : _lastReport.Headline)
         };
 
-        WorkspaceKicker.Text = _isPortable ? "TRYB PRZENOŚNY · DANE LOKALNE" : "TWÓJ PANEL · DANE NA ŻYWO";
+        WorkspaceKicker.Text = _currentPage == "blessing"
+            ? "TWOJE BŁOGOSŁAWIEŃSTWO · DANE LOKALNE"
+            : _isPortable ? "TRYB PRZENOŚNY · DANE LOKALNE" : "TWÓJ PANEL · DANE NA ŻYWO";
         WorkspaceTitle.Text = page.Title;
         CrumbTitle.Text = page.Crumb;
         BlessedMessage.Text = page.Message;
         WorkspaceStatusText.Text = _snapshot is null ? "Odczytuję komputer" : "Blessed jest gotowy";
     }
+
+    private static string FormatPolishCount(int count, string singular, string pluralFew, string pluralMany)
+    {
+        var absolute = Math.Abs((long)count);
+        var lastTwoDigits = absolute % 100;
+        var lastDigit = absolute % 10;
+        var form = lastTwoDigits is >= 11 and <= 14
+            ? pluralMany
+            : lastDigit == 1
+                ? singular
+                : lastDigit is >= 2 and <= 4
+                    ? pluralFew
+                    : pluralMany;
+        return $"{count} {form}";
+    }
+
+    private UIElement BuildFirstBlessingPage()
+    {
+        var page = NewPage("BLESSED · CZAS NA ODNOWĘ", "Twój komputer znów może złapać oddech.", iconKey: "IconSpark", description:
+            "Wybierz swój rytm. Blessed przygotuje osobisty plan, który pomoże Twojemu komputerowi działać tak, jak lubisz.");
+
+        var priority = NewPanel();
+        priority.Children.Add(PanelHeadingWithHelp("IconSpark", "Wybierz swój rytm", "Cel pomaga Blessed uporządkować wskazówki i przygotować propozycje. Sam wybór nie zmienia ustawień Windows ani nie zamyka programów.", "AccentBrush", 14));
+        priority.Children.Add(Text("Granie, praca, cisza czy dłuższa bateria? Dopasuję do tego kolejność wskazówek.", 11, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 10)));
+        priority.Children.Add(BuildPriorityChoices(completeOnboarding: true));
+        page.Children.Add(WrapPanel(priority));
+
+        var scan = NewPanel();
+        scan.Children.Add(Text("Gotowy na swój pierwszy rytuał?", 15, "TextPrimaryBrush", FontWeights.SemiBold));
+        scan.Children.Add(Text("Za chwilę sprawdzę, gdzie można dodać komputerowi lekkości, i ułożę plan do Twojej decyzji.", 11, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 11)));
+        var actions = new DockPanel { LastChildFill = false };
+        _blessingStatusText = Text(_firstBlessingReport is not null
+            ? $"Plan odnowy: {_firstBlessingReport.CompletedAt.ToLocalTime().ToString("dd MMM yyyy · HH:mm", CultureInfo.GetCultureInfo("pl-PL"))} · {_firstBlessingReport.Duration.TotalSeconds:0.#} s"
+            : _profile.FirstBlessingCompletedAt is { } previousAt
+                ? $"Ostatnie błogosławieństwo: {previousAt.ToLocalTime().ToString("dd MMM yyyy · HH:mm", CultureInfo.GetCultureInfo("pl-PL"))} · możesz przygotować nowy plan."
+                : "Twój komputer czeka na pierwszy rytuał.",
+            10, "TextSecondaryBrush");
+        _blessingStatusText.VerticalAlignment = VerticalAlignment.Center;
+        actions.Children.Add(_blessingStatusText);
+        _blessingRunButton = new Button
+        {
+            Content = ButtonContent("IconSearch", _profile.FirstBlessingCompletedAt is null ? "Rozpocznij błogosławieństwo" : "Odśwież plan odnowy", "AccentTextBrush"),
+            Style = (Style)FindResource("PrimaryButton"),
+            Margin = new Thickness(12, 0, 0, 0),
+            Padding = new Thickness(13, 8, 13, 8),
+            IsEnabled = !_firstBlessingBusy
+        };
+        _blessingRunButton.Click += async (_, _) => await RunFirstBlessingAsync();
+        DockPanel.SetDock(_blessingRunButton, Dock.Right);
+        actions.Children.Add(_blessingRunButton);
+        scan.Children.Add(actions);
+        page.Children.Add(WrapPanel(scan));
+
+        var results = NewPanel();
+        results.Children.Add(Text("TWÓJ PLAN ODNOWY", 9, "AccentBrush", FontWeights.Bold, new Thickness(0, 0, 0, 10)));
+        _blessingResultsHost = new StackPanel();
+        results.Children.Add(_blessingResultsHost);
+        if (_firstBlessingReport is null)
+            _blessingResultsHost.Children.Add(Text(_profile.FirstBlessingCompletedAt is null
+                ? "Po błogosławieństwie zobaczysz tutaj odkrycia Blessed i konkretne kroki, które możesz wybrać."
+                : "Przygotuj świeży plan, aby zobaczyć aktualne odkrycia dla swojego komputera.",
+                11, "TextSecondaryBrush", lineHeight: 18));
+        else
+            RenderFirstBlessingChecks(_blessingResultsHost, _firstBlessingReport);
+        page.Children.Add(WrapPanel(results));
+
+        var details = new Expander
+        {
+            Header = Text("Szczegóły dla ciekawych", 10, "TextSecondaryBrush", FontWeights.SemiBold),
+            IsExpanded = false,
+            Margin = new Thickness(0, 4, 0, 12),
+            Padding = new Thickness(6),
+            Background = Brushes.Transparent,
+            Foreground = GetBrush("TextSecondaryBrush")
+        };
+        var detailPanel = NewPanel();
+        detailPanel.Children.Add(PanelHeading("IconShield", "Spokojna odnowa", "GoldBrush", 13));
+        detailPanel.Children.Add(Text("Blessed odczytuje informacje udostępnione przez Windows, próbkuje zasoby komputera i proponuje dobrowolne następne kroki. Błogosławieństwo nie otwiera kamery ani mikrofonu i nie rejestruje klawiatury lub myszy. Zmiany systemowe zatwierdzasz osobno.", 10, "TextSecondaryBrush", margin: new Thickness(0, 7, 0, 0), lineHeight: 17));
+        detailPanel.Children.Add(Text("Dane odczytu pozostają lokalne. Niezależne sprawdzenie aktualizacji łączy się z GitHub.", 10, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 0), lineHeight: 16));
+        details.Content = WrapPanel(detailPanel);
+        page.Children.Add(details);
+        return page;
+    }
+
+    private async Task RunFirstBlessingAsync()
+    {
+        if (_firstBlessingBusy)
+            return;
+
+        _firstBlessingBusy = true;
+        if (_blessingRunButton is not null)
+            _blessingRunButton.IsEnabled = false;
+        if (_blessingStatusText is not null)
+            _blessingStatusText.Text = "Blessed szuka sposobów na odnowę Twojego komputera…";
+        FooterStatusText.Text = "Blessed przygotowuje Twój plan odnowy";
+        SetScanningIndicator(true);
+
+        try
+        {
+            var report = await FirstBlessingService.RunAsync(_profile.Priority, _lifetime.Token);
+            _firstBlessingReport = report;
+            _deviceInventory = report.Devices;
+            _deviceInventoryAvailable = report.DeviceInventoryAvailable;
+            _deviceInventoryMessage = report.DeviceInventoryMessage;
+            _primaryDisplay = report.Display;
+            _profile.FirstBlessingCompletedAt = report.CompletedAt;
+            BlessedProfileStore.Save(_profile);
+            FooterStatusText.Text = "Błogosławieństwo zakończone · plan odnowy gotowy";
+
+            if (_currentPage == "blessing")
+            {
+                RenderCurrentPage();
+                BlessedMessage.Text = "Plan odnowy gotowy. Wybierz kroki, które pasują do Twojego celu.";
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            if (_currentPage == "blessing" && _blessingStatusText is not null)
+                _blessingStatusText.Text = "Możesz wrócić do odnowy, kiedy będziesz gotowy.";
+        }
+        catch (Exception)
+        {
+            FooterStatusText.Text = "Blessed przygotuje nowy plan, gdy spróbujesz ponownie";
+            if (_currentPage == "blessing" && _blessingStatusText is not null)
+                _blessingStatusText.Text = "Nie udało się zebrać wszystkich informacji. Spróbuj ponownie — Blessed nadal czeka.";
+        }
+        finally
+        {
+            _firstBlessingBusy = false;
+            SetScanningIndicator(false);
+            if (_blessingRunButton is { IsLoaded: true })
+                _blessingRunButton.IsEnabled = true;
+        }
+    }
+
+    private void RenderFirstBlessingChecks(StackPanel host, FirstBlessingReport report)
+    {
+        host.Children.Clear();
+        var attentionCount = report.Checks.Count(check => check.Status is FirstBlessingStatus.Review or FirstBlessingStatus.Attention);
+        var summary = new UniformGrid { Columns = 3, Rows = 1, Margin = new Thickness(0, 0, 0, 8) };
+        summary.Children.Add(SpecCard("CZAS ODCZYTU", $"{report.Duration.TotalSeconds:0.#} s", "IconClock"));
+        summary.Children.Add(SpecCard("WSKAZÓWKI", attentionCount.ToString(CultureInfo.CurrentCulture), "IconSpark"));
+        summary.Children.Add(SpecCard("ZMIANY SYSTEMOWE", "0", "IconShield"));
+        host.Children.Add(summary);
+
+        foreach (var check in report.Checks)
+        {
+            var card = NewPanel();
+            var header = new DockPanel { LastChildFill = true, Margin = new Thickness(0, 0, 0, 6) };
+            var (iconKey, color, statusLabel) = check.Status switch
+            {
+                FirstBlessingStatus.Ready => ("IconCheck", "#79DDB5", "GOTOWE"),
+                FirstBlessingStatus.Review => ("IconSpark", "#E5BC67", "WARTO SPRAWDZIĆ"),
+                FirstBlessingStatus.Attention => ("IconAlert", "#F2757F", "UWAGA"),
+                _ => ("IconAlert", "#A9BED2", "BRAK ODCZYTU")
+            };
+            var badge = SeverityBadge(iconKey, color, 30);
+            badge.Margin = new Thickness(0, 0, 10, 0);
+            DockPanel.SetDock(badge, Dock.Left);
+            header.Children.Add(badge);
+            var status = Text(statusLabel, 8, check.Status switch
+            {
+                FirstBlessingStatus.Ready => "AccentBrush",
+                FirstBlessingStatus.Review or FirstBlessingStatus.Attention => "GoldBrush",
+                _ => "TextSecondaryBrush"
+            }, FontWeights.Bold);
+            status.VerticalAlignment = VerticalAlignment.Center;
+            DockPanel.SetDock(status, Dock.Right);
+            header.Children.Add(status);
+            header.Children.Add(Text(check.Title, 13, "TextPrimaryBrush", FontWeights.SemiBold));
+            card.Children.Add(header);
+            card.Children.Add(Text(check.Detail, 10, "TextSecondaryBrush", lineHeight: 16));
+            if (!string.IsNullOrWhiteSpace(check.ActionPage))
+            {
+                var action = new Button
+                {
+                    Content = check.ActionPage switch
+                    {
+                        "devices" => "Otwórz urządzenia",
+                        "power" => "Przejrzyj zasilanie",
+                        "cleanup" => "Otwórz porządki",
+                        "processes" => "Zobacz procesy",
+                        "connections" => "Otwórz połączenia",
+                        _ => "Zobacz więcej"
+                    },
+                    Style = (Style)FindResource("SecondaryButton"),
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    Margin = new Thickness(0, 9, 0, 0),
+                    Padding = new Thickness(11, 6, 11, 6)
+                };
+                var targetPage = check.ActionPage;
+                action.Click += (_, _) => NavigateTo(targetPage);
+                card.Children.Add(action);
+            }
+            host.Children.Add(WrapPanel(card));
+        }
+    }
+
+    private UIElement BuildDevicesPage()
+    {
+        var page = NewPage("URZĄDZENIA · LOKALNY ODCZYT", "Sprawdź, co Windows naprawdę widzi.", iconKey: "IconDisplay", description:
+            "Lista obecnych urządzeń Plug and Play, nie historycznych wpisów. Blessed pokazuje stan zgłaszany przez Windows i prowadzi do właściwych ustawień — nie zmienia sterowników ani konfiguracji.");
+
+        var display = NewPanel();
+        display.Children.Add(PanelHeading("IconDisplay", "Ekran główny", "AccentBrush", 14));
+        _deviceDisplayDetails = Text(string.Empty, 11, "TextPrimaryBrush", FontWeights.SemiBold, new Thickness(0, 8, 0, 0));
+        _deviceDisplayRecommendation = Text(string.Empty, 10, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 10));
+        UpdateDeviceDisplaySummary();
+        display.Children.Add(_deviceDisplayDetails);
+        display.Children.Add(_deviceDisplayRecommendation);
+        var displayActions = new WrapPanel();
+        displayActions.Children.Add(ChoiceButton("Ustawienia ekranu", () => OpenWindowsSettings("ms-settings:display")));
+        displayActions.Children.Add(ChoiceButton("Zaawansowane ustawienia ekranu", () => OpenWindowsSettings("ms-settings:display-advanced")));
+        display.Children.Add(displayActions);
+        page.Children.Add(WrapPanel(display));
+
+        var inventory = NewPanel();
+        var toolbar = new DockPanel { LastChildFill = false, Margin = new Thickness(0, 0, 0, 10) };
+        var heading = Text("Urządzenia obecne", 15, "TextPrimaryBrush", FontWeights.SemiBold);
+        heading.VerticalAlignment = VerticalAlignment.Center;
+        toolbar.Children.Add(heading);
+        var controls = new WrapPanel { HorizontalAlignment = HorizontalAlignment.Right };
+        var manager = new Button
+        {
+            Content = "Menedżer urządzeń",
+            Style = (Style)FindResource("SecondaryButton"),
+            Padding = new Thickness(11, 7, 11, 7),
+            Margin = new Thickness(0, 0, 8, 0)
+        };
+        manager.Click += (_, _) => OpenDeviceManager();
+        controls.Children.Add(manager);
+        _deviceRefreshButton = new Button
+        {
+            Content = "Odśwież listę",
+            Style = (Style)FindResource("SecondaryButton"),
+            Padding = new Thickness(11, 7, 11, 7),
+            IsEnabled = !_deviceRefreshBusy
+        };
+        _deviceRefreshButton.Click += async (_, _) => await RefreshDevicesAsync(_deviceInventoryHost!);
+        controls.Children.Add(_deviceRefreshButton);
+        DockPanel.SetDock(controls, Dock.Right);
+        toolbar.Children.Insert(0, controls);
+        inventory.Children.Add(toolbar);
+
+        _deviceInventoryHost = new StackPanel();
+        inventory.Children.Add(_deviceInventoryHost);
+        if (_deviceInventory is not null)
+        {
+            RenderPeripheralInventory(_deviceInventoryHost);
+        }
+        else if (_deviceRefreshBusy)
+        {
+            _deviceInventoryHost.Children.Add(Text("Odczyt urządzeń jest w toku…", 10, "TextSecondaryBrush"));
+        }
+        else
+        {
+            _deviceInventoryHost.Children.Add(Text("Odczytuję listę obecnych urządzeń…", 10, "TextSecondaryBrush"));
+            _ = RefreshDevicesAsync(_deviceInventoryHost);
+        }
+        page.Children.Add(WrapPanel(inventory));
+
+        var privacy = NewPanel();
+        privacy.Children.Add(PanelHeading("IconShield", "Twoja prywatność", "GoldBrush", 13));
+        privacy.Children.Add(Text("Kamera nie jest uruchamiana ani podglądana. Blessed nie odczytuje tekstu z klawiatury, ruchu myszy ani zawartości mikrofonu — widzi wyłącznie nazwy i status urządzeń, które Windows zgłasza jako obecne.", 10, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 10), lineHeight: 16));
+        var privacyActions = new WrapPanel();
+        privacyActions.Children.Add(ChoiceButton("Prywatność kamery", () => OpenWindowsSettings("ms-settings:privacy-webcam")));
+        privacyActions.Children.Add(ChoiceButton("Ustawienia dźwięku", () => OpenWindowsSettings("ms-settings:sound")));
+        privacy.Children.Add(privacyActions);
+        page.Children.Add(WrapPanel(privacy));
+        return page;
+    }
+
+    private void UpdateDeviceDisplaySummary()
+    {
+        if (_deviceDisplayDetails is null || _deviceDisplayRecommendation is null)
+            return;
+
+        if (_primaryDisplay is { } mode)
+        {
+            _deviceDisplayDetails.Text = $"{mode.Width} × {mode.Height} · aktualnie {mode.CurrentHz} Hz · najwyższy odczytany tryb dla tej rozdzielczości: {mode.MaximumHz} Hz";
+            _deviceDisplayRecommendation.Text = mode.CanGoFaster
+                ? "Windows udostępnia wyższą częstotliwość. Możesz wybrać ją ręcznie — Blessed nie przełącza trybu ekranu."
+                : "Nie znaleziono wyższego odświeżania dla bieżącej rozdzielczości i głębi koloru.";
+            _deviceDisplayDetails.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimaryBrush");
+        }
+        else
+        {
+            _deviceDisplayDetails.Text = "Dane ekranu nie są jeszcze dostępne. Odśwież urządzenia albo sprawdź Ustawienia Windows.";
+            _deviceDisplayRecommendation.Text = string.Empty;
+            _deviceDisplayDetails.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondaryBrush");
+        }
+    }
+
+    private async Task RefreshDevicesAsync(StackPanel host)
+    {
+        if (_deviceRefreshBusy)
+            return;
+
+        _deviceRefreshBusy = true;
+        if (_deviceRefreshButton is not null)
+            _deviceRefreshButton.IsEnabled = false;
+        host.Children.Clear();
+        host.Children.Add(Text("Odczytuję urządzenia widoczne dla Windows…", 10, "TextSecondaryBrush"));
+        try
+        {
+            var result = await Task.Run(() => new DevicePageReadResult(
+                PeripheralDiagnostics.ReadPresentDevices(_lifetime.Token),
+                DisplayDiagnostics.ReadPrimaryDisplay()), _lifetime.Token);
+            _deviceInventory = result.Devices;
+            _deviceInventoryAvailable = true;
+            _deviceInventoryMessage = null;
+            _primaryDisplay = result.Display;
+            FooterStatusText.Text = $"Odczyt urządzeń zakończony · {result.Devices.Count} pozycji · tylko do odczytu";
+            if (_currentPage == "devices")
+            {
+                UpdateDeviceDisplaySummary();
+                if (_deviceInventoryHost is not null)
+                    RenderPeripheralInventory(_deviceInventoryHost);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            if (_currentPage == "devices")
+                host.Children.Clear();
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or UnauthorizedAccessException or System.Security.SecurityException or InvalidOperationException or DllNotFoundException or EntryPointNotFoundException or ExternalException)
+        {
+            _deviceInventory = Array.Empty<PeripheralDevice>();
+            _deviceInventoryAvailable = false;
+            _deviceInventoryMessage = ex.Message;
+            if (_currentPage == "devices")
+            {
+                UpdateDeviceDisplaySummary();
+                if (_deviceInventoryHost is not null)
+                    RenderPeripheralInventory(_deviceInventoryHost);
+            }
+        }
+        finally
+        {
+            _deviceRefreshBusy = false;
+            if (_deviceRefreshButton is { IsLoaded: true })
+                _deviceRefreshButton.IsEnabled = true;
+        }
+    }
+
+    private void RenderPeripheralInventory(StackPanel host)
+    {
+        host.Children.Clear();
+        if (!_deviceInventoryAvailable)
+        {
+            host.Children.Add(Text($"Nie udało się odczytać obecnych urządzeń: {_deviceInventoryMessage ?? "brak szczegółów"}", 10, "TextSecondaryBrush", lineHeight: 16));
+            return;
+        }
+
+        var devices = _deviceInventory ?? Array.Empty<PeripheralDevice>();
+        var counts = devices
+            .GroupBy(device => device.Category, StringComparer.CurrentCultureIgnoreCase)
+            .OrderBy(group => group.Key, StringComparer.CurrentCultureIgnoreCase)
+            .Select(group => $"{group.Key}: {group.Count()}")
+            .ToArray();
+        host.Children.Add(Text(devices.Count == 0
+            ? "Nie znaleziono urządzeń w obsługiwanych kategoriach. Część sprzętu może być opisana przez sterownik inną nazwą."
+            : $"Wykryto {FormatPolishCount(devices.Count, "urządzenie", "urządzenia", "urządzeń")}{(counts.Length == 0 ? string.Empty : " · " + string.Join(" · ", counts))}.",
+            10, "TextSecondaryBrush", margin: new Thickness(0, 0, 0, 10)));
+
+        foreach (var group in devices.GroupBy(device => device.Category, StringComparer.CurrentCultureIgnoreCase))
+        {
+            var category = NewPanel();
+            category.Children.Add(Text(group.Key.ToUpperInvariant(), 9, "AccentBrush", FontWeights.Bold, new Thickness(0, 0, 0, 9)));
+            foreach (var device in group)
+            {
+                var row = new Grid { Margin = new Thickness(0, 0, 0, 8) };
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+                var copy = new StackPanel();
+                copy.Children.Add(Text(device.Name, 11, "TextPrimaryBrush", FontWeights.SemiBold));
+                if (!string.IsNullOrWhiteSpace(device.Manufacturer))
+                    copy.Children.Add(Text(device.Manufacturer, 9, "TextSecondaryBrush", margin: new Thickness(0, 2, 0, 0)));
+                row.Children.Add(copy);
+                var status = Text(device.StatusLabel, 9, device.HasReportedProblem ? "GoldBrush" : device.ProblemCode == 0 ? "AccentBrush" : "TextSecondaryBrush", FontWeights.SemiBold);
+                status.VerticalAlignment = VerticalAlignment.Center;
+                status.Margin = new Thickness(10, 0, 0, 0);
+                Grid.SetColumn(status, 1);
+                row.Children.Add(status);
+                category.Children.Add(row);
+            }
+            host.Children.Add(WrapPanel(category));
+        }
+
+        if (devices.Any(device => device.HasReportedProblem))
+            host.Children.Add(Text("Kod problemu pochodzi z Menedżera urządzeń. Blessed nie próbuje resetować sprzętu ani reinstalować sterownika.", 9, "TextSecondaryBrush", margin: new Thickness(0, 2, 0, 0), lineHeight: 15));
+    }
+
+    private static void OpenDeviceManager()
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo("devmgmt.msc") { UseShellExecute = true });
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception or FileNotFoundException)
+        {
+            MessageBox.Show($"Nie udało się otworzyć Menedżera urządzeń.\n\n{ex.Message}", "Blessed Optimizer", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+    }
+
+    private sealed record DevicePageReadResult(IReadOnlyList<PeripheralDevice> Devices, DisplayModeInfo? Display);
 
     private UIElement BuildGamingPage()
     {
@@ -449,26 +946,29 @@ public partial class MainWindow : Window
     private UIElement BuildProcessesPage()
     {
         var page = NewPage("PROCESY", "Zobacz, co naprawdę zajmuje zasoby.", iconKey: "IconList", description:
-            "Podgląd CPU, pamięci i czasu uruchomienia każdego procesu. Lista odświeża się co 2 sekundy, gdy ta karta jest otwarta.");
+            "CPU, pamięć i rola każdego procesu — z krótką podpowiedzią, co można bezpiecznie zamknąć.");
         var panel = NewPanel();
-        var toolbar = new DockPanel { LastChildFill = false, Margin = new Thickness(0, 0, 0, 12) };
+        var toolbar = new DockPanel { LastChildFill = false, Margin = new Thickness(0, 0, 0, 10) };
         _processSearch = new TextBox
         {
-            Width = 260,
+            Width = 245,
             Height = 36,
             Padding = new Thickness(10, 6, 10, 6),
             VerticalContentAlignment = VerticalAlignment.Center,
             Background = GetBrush("SurfaceRaisedBrush"),
             Foreground = GetBrush("TextPrimaryBrush"),
             BorderBrush = GetBrush("BorderBrush"),
-            ToolTip = "Filtruj po nazwie procesu lub PID"
+            ToolTip = "Filtruj po nazwie procesu, PID lub roli"
         };
         _processSearch.TextChanged += (_, _) => FilterProcessGrid();
         toolbar.Children.Add(_processSearch);
-        var refresh = new Button { Content = "Odśwież teraz", Style = (Style)FindResource("SecondaryButton"), Margin = new Thickness(10, 0, 0, 0), Padding = new Thickness(11, 7, 11, 7) };
+        var toolbarActions = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+        toolbarActions.Children.Add(HelpButton("CPU pokazuje udział w mocy procesora, a RAM — pamięć aktualnie zajętą przez proces. Rola jest ostrożną wskazówką: Windows, procesy w tle i nieznane pochodzenie są chronione; Blessed nie udaje, że wie, czy zapisałeś pracę."));
+        var refresh = new Button { Content = "Odśwież", Style = (Style)FindResource("SecondaryButton"), Margin = new Thickness(8, 0, 0, 0), Padding = new Thickness(11, 7, 11, 7) };
         refresh.Click += async (_, _) => await RefreshProcessesAsync();
-        DockPanel.SetDock(refresh, Dock.Right);
-        toolbar.Children.Add(refresh);
+        toolbarActions.Children.Add(refresh);
+        DockPanel.SetDock(toolbarActions, Dock.Right);
+        toolbar.Children.Add(toolbarActions);
         _processStatus = Text("Przygotowuję pierwszy pomiar…", 10, "TextSecondaryBrush", margin: new Thickness(0, 9, 0, 0));
         DockPanel.SetDock(_processStatus, Dock.Bottom);
         toolbar.Children.Add(_processStatus);
@@ -477,11 +977,13 @@ public partial class MainWindow : Window
         _processGrid = new DataGrid
         {
             AutoGenerateColumns = false,
-            IsReadOnly = true,
+            IsReadOnly = false,
             CanUserAddRows = false,
             CanUserDeleteRows = false,
             CanUserReorderColumns = true,
             CanUserSortColumns = true,
+            SelectionMode = DataGridSelectionMode.Extended,
+            SelectionUnit = DataGridSelectionUnit.FullRow,
             HeadersVisibility = DataGridHeadersVisibility.Column,
             GridLinesVisibility = DataGridGridLinesVisibility.Horizontal,
             HorizontalGridLinesBrush = GetBrush("BorderBrush"),
@@ -494,27 +996,171 @@ public partial class MainWindow : Window
             MinHeight = 220,
             MaxHeight = 440,
             EnableRowVirtualization = true,
-            Margin = new Thickness(0, 0, 0, 5)
+            Margin = new Thickness(0, 0, 0, 6)
         };
         var headerStyle = new Style(typeof(DataGridColumnHeader));
         headerStyle.Setters.Add(new Setter(Control.BackgroundProperty, GetBrush("SurfaceRaisedBrush")));
         headerStyle.Setters.Add(new Setter(Control.ForegroundProperty, GetBrush("TextSecondaryBrush")));
         headerStyle.Setters.Add(new Setter(Control.FontWeightProperty, FontWeights.SemiBold));
-        headerStyle.Setters.Add(new Setter(Control.PaddingProperty, new Thickness(8, 7, 8, 7)));
+        headerStyle.Setters.Add(new Setter(Control.PaddingProperty, new Thickness(7, 5, 7, 5)));
         _processGrid.ColumnHeaderStyle = headerStyle;
-        _processGrid.Columns.Add(new DataGridTextColumn { Header = "Proces", Binding = new System.Windows.Data.Binding(nameof(ProcessUsageSnapshot.Name)), Width = new DataGridLength(1, DataGridLengthUnitType.Star), MinWidth = 130 });
-        _processGrid.Columns.Add(new DataGridTextColumn { Header = "PID", Binding = new System.Windows.Data.Binding(nameof(ProcessUsageSnapshot.ProcessId)), Width = 72 });
-        _processGrid.Columns.Add(new DataGridTextColumn { Header = "CPU", Binding = new System.Windows.Data.Binding(nameof(ProcessUsageSnapshot.CpuPercent)) { StringFormat = "{0:0.0}%" }, Width = 80 });
-        _processGrid.Columns.Add(new DataGridTextColumn { Header = "RAM", Binding = new System.Windows.Data.Binding(nameof(ProcessUsageSnapshot.WorkingSetMb)) { StringFormat = "{0:N0} MB" }, Width = 100 });
-        _processGrid.Columns.Add(new DataGridTextColumn { Header = "Uruchomiono", Binding = new System.Windows.Data.Binding(nameof(ProcessUsageSnapshot.StartedAt)) { StringFormat = "{0:g}" }, Width = 130 });
+        _processGrid.Columns.Add(new DataGridTextColumn
+        {
+            Header = HelpHeader("Proces", "Nazwa aplikacji widocznej dla Windows. Kilka procesów może należeć do jednego programu."),
+            Binding = new System.Windows.Data.Binding(nameof(ProcessUsageSnapshot.Name)),
+            Width = new DataGridLength(1, DataGridLengthUnitType.Star),
+            MinWidth = 115,
+            IsReadOnly = true
+        });
+        _processGrid.Columns.Add(new DataGridTextColumn
+        {
+            Header = HelpHeader("Rola", "Wskazówka nie zastępuje Twojej decyzji. Windows i Blessed są chronione, procesów bez widocznego okna i nieznanych ścieżek nie zamykam."),
+            Binding = new System.Windows.Data.Binding(nameof(ProcessUsageSnapshot.ImportanceLabel)),
+            Width = 145,
+            IsReadOnly = true
+        });
+        var importantColumn = new DataGridCheckBoxColumn
+        {
+            Header = HelpHeader("Ważny", "Zaznaczenie zapamiętuje nazwę procesu lokalnie w profilu Blessed. Ważne dla Ciebie programy nie będą dostępne do zamknięcia z tego widoku."),
+            Binding = new System.Windows.Data.Binding(nameof(ProcessUsageSnapshot.IsImportant))
+            {
+                Mode = System.Windows.Data.BindingMode.TwoWay,
+                UpdateSourceTrigger = System.Windows.Data.UpdateSourceTrigger.PropertyChanged
+            },
+            Width = 68,
+            IsReadOnly = false
+        };
+        _processGrid.Columns.Add(importantColumn);
+        _processGrid.Columns.Add(new DataGridTextColumn { Header = "PID", Binding = new System.Windows.Data.Binding(nameof(ProcessUsageSnapshot.ProcessId)), Width = 58, IsReadOnly = true });
+        _processGrid.Columns.Add(new DataGridTextColumn { Header = HelpHeader("CPU", "Udział CPU jest liczony z dwóch lokalnych próbek. Pierwszy odczyt może jeszcze nie mieć wartości."), Binding = new System.Windows.Data.Binding(nameof(ProcessUsageSnapshot.CpuPercent)) { StringFormat = "{0:0.0}%" }, Width = 68, IsReadOnly = true });
+        _processGrid.Columns.Add(new DataGridTextColumn { Header = "RAM", Binding = new System.Windows.Data.Binding(nameof(ProcessUsageSnapshot.WorkingSetMb)) { StringFormat = "{0:N0} MB" }, Width = 82, IsReadOnly = true });
+        _processGrid.Columns.Add(new DataGridTextColumn { Header = "Uruchomiono", Binding = new System.Windows.Data.Binding(nameof(ProcessUsageSnapshot.StartedAt)) { StringFormat = "{0:g}" }, Width = 112, IsReadOnly = true });
+        _processGrid.SelectionChanged += (_, _) => UpdateProcessActionButtons();
+        _processGrid.CellEditEnding += (_, args) =>
+        {
+            if (!ReferenceEquals(args.Column, importantColumn) || args.Row.Item is not ProcessUsageSnapshot editedRow)
+                return;
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                foreach (var row in _processRows.Where(row => string.Equals(row.Name, editedRow.Name, StringComparison.OrdinalIgnoreCase)))
+                    row.IsImportant = editedRow.IsImportant;
+                SaveImportantProcessNames();
+                UpdateProcessActionButtons();
+            }));
+        };
         panel.Children.Add(_processGrid);
+
+        var processHelp = TextWithHelp(
+            "Wybierz w tabeli konkretne aplikacje. Blessed najpierw poprosi je o zwykłe zamknięcie.",
+            "Procesy z zaznaczeniem Ważny, składniki Windows, programy działające w tle, inne sesje i procesy o nieznanej ścieżce są wykluczone. Zwykłe zamknięcie może poprosić o zapisanie plików; wymuszenie może utracić niezapisane zmiany.",
+            10, "TextSecondaryBrush", margin: new Thickness(0, 2, 0, 9));
+        panel.Children.Add(processHelp);
+        var processActions = new StackPanel { Orientation = Orientation.Horizontal };
+        _processCloseButton = new Button
+        {
+            Content = "Poproś o zamknięcie",
+            Style = (Style)FindResource("SecondaryButton"),
+            Padding = new Thickness(12, 7, 12, 7),
+            Margin = new Thickness(0, 0, 8, 0),
+            IsEnabled = false
+        };
+        _processCloseButton.Click += async (_, _) => await RunSelectedProcessActionAsync(forceTerminate: false);
+        processActions.Children.Add(_processCloseButton);
+        _processForceCloseButton = new Button
+        {
+            Content = "Wymuś zakończenie…",
+            Style = (Style)FindResource("DangerButton"),
+            Padding = new Thickness(12, 7, 12, 7),
+            IsEnabled = false
+        };
+        _processForceCloseButton.Click += async (_, _) => await RunSelectedProcessActionAsync(forceTerminate: true);
+        processActions.Children.Add(_processForceCloseButton);
+        panel.Children.Add(processActions);
         page.Children.Add(WrapPanel(panel));
 
         var safety = NewPanel();
-        safety.Children.Add(PanelHeading("IconCpu", "Pełny obraz zasobów"));
-        safety.Children.Add(Text("Widzisz, co realnie zajmuje procesor i pamięć — bez ingerencji w działające programy i zabezpieczenia Windows.", 11, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 0)));
+        safety.Children.Add(PanelHeadingWithHelp(
+            "IconCpu", "Ważne dla Ciebie — system chroniony",
+            "Blessed nie ocenia przydatności na podstawie samego zużycia CPU lub RAM. Oznacz swoje ważne aplikacje; do zamknięcia trzeba ręcznie zaznaczyć konkretny wiersz. Procesy systemowe, w tle i o nieznanym pochodzeniu zostają zablokowane.",
+            "AccentBrush"));
+        safety.Children.Add(Text("Najpierw zapisuj ważne pliki. Zwykłe zamknięcie daje aplikacji szansę na zapis; wymuszone kończenie jest osobne, wymaga ponownego potwierdzenia i dotyczy tylko wybranych aplikacji z widocznym oknem.", 10, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 0), lineHeight: 16));
         page.Children.Add(WrapPanel(safety));
+        UpdateProcessActionButtons();
         return page;
+    }
+
+    private void SaveImportantProcessNames()
+    {
+        _profile.ImportantProcessNames = _processRows
+            .Where(row => row.IsImportant)
+            .Select(row => row.Name)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        BlessedProfileStore.Save(_profile);
+    }
+
+    private void UpdateProcessActionButtons()
+    {
+        if (_processGrid is not null)
+            _processGrid.IsEnabled = !_processActionBusy;
+        var hasClosableSelection = _processGrid?.SelectedItems
+            .OfType<ProcessUsageSnapshot>()
+            .Any(row => row.CanClose) == true;
+        if (_processCloseButton is not null)
+            _processCloseButton.IsEnabled = hasClosableSelection && !_processActionBusy;
+        if (_processForceCloseButton is not null)
+            _processForceCloseButton.IsEnabled = hasClosableSelection && !_processActionBusy;
+    }
+
+    private async Task RunSelectedProcessActionAsync(bool forceTerminate)
+    {
+        if (_processGrid is null || _processActionBusy)
+            return;
+        var selectedRows = _processGrid.SelectedItems.OfType<ProcessUsageSnapshot>().ToArray();
+        var candidates = selectedRows.Where(row => row.CanClose).ToArray();
+        if (candidates.Length == 0)
+        {
+            MessageBox.Show(this,
+                "Zaznacz w tabeli aplikację z widocznym oknem i upewnij się, że nie oznaczono jej jako ważnej. Składników Windows, procesów w tle i nieznanych procesów Blessed nie zamyka.",
+                "Blessed Optimizer — procesy", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var preview = string.Join("\n", candidates.Take(6).Select(row => $"• {row.Name} · PID {row.ProcessId}"));
+        if (candidates.Length > 6)
+            preview += $"\n• …i jeszcze {candidates.Length - 6} aplikacji";
+        var message = forceTerminate
+            ? $"Wymusić zakończenie {candidates.Length} zaznaczonych aplikacji?\n\n{preview}\n\nWymuszenie może utracić niezapisane zmiany. Blessed zakończy wyłącznie wskazane procesy — bez ich procesów potomnych. Procesy chronione i oznaczone jako ważne są pomijane."
+            : $"Poprosić {candidates.Length} zaznaczonych aplikacji o zwykłe zamknięcie?\n\n{preview}\n\nAplikacje mogą zapytać o zapisanie plików. Jeśli nie odpowiedzą, możesz osobno wybrać wymuszenie zakończenia.";
+        if (MessageBox.Show(this, message, forceTerminate ? "Blessed Optimizer — wymuszenie zakończenia" : "Blessed Optimizer — zamknij aplikacje",
+                MessageBoxButton.YesNo, forceTerminate ? MessageBoxImage.Warning : MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes)
+            return;
+
+        _processActionBusy = true;
+        UpdateProcessActionButtons();
+        try
+        {
+            var results = await Task.Run(() => ProcessControlService.CloseSelected(candidates, forceTerminate));
+            var closed = results.Count(result => result.Outcome == ProcessCloseOutcome.Closed);
+            var pending = results.Count(result => result.Outcome == ProcessCloseOutcome.StillRunning);
+            var changed = results.Count(result => result.Outcome is ProcessCloseOutcome.ProcessChanged or ProcessCloseOutcome.AlreadyExited);
+            var failed = results.Count(result => result.Outcome is ProcessCloseOutcome.Failed or ProcessCloseOutcome.Protected);
+            var title = forceTerminate ? "Wymuszone zakończenie" : "Zwykłe zamknięcie";
+            var summary = $"Zamknięto: {closed}. Nadal działa lub wymaga uwagi: {pending}. Zmienił się stan procesu: {changed}. Pominięto lub nie udało się: {failed}.";
+            var details = string.Join("\n", results.Where(result => result.Outcome != ProcessCloseOutcome.Closed).Take(5)
+                .Select(result => $"• {result.Name} (PID {result.ProcessId}): {result.Detail}"));
+            MessageBox.Show(this, details.Length == 0 ? summary : $"{summary}\n\n{details}",
+                $"Blessed Optimizer — {title}", MessageBoxButton.OK,
+                failed > 0 || pending > 0 ? MessageBoxImage.Warning : MessageBoxImage.Information);
+            if (_currentPage == "processes")
+                await RefreshProcessesAsync();
+        }
+        finally
+        {
+            _processActionBusy = false;
+            UpdateProcessActionButtons();
+        }
     }
 
     private async Task RefreshProcessesAsync()
@@ -527,10 +1173,14 @@ public partial class MainWindow : Window
             var rows = await Task.Run(_processOverviewService.ReadSnapshot);
             if (_currentPage != "processes" || _processGrid is null)
                 return;
+            var importantNames = _profile.ImportantProcessNames.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            foreach (var row in rows)
+                row.IsImportant = importantNames.Contains(row.Name);
             _processRows = rows;
             FilterProcessGrid();
+            UpdateProcessActionButtons();
             if (_processStatus is not null)
-                _processStatus.Text = $"{rows.Count} procesów · odczyt lokalny {DateTime.Now:HH:mm:ss} · CPU liczone z próbek co 2 s";
+                _processStatus.Text = $"{rows.Count} procesów · lokalny odczyt {DateTime.Now:HH:mm:ss} · CPU z próbek co 2 s";
         }
         catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception or System.Security.SecurityException)
         {
@@ -548,12 +1198,25 @@ public partial class MainWindow : Window
     private void FilterProcessGrid()
     {
         if (_processGrid is null) return;
+        var selectedKeys = _processGrid.SelectedItems
+            .OfType<ProcessUsageSnapshot>()
+            .Where(row => row.CanClose)
+            .Select(row => (row.ProcessId, row.StartedAt))
+            .ToHashSet();
         var query = _processSearch?.Text.Trim() ?? string.Empty;
-        IEnumerable<ProcessUsageSnapshot> visibleRows = string.IsNullOrWhiteSpace(query)
+        var visibleRows = (string.IsNullOrWhiteSpace(query)
             ? _processRows
             : _processRows.Where(row => row.Name.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
-                                        row.ProcessId.ToString(CultureInfo.InvariantCulture).Contains(query, StringComparison.Ordinal)).ToArray();
+                                        row.ImportanceLabel.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
+                                        row.ProcessId.ToString(CultureInfo.InvariantCulture).Contains(query, StringComparison.Ordinal)))
+            .ToArray();
         _processGrid.ItemsSource = visibleRows;
+        foreach (var row in visibleRows)
+        {
+            if (row.CanClose && selectedKeys.Contains((row.ProcessId, row.StartedAt)))
+                _processGrid.SelectedItems.Add(row);
+        }
+        UpdateProcessActionButtons();
     }
 
     private UIElement BuildStartupPage()
@@ -637,11 +1300,11 @@ public partial class MainWindow : Window
 
     private UIElement BuildCleanupPage()
     {
-        var page = NewPage("PORZĄDKI · KONTO UŻYTKOWNIKA", "Aplikacje, których nie używasz, też zajmują miejsce.", iconKey: "IconBroom", description:
-            "Lista aplikacji z Microsoft Store przypisanych do Twojego konta. Odinstalowanie dotyczy tylko bieżącego użytkownika — aplikację wgrasz z powrotem przez Store w każdej chwili.");
+        var page = NewPage("ODCHUDZANIE APLIKACJI", "Więcej miejsca na to, czego używasz.", iconKey: "IconBroom", description:
+            "Przejrzyj aplikacje Microsoft Store przypisane do swojego konta. Zaznaczasz każdą pozycję samodzielnie; wspólne i chronione składniki pozostają zablokowane.");
         var host = new StackPanel();
         page.Children.Add(WrapPanel(host));
-        host.Children.Add(Text("Wczytuję listę aplikacji bieżącego użytkownika…", 11, "TextSecondaryBrush"));
+        host.Children.Add(Text("Wczytuję aplikacje Twojego konta…", 11, "TextSecondaryBrush"));
         _ = LoadCleanupPageAsync(host);
         return page;
     }
@@ -660,74 +1323,139 @@ public partial class MainWindow : Window
         catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
         {
             host.Children.Clear();
-            host.Children.Add(Text($"Nie udało się odczytać listy aplikacji: {ex.Message}", 11, "TextSecondaryBrush"));
+            host.Children.Add(TextWithHelp("Nie udało się odczytać aplikacji.", $"Szczegóły odczytu: {ex.Message}", 11, "TextSecondaryBrush"));
             return;
         }
 
         host.Children.Clear();
         if (packages.Count == 0)
         {
-            host.Children.Add(Text("Nie znaleziono aplikacji przypisanych do Twojego konta.", 11, "TextSecondaryBrush"));
+            host.Children.Add(Text("Nie znaleziono aplikacji przypisanych do Twojego konta. Spróbuj odświeżyć stronę Porządki.", 11, "TextSecondaryBrush"));
             return;
         }
 
+        var selectablePackages = packages.Where(package => !package.Safety.IsProtected).ToArray();
+        var protectedCount = packages.Count - selectablePackages.Length;
         var boxes = new List<CheckBox>();
-        var toolbar = new DockPanel { LastChildFill = false, Margin = new Thickness(0, 0, 0, 10) };
-        var counter = Text($"{packages.Count} aplikacji", 11, "TextSecondaryBrush", FontWeights.SemiBold);
+        var rows = new Dictionary<CheckBox, FrameworkElement>();
+        var appList = NewPanel();
+        var header = new DockPanel { LastChildFill = false, Margin = new Thickness(0, 0, 0, 10) };
+        var counter = Text(string.Empty, 10, "TextSecondaryBrush", FontWeights.SemiBold);
         counter.VerticalAlignment = VerticalAlignment.Center;
-        toolbar.Children.Add(counter);
-        var selectAll = new Button { Content = "Zaznacz wszystkie", Style = (Style)FindResource("SecondaryButton"), Padding = new Thickness(11, 7, 11, 7), Margin = new Thickness(12, 0, 0, 0) };
-        var selectNone = new Button { Content = "Odznacz wszystkie", Style = (Style)FindResource("SecondaryButton"), Padding = new Thickness(11, 7, 11, 7), Margin = new Thickness(8, 0, 0, 0) };
-        DockPanel.SetDock(selectAll, Dock.Right);
-        DockPanel.SetDock(selectNone, Dock.Right);
-        toolbar.Children.Add(selectAll);
-        toolbar.Children.Add(selectNone);
-        host.Children.Add(toolbar);
+        header.Children.Add(counter);
+        var headerActions = new StackPanel { Orientation = Orientation.Horizontal };
+        headerActions.Children.Add(HelpButton("Ta lista pokazuje identyfikatory aplikacji i wydawców zgłoszone przez Windows. Blessed nie zgaduje, czego już nie używasz: zaznaczasz tylko znane Ci aplikacje. Wspólne frameworki i składniki chronione przez Windows są zablokowane."));
+        var selectOptional = new Button { Content = "Zaznacz wszystkie do wyboru", Style = (Style)FindResource("SecondaryButton"), Padding = new Thickness(10, 6, 10, 6), Margin = new Thickness(8, 0, 0, 0) };
+        var selectNone = new Button { Content = "Wyczyść wybór", Style = (Style)FindResource("SecondaryButton"), Padding = new Thickness(10, 6, 10, 6), Margin = new Thickness(7, 0, 0, 0) };
+        headerActions.Children.Add(selectOptional);
+        headerActions.Children.Add(selectNone);
+        DockPanel.SetDock(headerActions, Dock.Right);
+        header.Children.Add(headerActions);
+        appList.Children.Add(header);
+
+        var searchRow = new DockPanel { LastChildFill = true, Margin = new Thickness(0, 0, 0, 10) };
+        var searchHelp = HelpButton("Wyszukiwanie działa w nazwie pakietu i wydawcy. Ukrycie pozycji na liście nie zaznacza jej ani nie usuwa jej z wyboru.");
+        DockPanel.SetDock(searchHelp, Dock.Right);
+        searchRow.Children.Add(searchHelp);
+        var search = new TextBox
+        {
+            Height = 34,
+            Padding = new Thickness(9, 5, 9, 5),
+            VerticalContentAlignment = VerticalAlignment.Center,
+            Background = GetBrush("SurfaceRaisedBrush"),
+            Foreground = GetBrush("TextPrimaryBrush"),
+            BorderBrush = GetBrush("BorderBrush"),
+            ToolTip = "Filtruj po nazwie aplikacji lub wydawcy"
+        };
+        searchRow.Children.Add(search);
+        appList.Children.Add(searchRow);
 
         foreach (var package in packages.OrderBy(package => package.Name, StringComparer.CurrentCultureIgnoreCase))
         {
+            var safety = package.Safety;
             var box = new CheckBox
             {
                 Tag = package,
-                Content = string.IsNullOrWhiteSpace(package.Version) ? package.Name : $"{package.Name}  ·  {package.Version}",
-                FontSize = 11,
-                Margin = new Thickness(0, 0, 0, 6)
+                IsEnabled = !safety.IsProtected,
+                Margin = new Thickness(0, 1, 8, 1),
+                VerticalAlignment = VerticalAlignment.Center
             };
+            var copy = new StackPanel { Margin = new Thickness(0, 3, 0, 3) };
+            copy.Children.Add(Text(package.Name, 10, "TextPrimaryBrush", FontWeights.SemiBold));
+            var metadata = new List<string>();
+            if (!string.IsNullOrWhiteSpace(package.PublisherDisplayName))
+                metadata.Add(package.PublisherDisplayName);
+            if (!string.IsNullOrWhiteSpace(package.Version))
+                metadata.Add($"v{package.Version}");
+            metadata.Add(safety.Category);
+            copy.Children.Add(Text(string.Join(" · ", metadata), 8, safety.IsProtected ? "GoldBrush" : "TextSecondaryBrush", margin: new Thickness(0, 2, 0, 0)));
+            box.Content = copy;
             box.SetResourceReference(Control.ForegroundProperty, "TextPrimaryBrush");
             boxes.Add(box);
-            host.Children.Add(box);
+
+            var row = new DockPanel { LastChildFill = true, Margin = new Thickness(0, 1, 0, 1), ToolTip = safety.Explanation };
+            var help = HelpButton($"{package.Name}\nWydawca: {(string.IsNullOrWhiteSpace(package.PublisherDisplayName) ? "niepodany przez Windows" : package.PublisherDisplayName)}\nWersja: {(string.IsNullOrWhiteSpace(package.Version) ? "brak danych" : package.Version)}\n\n{safety.Explanation}");
+            DockPanel.SetDock(help, Dock.Right);
+            row.Children.Add(help);
+            row.Children.Add(box);
+            appList.Children.Add(row);
+            rows[box] = row;
         }
 
-        void RefreshCounter() => counter.Text = $"{boxes.Count(box => box.IsChecked == true)} z {packages.Count} zaznaczonych";
-        selectAll.Click += (_, _) => { foreach (var box in boxes) box.IsChecked = true; RefreshCounter(); };
+        void RefreshCounter()
+        {
+            var selectedCount = boxes.Count(box => box.IsChecked == true);
+            counter.Text = $"{packages.Count} aplikacji · {selectablePackages.Length} do Twojego wyboru · {protectedCount} chronionych · {selectedCount} zaznaczonych";
+        }
+
+        void ApplyFilter()
+        {
+            var query = search.Text.Trim();
+            foreach (var pair in rows)
+            {
+                var package = (AppxPackage)pair.Key.Tag!;
+                var matches = string.IsNullOrWhiteSpace(query) ||
+                              package.Name.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
+                              package.PublisherDisplayName.Contains(query, StringComparison.CurrentCultureIgnoreCase);
+                pair.Value.Visibility = matches ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+
+        selectOptional.Click += (_, _) => { foreach (var box in boxes.Where(box => box.IsEnabled)) box.IsChecked = true; RefreshCounter(); };
         selectNone.Click += (_, _) => { foreach (var box in boxes) box.IsChecked = false; RefreshCounter(); };
+        search.TextChanged += (_, _) => ApplyFilter();
         foreach (var box in boxes)
         {
             box.Checked += (_, _) => RefreshCounter();
             box.Unchecked += (_, _) => RefreshCounter();
         }
+        RefreshCounter();
 
         var uninstall = new Button
         {
-            Content = ButtonContent("IconBroom", "Odinstaluj zaznaczone", "AccentTextBrush"),
+            Content = ButtonContent("IconBroom", "Odinstaluj zaznaczone aplikacje", "AccentTextBrush"),
             Style = (Style)FindResource("PrimaryButton"),
             HorizontalAlignment = HorizontalAlignment.Left,
-            Margin = new Thickness(0, 8, 0, 0),
+            Margin = new Thickness(0, 10, 0, 0),
             Padding = new Thickness(13, 8, 13, 8)
         };
         uninstall.Click += async (_, _) =>
         {
             var selected = boxes
-                .Where(box => box.IsChecked == true)
+                .Where(box => box.IsChecked == true && box.IsEnabled)
                 .Select(box => (AppxPackage)box.Tag!)
                 .ToArray();
             await RunAppxRemovalAsync(selected);
         };
-        host.Children.Add(uninstall);
+        appList.Children.Add(uninstall);
+        host.Children.Add(WrapPanel(appList));
 
         var note = NewPanel();
-        note.Children.Add(PanelHeading("IconShield", "Zakres zmian", fontSize: 12));
-        note.Children.Add(Text("Blessed odinstalowuje wyłącznie aplikacje bieżącego konta (AppX). Nie usuwa aplikacji systemowych, innych użytkowników, usług ani plików poza rejestracją aplikacji. Odinstalowaną aplikację wgrasz z powrotem przez Microsoft Store. Każda pozycja wymaga Twojej zgody przed odinstalowaniem.", 10, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 0)));
+        note.Children.Add(PanelHeadingWithHelp(
+            "IconShield", "Odchudzanie z kontrolą",
+            "Porządki dotyczą tylko aplikacji AppX bieżącego konta. Nie uruchamiamy skryptów, które wyłączają usługi, zabezpieczenia, sterowniki, zadania Windows lub aktualizacje.",
+            "AccentBrush", 12));
+        note.Children.Add(Text("Każde odinstalowanie wymaga osobnego potwierdzenia z listą wybranych aplikacji. Blessed chroni pakiety oznaczone jako nieusuwalne, frameworki i komponenty współdzielone. Możliwość ponownej instalacji zależy od dostępności aplikacji u wydawcy lub w Microsoft Store.", 10, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 0), lineHeight: 16));
         host.Children.Add(WrapPanel(note));
     }
 
@@ -743,7 +1471,7 @@ public partial class MainWindow : Window
         if (selected.Count > 8)
             preview += $"\n• …i jeszcze {selected.Count - 8} aplikacji";
         var choice = MessageBox.Show(this,
-            $"Odinstalować {selected.Count} aplikacji bieżącego konta?\n\n{preview}\n\nOdinstalowanie usuwa aplikację tylko z Twojego konta — wgrasz ją z powrotem przez Microsoft Store. Aplikacje systemowe pozostają nietknięte.",
+            $"Odinstalować {selected.Count} zaznaczonych aplikacji bieżącego konta?\n\n{preview}\n\nNie zmieniam usług, sterowników ani składników Windows. Dostępność ponownej instalacji zależy od wydawcy lub Microsoft Store.",
             "Blessed Optimizer — potwierdź odinstalowanie",
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning,
@@ -753,7 +1481,7 @@ public partial class MainWindow : Window
 
         FooterStatusText.Text = $"Odinstalowuję {selected.Count} aplikacji…";
         var failed = await AppxInventoryService.RemovePackagesAsync(
-            selected.Select(package => package.PackageFullName),
+            selected,
             progress: null,
             _lifetime.Token);
         _watchService.InvalidateAppxScan();
@@ -766,7 +1494,7 @@ public partial class MainWindow : Window
             : $"Odinstalowano {removedCount} aplikacji · {failed.Count} wymagało ręcznej uwagi";
         MessageBox.Show(this,
             failed.Count == 0
-                ? $"Gotowe. Odinstalowano {removedCount} aplikacji z Twojego konta. Wgrasz je z powrotem przez Microsoft Store, kiedy zechcesz."
+                ? $"Gotowe. Odinstalowano {removedCount} aplikacji z Twojego konta. Ponowna instalacja zależy od dostępności aplikacji u wydawcy lub w Microsoft Store."
                 : $"Odinstalowano {removedCount} aplikacji. Nie udało się odinstalować {failed.Count} — mogą być używane przez system lub inną sesję.",
             "Blessed Optimizer — porządki", MessageBoxButton.OK,
             failed.Count == 0 ? MessageBoxImage.Information : MessageBoxImage.Warning);
@@ -808,7 +1536,7 @@ public partial class MainWindow : Window
             page.Children.Add(BuildPowerSettingCard(snapshot, state));
 
         var note = NewPanel();
-        note.Children.Add(PanelHeading("IconRestart", "Cofnięcie zmian", fontSize: 12));
+        note.Children.Add(PanelHeadingWithHelp("IconRestart", "Cofnięcie zmian", "Pierwsza zmiana zapisuje oryginalne wartości sieci i baterii lokalnie. Użyj przycisku przy danej opcji, aby je przywrócić.", "AccentBrush", 12));
         note.Children.Add(Text("Pierwsza zmiana danej opcji zapisuje oryginalne wartości AC i baterii w profilu użytkownika. Przycisk „Przywróć oryginał” odtwarza te wartości; samo przełączanie profilu nie kasuje kopii.", 10, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 0)));
         page.Children.Add(WrapPanel(note));
         return page;
@@ -817,7 +1545,10 @@ public partial class MainWindow : Window
     private UIElement BuildPowerSettingCard(PowerPlanSnapshot snapshot, PowerSettingState state)
     {
         var panel = NewPanel();
-        panel.Children.Add(Text(state.Descriptor.Name, 14, "TextPrimaryBrush", FontWeights.SemiBold));
+        panel.Children.Add(TextWithHelp(
+            state.Descriptor.Name,
+            $"{state.Descriptor.Description}\n\nDostępne ustawienia systemowe wyjaśnia Windows. Blessed zmienia wyłącznie tę opcję po Twoim potwierdzeniu.",
+            14, "TextPrimaryBrush", FontWeights.SemiBold));
         panel.Children.Add(Text(state.Descriptor.Description, 10, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 11), lineHeight: 16));
 
         var controls = new Grid { Margin = new Thickness(0, 0, 0, 10) };
@@ -825,8 +1556,11 @@ public partial class MainWindow : Window
         controls.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         controls.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         controls.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        controls.Children.Add(Text("Zasilanie z sieci", 10, "TextSecondaryBrush", FontWeights.SemiBold, new Thickness(0, 0, 8, 4)));
-        var batteryLabel = Text("Bateria / UPS", 10, "TextSecondaryBrush", FontWeights.SemiBold, new Thickness(8, 0, 0, 4));
+        var acLabel = HelpHeader("Zasilanie z sieci", "Limit używany, gdy komputer jest podłączony do zasilania. Wyższe ustawienie może poprawić wydajność, ale zwiększyć zużycie energii i temperaturę.");
+        acLabel.Margin = new Thickness(0, 0, 8, 4);
+        controls.Children.Add(acLabel);
+        var batteryLabel = HelpHeader("Bateria / UPS", "Limit używany z baterii lub UPS-a. Niższa wartość może ograniczyć wydajność i zmniejszyć pobór energii.");
+        batteryLabel.Margin = new Thickness(8, 0, 0, 4);
         Grid.SetColumn(batteryLabel, 1);
         controls.Children.Add(batteryLabel);
 
@@ -1205,11 +1939,11 @@ public partial class MainWindow : Window
     private StackPanel BuildPriorityCard()
     {
         var card = NewPanel();
-        card.Children.Add(Text("PRIORYTET BLESSED", 9, "AccentBrush", FontWeights.Bold));
-        card.Children.Add(Text($"Twój priorytet: {_profile.PriorityLabel}", 16, "TextPrimaryBrush", FontWeights.SemiBold, new Thickness(0, 6, 0, 0)));
+        card.Children.Add(Text("TWÓJ RYTM", 9, "AccentBrush", FontWeights.Bold));
+        card.Children.Add(Text($"Twój cel: {_profile.PriorityLabel}", 16, "TextPrimaryBrush", FontWeights.SemiBold, new Thickness(0, 6, 0, 0)));
         card.Children.Add(Text(_profile.PriorityPromise, 11, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 12), lineHeight: 18));
         card.Children.Add(BuildPriorityChoices(completeOnboarding: false));
-        card.Children.Add(Text("Priorytet zmienia kolejność i treść podpowiedzi. Nie zmienia samodzielnie ustawień Windows.", 10, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 0), lineHeight: 16));
+        card.Children.Add(Text("Podpowiedzi i kolejność działań dopasuję do wybranego celu.", 10, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 0), lineHeight: 16));
         return card;
     }
 
@@ -1218,29 +1952,38 @@ public partial class MainWindow : Window
         var card = NewPanel();
         card.Children.Add(Text("AUTOMATYCZNE DZIAŁANIA", 9, "AccentBrush", FontWeights.Bold));
         card.Children.Add(Text("Ty wybierasz, co może wydarzyć się bez kolejnego kliknięcia.", 14, "TextPrimaryBrush", FontWeights.SemiBold, new Thickness(0, 6, 0, 12)));
-        card.Children.Add(AutomationSwitch("Sprawdzaj komputer co 3 minuty, gdy Blessed jest otwarty", _profile.WatchInBackground, value =>
-        {
-            _profile.WatchInBackground = value;
-            if (value) _careTimer.Start(); else _careTimer.Stop();
-        }));
+        card.Children.Add(AutomationSwitch(
+            "Sprawdzaj komputer co 3 minuty, gdy Blessed jest otwarty",
+            _profile.WatchInBackground,
+            value =>
+            {
+                _profile.WatchInBackground = value;
+                if (value) _careTimer.Start(); else _careTimer.Stop();
+            },
+            "Gdy Blessed jest otwarty, wykonuje lokalny, tylko-odczytowy przegląd co 3 minuty. Nie uruchamia się przy zamkniętej aplikacji i nie zmienia ustawień Windows."));
         card.Children.Add(TempCleanupAutomationSwitch());
-        card.Children.Add(Text("Sprzątanie dotyczy plików tymczasowych starszych niż 2 dni, uruchamia się dopiero po zebraniu co najmniej 1 GB i pomija pliki używane przez inne programy. Usuniętych plików nie da się przywrócić. Autostart i ustawienia zasilania Blessed zmienia wyłącznie po osobnym działaniu i potwierdzeniu.", 10, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 0), lineHeight: 16));
+        card.Children.Add(Text("Automatyczne porządki obejmują stare pliki tymczasowe i włączasz je osobno.", 10, "TextSecondaryBrush", margin: new Thickness(0, 5, 0, 0), lineHeight: 16));
         return card;
     }
 
-    private CheckBox TempCleanupAutomationSwitch()
+    private UIElement TempCleanupAutomationSwitch()
     {
+        var row = new DockPanel { LastChildFill = true, Margin = new Thickness(0, 0, 0, 8) };
+        var help = HelpButton("Jeśli włączysz tę opcję i zaakceptujesz monit, Blessed może sprzątać wyłącznie pliki tymczasowe starsze niż 2 dni. Uruchomi się dopiero przy co najmniej 1 GB takich plików, nie częściej niż raz na 12 godzin, i pominie pliki używane przez inne programy.");
+        DockPanel.SetDock(help, Dock.Right);
+        row.Children.Add(help);
         var box = new CheckBox
         {
             Content = "Automatycznie sprzątaj stare pliki tymczasowe",
             IsChecked = _profile.AllowTempCleanup,
             FontSize = 11,
-            Margin = new Thickness(0, 0, 0, 8)
+            Margin = new Thickness(0, 0, 8, 0)
         };
         box.SetResourceReference(Control.ForegroundProperty, "TextPrimaryBrush");
         box.Checked += (_, _) => SetTempCleanupConsent(box, enabled: true);
         box.Unchecked += (_, _) => SetTempCleanupConsent(box, enabled: false);
-        return box;
+        row.Children.Add(box);
+        return row;
     }
 
     private void SetTempCleanupConsent(CheckBox control, bool enabled)
@@ -1310,18 +2053,32 @@ public partial class MainWindow : Window
         return card;
     }
 
+    private Expander BuildSettingsDisclosure(string title, StackPanel content)
+    {
+        return new Expander
+        {
+            Header = Text(title, 10, "TextSecondaryBrush", FontWeights.SemiBold),
+            Content = WrapPanel(content),
+            IsExpanded = false,
+            Margin = new Thickness(0, 3, 0, 3),
+            Padding = new Thickness(8, 6, 8, 6),
+            Background = Brushes.Transparent,
+            Foreground = GetBrush("TextSecondaryBrush")
+        };
+    }
+
     private UIElement BuildSettingsPage()
     {
         var page = NewPage("USTAWIENIA BLESSED", "Dopasuj pomoc do siebie.", iconKey: "IconSettings", description:
-            "Wybierz, na czym najbardziej Ci zależy, i osobno zdecyduj o automatycznych działaniach. Zmiany w Windows nadal wymagają Twojego potwierdzenia.");
+            "Najpierw wybierz swój cel i sposób czuwania. Dodatkowe opcje są pogrupowane niżej.");
         page.Children.Add(WrapPanel(BuildPriorityCard()));
         page.Children.Add(WrapPanel(BuildAutomationCard()));
-        page.Children.Add(WrapPanel(BuildMutedCard()));
+        page.Children.Add(BuildSettingsDisclosure("Wyciszone sprawy", BuildMutedCard()));
 
         var privacy = NewPanel();
-        privacy.Children.Add(PanelHeading("IconShield", "Prywatność i kontrola", "AccentBrush"));
-        privacy.Children.Add(Text("Ustawienia profilu i historia przeglądów są przechowywane lokalnie w Twoim profilu Windows. Blessed nie wysyła ich do serwera. Sprawdzenie aktualizacji jest oddzielne i łączy się z GitHub.", 10, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 0), lineHeight: 16));
-        page.Children.Add(WrapPanel(privacy));
+        privacy.Children.Add(PanelHeading("IconShield", "Twoje dane zostają u Ciebie", "AccentBrush"));
+        privacy.Children.Add(Text("Ustawienia profilu i historia przeglądów są przechowywane lokalnie. Sprawdzenie aktualizacji jest oddzielne.", 10, "TextSecondaryBrush", margin: new Thickness(0, 6, 0, 0), lineHeight: 16));
+        page.Children.Add(BuildSettingsDisclosure("Historia i prywatność", privacy));
         return page;
     }
 
@@ -1423,19 +2180,24 @@ public partial class MainWindow : Window
         return choices;
     }
 
-    private CheckBox AutomationSwitch(string label, bool value, Action<bool> onChanged)
+    private UIElement AutomationSwitch(string label, bool value, Action<bool> onChanged, string helpText)
     {
+        var row = new DockPanel { LastChildFill = true, Margin = new Thickness(0, 0, 0, 8) };
+        var help = HelpButton(helpText);
+        DockPanel.SetDock(help, Dock.Right);
+        row.Children.Add(help);
         var box = new CheckBox
         {
             Content = label,
             IsChecked = value,
             FontSize = 11,
-            Margin = new Thickness(0, 0, 0, 8)
+            Margin = new Thickness(0, 0, 8, 0)
         };
         box.SetResourceReference(Control.ForegroundProperty, "TextPrimaryBrush");
         box.Checked += (_, _) => { onChanged(true); BlessedProfileStore.Save(_profile); };
         box.Unchecked += (_, _) => { onChanged(false); BlessedProfileStore.Save(_profile); };
-        return box;
+        row.Children.Add(box);
+        return row;
     }
 
     private void SelectPriority(BlessedPriority priority, bool completeOnboarding)
@@ -2111,6 +2873,53 @@ public partial class MainWindow : Window
             Margin = new Thickness(0, 1, 13, 0),
             Child = icon
         };
+    }
+
+    private DockPanel TextWithHelp(string label, string helpText, double fontSize = 11, string brushKey = "TextSecondaryBrush", FontWeight? weight = null, Thickness? margin = null)
+    {
+        var row = new DockPanel { LastChildFill = true, Margin = margin ?? new Thickness(0) };
+        var help = HelpButton(helpText);
+        DockPanel.SetDock(help, Dock.Right);
+        row.Children.Add(help);
+        row.Children.Add(Text(label, fontSize, brushKey, weight));
+        return row;
+    }
+
+    private DockPanel PanelHeadingWithHelp(string iconKey, string title, string helpText, string brushKey = "GoldBrush", double fontSize = 13, Thickness? margin = null)
+    {
+        var row = new DockPanel { LastChildFill = true, Margin = margin ?? new Thickness(0) };
+        var help = HelpButton(helpText);
+        DockPanel.SetDock(help, Dock.Right);
+        row.Children.Add(help);
+        row.Children.Add(PanelHeading(iconKey, title, brushKey, fontSize));
+        return row;
+    }
+
+    private Button HelpButton(string helpText)
+    {
+        var button = new Button
+        {
+            Content = "?",
+            Style = (Style)FindResource("HelpIconButton"),
+            ToolTip = helpText,
+            Focusable = true
+        };
+        button.SetValue(System.Windows.Automation.AutomationProperties.NameProperty, "Wyjaśnij tę opcję");
+        button.Click += (_, _) => MessageBox.Show(this, helpText, "Pomoc Blessed", MessageBoxButton.OK, MessageBoxImage.Information);
+        return button;
+    }
+
+    private StackPanel HelpHeader(string label, string helpText)
+    {
+        var header = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+        header.Children.Add(Text(label, 9, "TextSecondaryBrush", FontWeights.SemiBold));
+        var help = HelpButton(helpText);
+        help.Width = 18;
+        help.Height = 18;
+        help.MinWidth = 18;
+        help.Margin = new Thickness(4, 0, 0, 0);
+        header.Children.Add(help);
+        return header;
     }
 
     private static DockPanel PanelHeading(string iconKey, string title, string brushKey = "GoldBrush", double fontSize = 13, Thickness? margin = null)

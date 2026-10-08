@@ -20,6 +20,9 @@ public sealed class BlessedProfile
 {
     public bool OnboardingCompleted { get; set; }
 
+    /// <summary>The last time the user completed the explicit, read-only welcome audit.</summary>
+    public DateTimeOffset? FirstBlessingCompletedAt { get; set; }
+
     public BlessedPriority Priority { get; set; } = BlessedPriority.Gaming;
 
     public bool WatchInBackground { get; set; } = true;
@@ -37,6 +40,9 @@ public sealed class BlessedProfile
 
     /// <summary>Finding ids the user muted; those cards stop appearing in the watch list.</summary>
     public List<string> MutedFindingIds { get; set; } = new();
+
+    /// <summary>Process names the user marked as important; matching rows are excluded from close actions.</summary>
+    public List<string> ImportantProcessNames { get; set; } = new();
 
     /// <summary>
     /// v1.0.3 enabled TEMP cleanup for new profiles without a separate opt-in.
