@@ -4,7 +4,7 @@ Blessed to lokalny pomocnik Windowsa. Gdy aplikacja jest otwarta, co 3 minuty pr
 
 Responsywna, polskojęzyczna strona projektu z osobnymi zakładkami „O programie” i „Symulator”, niebieskim gradientem, szklistymi panelami oraz gołębiem Blessed. Symulator zawiera interaktywny prototyp rytuału odnowy: wybór celu, animowany przegląd, spersonalizowany plan i demonstrację efektu „przed i po”. Liczby są przykładowe; rzeczywiste działania wykonuje aplikacja Windows.
 
-W katalogu `app/BlessedOptimizer/` znajduje się natywna aplikacja Windows. Numer wersji w kodzie to **1.3.0**. GitHub Actions buduje ją jako jeden samodzielny plik `.exe`; wydanie `v1.3.0` udostępnia instalator, sumę SHA-256 i manifest aktualizacji w GitHub Releases.
+W katalogu `app/BlessedOptimizer/` znajduje się natywna aplikacja Windows. Numer wersji w kodzie to **1.3.0**. GitHub Actions buduje ją jako jeden samodzielny plik `.exe`; workflow wydania dołącza instalator, sumę SHA-256 i manifest aktualizacji do GitHub Release z tagiem `v1.3.0`.
 
 ## Co robi aplikacja v1.3.0
 
