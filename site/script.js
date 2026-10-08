@@ -5,12 +5,12 @@
 
   const toast = document.getElementById('site-toast');
   let toastTimer = 0;
-  function showToast(message) {
+  function showToast(message, duration = 3600) {
     if (!toast) return;
     toast.textContent = message;
     toast.classList.add('is-visible');
     window.clearTimeout(toastTimer);
-    toastTimer = window.setTimeout(() => toast.classList.remove('is-visible'), 3600);
+    toastTimer = window.setTimeout(() => toast.classList.remove('is-visible'), duration);
   }
 
   const year = document.getElementById('current-year');
@@ -229,19 +229,22 @@
   const mockViewCrumb = document.getElementById('mock-view-crumb');
   const mockGuideMessage = document.getElementById('mock-guide-message');
   const mockNavButtons = Array.from(document.querySelectorAll('[data-mock-view]'));
+  const mockNavGroupButtons = Array.from(document.querySelectorAll('[data-mock-nav-toggle]'));
   const mockCareBadge = document.getElementById('mock-care-badge');
   const mockStatusPill = document.getElementById('mock-status-pill');
   const mockStatusPillText = document.getElementById('mock-status-pill-text');
   const mockViews = {
+    blessing: { title: 'Czas na odnowę', crumb: 'BŁOGOSŁAWIEŃSTWO', template: 'mock-template-blessing', message: 'Wybierz swój rytm. Przygotuję plan, który doda komputerowi lekkości.' },
     care: { title: 'Blessed czuwa', crumb: 'BLESSED CZUWA', template: 'mock-template-care', message: 'Znalazłem 2 rzeczy warte zajęcia się.' },
+    history: { title: 'Historia', crumb: 'HISTORIA', template: 'mock-template-history', message: 'Ostatnie przeglądy są zapisywane wyłącznie na tym komputerze.' },
     gaming: { title: 'Strefa gracza', crumb: 'STREFA GRACZA', template: 'mock-template-gaming', message: 'Włącz czuwanie, aby obserwować użycie procesora i pamięci podczas gry.' },
     processes: { title: 'Procesy', crumb: 'PROCESY', template: 'mock-template-processes', message: 'Pokażę zużycie CPU i pamięci przez każdy proces — czytelnie i na żywo.' },
+    devices: { title: 'Urządzenia', crumb: 'URZĄDZENIA', template: 'mock-template-devices', message: 'Przykładowy spis sprzętu obecnego według Windows. Bez odczytu kamery lub wejścia.' },
     connections: { title: 'Połączenia', crumb: 'POŁĄCZENIA', template: 'mock-template-connections', message: 'Sprawdzę stan kart sieciowych i wykonam test ping. Każdą zmianę zatwierdzasz Ty.' },
     proposals: { title: 'Propozycje', crumb: 'PROPOZYCJE', template: 'mock-template-proposals', message: 'Podpowiem, co warto sprawdzić, i zaprowadzę Cię prosto do właściwych ustawień Windows.' },
-    history: { title: 'Historia', crumb: 'HISTORIA', template: 'mock-template-history', message: 'Ostatnie przeglądy są zapisywane wyłącznie na tym komputerze.' },
-    startup: { title: 'Autostart', crumb: 'AUTOSTART', template: 'mock-template-startup', message: 'Przejrzyj wpisy autostartu swojego konta. Każda zmiana ma zapisaną kopię do przywrócenia.' },
-    cleanup: { title: 'Porządki', crumb: 'PORZĄDKI', template: 'mock-template-cleanup', message: 'Przejrzyj aplikacje swojego konta i odinstaluj te, których nie używasz. Aplikacje wracają przez Microsoft Store.' },
     power: { title: 'Zasilanie', crumb: 'ZASILANIE', template: 'mock-template-power', message: 'Dostrój plan zasilania. Każdą zmianę potwierdzasz Ty i zawsze możesz ją cofnąć.' },
+    startup: { title: 'Autostart', crumb: 'AUTOSTART', template: 'mock-template-startup', message: 'Przejrzyj wpisy autostartu swojego konta. Każda zmiana ma zapisaną kopię do przywrócenia.' },
+    cleanup: { title: 'Porządki', crumb: 'PORZĄDKI', template: 'mock-template-cleanup', message: 'Przejrzyj aplikacje swojego konta i odinstaluj te, których nie używasz. Ponowna instalacja zależy od dostępności u wydawcy lub w Microsoft Store.' },
     personalization: { title: 'Wygląd', crumb: 'WYGLĄD', template: 'mock-template-personalization', message: 'Dopasuj motyw i kolor Blessed. Ustawienia systemowe Windows otworzysz osobno.' },
     settings: { title: 'Ustawienia Blessed', crumb: 'USTAWIENIA', template: 'mock-template-settings', message: 'Wybierz swój priorytet i zdecyduj, które zadania Blessed może wykonywać automatycznie.' }
   };
@@ -251,7 +254,19 @@
     battery: { label: 'Długa praca na baterii', promise: 'Pilnuję zużycia energii i podpowiadam, co niepotrzebnie zjada baterię.' },
     quiet: { label: 'Cisza i chłód', promise: 'Pilnuję obciążenia, żeby wentylatory nie miały powodu do pracy.' }
   };
+  const mockBlessingGoals = {
+    gaming: { label: 'Granie', intention: 'Gotowy na rundę? Przygotuję komputer do gry.', prompt: 'Dam pierwszeństwo płynności i mocy.', powerHeading: 'Daj procesorowi więcej swobody', powerCopy: 'Zwiększ limit do 100% podczas zasilania z sieci — gotowy na grę.', powerValue: '70% → 100%', boost: true },
+    work: { label: 'Praca', intention: 'Czas na skupienie i lżejszy start.', prompt: 'Ułożę plan pod produktywny dzień.', powerHeading: 'Przygotuj moc do pracy', powerCopy: 'Zwiększ limit do 100% przy zasilaniu z sieci, gdy liczy się wydajność.', powerValue: '70% → 100%', boost: true },
+    quiet: { label: 'Cisza', intention: 'Zadbajmy o spokojniejszy komputer.', prompt: 'Postawię na łagodniejsze, cichsze działanie.', powerHeading: 'Zachowaj spokojny profil', powerCopy: 'Zostaw limit na 70% — wybierasz ciszę i chłodniejszą pracę.', powerValue: '70% → 70%', boost: false },
+    battery: { label: 'Bateria', intention: 'Dziś liczy się dłuższy dzień.', prompt: 'Ułożę plan z myślą o energii na później.', powerHeading: 'Oszczędzaj energię', powerCopy: 'Zostaw limit na 70%, by zachować spokojniejszy pobór energii.', powerValue: '70% → 70%', boost: false }
+  };
   let mockWatchTimer = 0;
+  let mockBlessingTimer = 0;
+  let mockRenewalTimer = 0;
+  let mockBlessingGoal = 'gaming';
+  let mockBlessingScanned = false;
+  let mockRenewalSelection = new Set(['cleanup', 'power']);
+  let mockRenewalCompletedItems = [];
 
   function mockHeadline(count) {
     if (count === 0) return 'Wszystko gra — nic nie wymaga Twojej uwagi.';
@@ -285,13 +300,34 @@
     }
   }
 
+  function mockSetNavGroup(groupName, expanded) {
+    mockNavGroupButtons.forEach((button) => {
+      const selected = button.dataset.mockNavToggle === groupName;
+      const open = selected && expanded;
+      button.setAttribute('aria-expanded', String(open));
+      button.classList.toggle('is-open', open);
+      const panel = document.getElementById(button.getAttribute('aria-controls'));
+      if (panel) panel.hidden = !open;
+      const chevron = button.querySelector('.mock-nav-chevron');
+      if (chevron) chevron.textContent = open ? '⌄' : '›';
+    });
+  }
+
   function setMockView(viewName) {
     const view = mockViews[viewName];
     const template = view && document.getElementById(view.template);
     const selectedButton = mockNavButtons.find((button) => button.dataset.mockView === viewName);
     if (!mockPage || !view || !template || !selectedButton) return;
+    const navItems = selectedButton.closest('[data-mock-nav-items]');
+    if (navItems) mockSetNavGroup(navItems.dataset.mockNavItems, true);
     window.clearInterval(mockWatchTimer);
     mockWatchTimer = 0;
+    window.clearTimeout(mockBlessingTimer);
+    window.clearTimeout(mockRenewalTimer);
+    mockBlessingTimer = 0;
+    mockRenewalTimer = 0;
+    if (mockWindow) mockWindow.classList.remove('is-blessing', 'is-renewing');
+    if (mockStatusPill) mockStatusPill.classList.remove('is-scanning');
     mockPage.classList.remove('view-switch');
     mockPage.replaceChildren(template.content.cloneNode(true));
     window.requestAnimationFrame(() => mockPage.classList.add('view-switch'));
@@ -305,30 +341,282 @@
     mockNavButtons.forEach((button) => {
       const selected = button === selectedButton;
       button.classList.toggle('is-active', selected);
-      button.setAttribute('aria-selected', String(selected));
-      button.tabIndex = selected ? 0 : -1;
       if (selected) button.setAttribute('aria-current', 'page');
       else button.removeAttribute('aria-current');
     });
     if (viewName === 'care') mockRefreshCareState();
+    if (viewName === 'processes') {
+      mockRefreshProcessControls();
+      mockFilterProcessRows('');
+    }
+    if (viewName === 'blessing') mockRestoreBlessingView();
   }
+
+  function mockRenewalCountLabel(count) {
+    if (count === 1) return '1 krok';
+    if (count >= 2 && count <= 4) return `${count} kroki`;
+    return `${count} kroków`;
+  }
+
+  function mockRefreshRenewalPlan() {
+    if (!mockPage) return;
+    const allItems = Array.from(mockPage.querySelectorAll('[data-renewal-item]'));
+    allItems.forEach((input) => {
+      const card = input.closest('[data-renewal-card]');
+      const visible = Boolean(card && !card.hidden);
+      const selected = visible && mockRenewalSelection.has(input.dataset.renewalItem);
+      input.checked = selected;
+      if (card) card.classList.toggle('is-selected', selected);
+    });
+    const items = allItems.filter((input) => {
+      const card = input.closest('[data-renewal-card]');
+      return Boolean(card && !card.hidden);
+    });
+    const count = items.filter((input) => mockRenewalSelection.has(input.dataset.renewalItem)).length;
+    const countLabel = mockPage.querySelector('#mock-renewal-count');
+    const applyButton = mockPage.querySelector('#mock-renewal-apply');
+    if (countLabel) countLabel.textContent = count ? mockRenewalCountLabel(count) : 'Wybierz kroki';
+    if (applyButton) {
+      applyButton.disabled = count === 0;
+      const label = applyButton.querySelector('[data-renewal-apply-label]');
+      if (label) label.textContent = count ? `Odnowa jednym kliknięciem · ${mockRenewalCountLabel(count)}` : 'Wybierz krok odnowy';
+    }
+  }
+
+  function mockBringIntoView(element) {
+    if (!element?.scrollIntoView) return;
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    window.requestAnimationFrame(() => element.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' }));
+  }
+
+  function mockSetBlessingGoal(goalName, applyGoalDefaults = true) {
+    const goal = mockBlessingGoals[goalName];
+    if (!goal || !mockPage) return;
+    mockBlessingGoal = goalName;
+    mockPage.querySelectorAll('[data-blessing-goal]').forEach((button) => {
+      const selected = button.dataset.blessingGoal === goalName;
+      button.classList.toggle('is-selected', selected);
+      button.setAttribute('aria-pressed', String(selected));
+    });
+    const setText = (selector, text) => {
+      const element = mockPage.querySelector(selector);
+      if (element) element.textContent = text;
+    };
+    setText('#mock-blessing-intention', goal.intention);
+    setText('#mock-blessing-prompt', goal.prompt);
+    setText('#mock-renewal-goal-name', goal.label);
+    setText('#mock-sidebar-profile', `${goal.label} · gotowy`);
+    setText('#mock-renewal-power-heading', goal.powerHeading);
+    setText('#mock-renewal-power-copy', goal.powerCopy);
+    setText('#mock-renewal-power-value', goal.powerValue);
+    setText('#mock-renewal-power-metric', goal.boost ? '100%' : '70%');
+    setText('#mock-renewal-power-metric-caption', goal.boost ? 'możliwy limit CPU przy zasilaniu' : 'obecny limit dla wybranego celu');
+    const powerInput = mockPage.querySelector('[data-renewal-item="power"]');
+    const powerCard = mockPage.querySelector('[data-renewal-card="power"]');
+    if (powerCard) powerCard.hidden = !goal.boost;
+    if (!goal.boost) mockRenewalSelection.delete('power');
+    if (applyGoalDefaults && powerInput) {
+      if (goal.boost) mockRenewalSelection.add('power');
+      else mockRenewalSelection.delete('power');
+      mockRenewalCompletedItems = [];
+      const results = mockPage.querySelector('#mock-first-blessing-results');
+      const complete = mockPage.querySelector('#mock-renewal-complete');
+      if (mockBlessingScanned && results) results.hidden = false;
+      if (complete) complete.hidden = true;
+    }
+    mockRefreshRenewalPlan();
+  }
+
+  function mockRestoreBlessingView() {
+    mockSetBlessingGoal(mockBlessingGoal, false);
+    const results = mockPage.querySelector('#mock-first-blessing-results');
+    const complete = mockPage.querySelector('#mock-renewal-complete');
+    const runButton = mockPage.querySelector('#mock-first-blessing-run');
+    const status = mockPage.querySelector('#mock-first-blessing-status');
+    if (results) results.hidden = !mockBlessingScanned || mockRenewalCompletedItems.length > 0;
+    if (complete) complete.hidden = mockRenewalCompletedItems.length === 0;
+    if (runButton) runButton.querySelector('#mock-first-blessing-label').textContent = mockBlessingScanned ? 'Odśwież przegląd' : 'Rozpocznij błogosławieństwo';
+    if (status) status.textContent = mockBlessingScanned ? 'Plan odnowy gotowy · dane przykładowe' : 'Podgląd interaktywny · przykładowe odczyty';
+    if (mockStatusPillText) mockStatusPillText.textContent = mockRenewalCompletedItems.length ? 'Odnowa zakończona' : mockBlessingScanned ? 'Plan odnowy gotowy' : 'Gotowy na odnowę';
+    if (mockBlessingScanned && mockRenewalCompletedItems.length) mockShowRenewalComplete(mockRenewalCompletedItems);
+    mockRefreshRenewalPlan();
+  }
+
+  function mockStartBlessingScan() {
+    const runButton = mockPage?.querySelector('#mock-first-blessing-run');
+    const progress = mockPage?.querySelector('#mock-blessing-progress');
+    const results = mockPage?.querySelector('#mock-first-blessing-results');
+    const status = mockPage?.querySelector('#mock-first-blessing-status');
+    if (!runButton || runButton.disabled || !progress || !results) return;
+    const label = runButton.querySelector('#mock-first-blessing-label');
+    const steps = Array.from(progress.querySelectorAll('[data-blessing-step]'));
+    steps.forEach((step) => step.classList.remove('is-active', 'is-done'));
+    mockBlessingScanned = false;
+    mockRenewalCompletedItems = [];
+    runButton.disabled = true;
+    if (label) label.textContent = 'Blessed już sprawdza…';
+    progress.hidden = false;
+    results.hidden = true;
+    const complete = mockPage.querySelector('#mock-renewal-complete');
+    if (complete) complete.hidden = true;
+    if (status) status.textContent = 'Oglądam możliwości Twojego komputera…';
+    if (mockWindow) mockWindow.classList.add('is-blessing');
+    if (mockStatusPill) mockStatusPill.classList.add('is-scanning');
+    if (mockStatusPillText) mockStatusPillText.textContent = 'Blessed szykuje odnowę';
+    if (mockGuideMessage) mockGuideMessage.textContent = 'Lecę znaleźć, gdzie możemy dodać Twojemu komputerowi lekkości.';
+    mockPage.querySelectorAll('[data-blessing-goal]').forEach((button) => { button.disabled = true; });
+    let index = 0;
+    const advance = () => {
+      const previous = steps[index - 1];
+      if (previous) previous.classList.replace('is-active', 'is-done');
+      if (index >= steps.length) {
+        mockBlessingTimer = 0;
+        mockBlessingScanned = true;
+        progress.hidden = true;
+        results.hidden = false;
+        mockBringIntoView(results);
+        runButton.disabled = false;
+        if (label) label.textContent = 'Odśwież przegląd';
+        if (status) status.textContent = 'Mam gotowy plan odnowy · przykładowe odczyty';
+        if (mockWindow) mockWindow.classList.remove('is-blessing');
+        if (mockStatusPill) mockStatusPill.classList.remove('is-scanning');
+        if (mockStatusPillText) mockStatusPillText.textContent = 'Plan odnowy gotowy';
+        if (mockGuideMessage) mockGuideMessage.textContent = 'Mam dla Ciebie plan. Zobaczmy, które kroki pasują do Twojego dnia.';
+        mockPage.querySelectorAll('[data-blessing-goal]').forEach((button) => { button.disabled = false; });
+        mockRefreshRenewalPlan();
+        showToast('Plan odnowy jest gotowy. Wybierz kroki, które chcesz wypróbować.');
+        return;
+      }
+      steps[index].classList.add('is-active');
+      index += 1;
+      mockBlessingTimer = window.setTimeout(advance, 430);
+    };
+    advance();
+  }
+
+  function mockShowRenewalComplete(items) {
+    if (!mockPage) return;
+    const hasCleanup = items.includes('cleanup');
+    const hasPower = items.includes('power');
+    const freed = mockPage.querySelector('#mock-renewal-freed');
+    const power = mockPage.querySelector('#mock-renewal-power-result');
+    const copy = mockPage.querySelector('#mock-renewal-complete-copy');
+    const cleanupLine = mockPage.querySelector('#mock-renewal-done-cleanup');
+    const powerLine = mockPage.querySelector('#mock-renewal-done-power');
+    if (freed) freed.textContent = hasCleanup ? '2,4 GB' : '—';
+    if (power) power.textContent = hasPower ? '100%' : 'Bez zmian';
+    if (cleanupLine) cleanupLine.hidden = !hasCleanup;
+    if (powerLine) {
+      powerLine.hidden = !hasPower;
+      powerLine.textContent = `✓ Przygotowano profil energii dla ${mockBlessingGoals[mockBlessingGoal].label}`;
+    }
+    if (copy) {
+      const outcomes = [];
+      if (hasCleanup) outcomes.push('odzyskaliśmy 2,4 GB miejsca');
+      if (hasPower) outcomes.push(`dostroiliśmy profil pod ${mockBlessingGoals[mockBlessingGoal].label.toLowerCase()}`);
+      copy.textContent = outcomes.length ? `Pięknie! ${outcomes.join(' i ')}. Twój komputer jest gotowy na więcej.` : 'Gotowe. Twój komputer zachował obecne ustawienia.';
+    }
+  }
+
+  function mockRunRenewal() {
+    const selected = Array.from(mockRenewalSelection);
+    const results = mockPage?.querySelector('#mock-first-blessing-results');
+    const progress = mockPage?.querySelector('#mock-renewal-progress');
+    const complete = mockPage?.querySelector('#mock-renewal-complete');
+    if (!selected.length || !results || !progress || !complete) return;
+    mockRenewalCompletedItems = [];
+    results.hidden = true;
+    complete.hidden = true;
+    progress.hidden = false;
+    mockBringIntoView(progress);
+    const steps = Array.from(progress.querySelectorAll('[data-renewal-step]'));
+    steps.forEach((step) => {
+      step.hidden = !selected.includes(step.dataset.renewalStep);
+      step.classList.remove('is-active', 'is-done');
+    });
+    if (mockWindow) mockWindow.classList.add('is-renewing');
+    if (mockStatusPill) mockStatusPill.classList.add('is-scanning');
+    if (mockStatusPillText) mockStatusPillText.textContent = 'Blessed odnawia komputer';
+    if (mockGuideMessage) mockGuideMessage.textContent = 'Już działam. Za chwilę pokażę Ci świeży efekt.';
+    const activeSteps = steps.filter((step) => selected.includes(step.dataset.renewalStep));
+    let index = 0;
+    const advance = () => {
+      const previous = activeSteps[index - 1];
+      if (previous) previous.classList.replace('is-active', 'is-done');
+      if (index >= activeSteps.length) {
+        mockRenewalTimer = 0;
+        mockRenewalCompletedItems = selected;
+        progress.hidden = true;
+        complete.hidden = false;
+        mockBringIntoView(complete);
+        mockShowRenewalComplete(selected);
+        if (mockWindow) mockWindow.classList.remove('is-renewing');
+        if (mockStatusPill) mockStatusPill.classList.remove('is-scanning');
+        if (mockStatusPillText) mockStatusPillText.textContent = 'Odnowa zakończona';
+        if (mockGuideMessage) mockGuideMessage.textContent = 'Pięknie! Twój komputer odzyskał trochę oddechu.';
+        showToast('Odnowa zakończona — taki efekt zobaczysz w demonstracji.');
+        return;
+      }
+      activeSteps[index].classList.add('is-active');
+      index += 1;
+      mockRenewalTimer = window.setTimeout(advance, 760);
+    };
+    advance();
+  }
+
+  function mockReturnToRenewalPlan() {
+    mockRenewalCompletedItems = [];
+    const results = mockPage?.querySelector('#mock-first-blessing-results');
+    const complete = mockPage?.querySelector('#mock-renewal-complete');
+    if (results) results.hidden = false;
+    if (complete) complete.hidden = true;
+    if (mockStatusPillText) mockStatusPillText.textContent = 'Plan odnowy gotowy';
+    if (mockGuideMessage) mockGuideMessage.textContent = 'Możesz zmienić swój plan albo wybrać kolejną rzecz do odnowienia.';
+    mockRefreshRenewalPlan();
+  }
+
+  mockNavGroupButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const open = button.getAttribute('aria-expanded') === 'true';
+      mockSetNavGroup(button.dataset.mockNavToggle, !open);
+    });
+    button.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowLeft' && button.getAttribute('aria-expanded') === 'true') {
+        event.preventDefault();
+        mockSetNavGroup(button.dataset.mockNavToggle, false);
+      } else if (event.key === 'ArrowRight' && button.getAttribute('aria-expanded') !== 'true') {
+        event.preventDefault();
+        mockSetNavGroup(button.dataset.mockNavToggle, true);
+      } else if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        mockSetNavGroup(button.dataset.mockNavToggle, true);
+        window.requestAnimationFrame(() => document.getElementById(button.getAttribute('aria-controls'))?.querySelector('[data-mock-view]')?.focus());
+      }
+    });
+  });
 
   mockNavButtons.forEach((button) => {
     button.addEventListener('click', () => setMockView(button.dataset.mockView));
     button.addEventListener('keydown', (event) => {
       if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
       event.preventDefault();
-      const index = mockNavButtons.indexOf(button);
+      const visibleButtons = mockNavButtons.filter((navButton) => !navButton.closest('[data-mock-nav-items]')?.hidden);
+      const index = visibleButtons.indexOf(button);
       const next = event.key === 'Home' ? 0
-        : event.key === 'End' ? mockNavButtons.length - 1
-          : (index + (['ArrowRight', 'ArrowDown'].includes(event.key) ? 1 : -1) + mockNavButtons.length) % mockNavButtons.length;
-      mockNavButtons[next].focus();
-      setMockView(mockNavButtons[next].dataset.mockView);
+        : event.key === 'End' ? visibleButtons.length - 1
+          : (index + (['ArrowRight', 'ArrowDown'].includes(event.key) ? 1 : -1) + visibleButtons.length) % visibleButtons.length;
+      visibleButtons[next].focus();
+      setMockView(visibleButtons[next].dataset.mockView);
     });
   });
-  setMockView('care');
+  setMockView('blessing');
 
   function mockRunScan() {
+    const firstBlessingButton = mockPage ? mockPage.querySelector('#mock-first-blessing-run') : null;
+    if (firstBlessingButton) {
+      firstBlessingButton.click();
+      return;
+    }
     const careStatus = mockPage ? mockPage.querySelector('#mock-care-status') : null;
     if (careStatus) {
       careStatus.textContent = 'Sprawdzam Twój komputer…';
@@ -464,13 +752,15 @@
     const counter = document.getElementById('mock-cleanup-counter');
     if (!counter) return;
     const boxes = mockAppxBoxes().filter((box) => !box.closest('.mock-appx').classList.contains('is-removed'));
-    const checked = boxes.filter((box) => box.checked).length;
-    counter.textContent = `${boxes.length} aplikacje · ${checked} zaznaczonych`;
+    const selectable = boxes.filter((box) => !box.disabled).length;
+    const protectedCount = boxes.length - selectable;
+    const checked = boxes.filter((box) => box.checked && !box.disabled).length;
+    counter.textContent = `${boxes.length} przykładowych pakietów · ${selectable} do wyboru · ${protectedCount} chroniony · ${checked} zaznaczonych`;
   }
 
   function mockSetAllAppx(checked) {
     mockAppxBoxes().forEach((box) => {
-      if (!box.closest('.mock-appx').classList.contains('is-removed')) box.checked = checked;
+      if (!box.disabled && !box.closest('.mock-appx').classList.contains('is-removed')) box.checked = checked;
     });
     mockRefreshAppxCounter();
   }
@@ -479,7 +769,7 @@
     const confirm = document.getElementById('mock-cleanup-confirm');
     const text = document.getElementById('mock-cleanup-confirm-text');
     if (!confirm) return;
-    const boxes = mockAppxBoxes().filter((box) => box.checked && !box.closest('.mock-appx').classList.contains('is-removed'));
+    const boxes = mockAppxBoxes().filter((box) => box.checked && !box.disabled && !box.closest('.mock-appx').classList.contains('is-removed'));
     if (boxes.length === 0) {
       showToast('Zaznacz najpierw aplikacje, które chcesz odinstalować.');
       return;
@@ -487,16 +777,92 @@
     if (text) {
       const names = boxes.slice(0, 3).map((box) => box.closest('.mock-appx').querySelector('strong')?.textContent || '');
       const suffix = boxes.length > 3 ? ` i jeszcze ${boxes.length - 3}` : '';
-      text.textContent = `Odinstalować ${boxes.length} aplikacji bieżącego konta? ${names.join(', ')}${suffix}. Aplikacje wgrasz z powrotem przez Microsoft Store.`;
+      text.textContent = `Odinstalować ${boxes.length} aplikacji bieżącego konta? ${names.join(', ')}${suffix}. Prototyp niczego nie usuwa; ponowna instalacja zależy od dostępności u wydawcy lub w Microsoft Store.`;
     }
     confirm.hidden = false;
+  }
+
+  function mockShowProcessConfirm(forceTerminate) {
+    const confirm = document.getElementById('mock-process-confirm');
+    const text = document.getElementById('mock-process-confirm-text');
+    const run = document.getElementById('mock-process-confirm-run');
+    const selectedCount = Array.from(mockPage.querySelectorAll('[data-mock-process-row]')).filter((row) => {
+      const checkbox = row.querySelector('[data-mock-process-select]');
+      return checkbox && checkbox.checked && !checkbox.disabled && !row.hidden;
+    }).length;
+    if (selectedCount === 0) {
+      showToast('Zaznacz aplikację z widocznym oknem. Procesy oznaczone jako ważne i składniki Windows są wyłączone z tej akcji.');
+      return;
+    }
+    if (text) text.textContent = forceTerminate
+      ? `Wymusić zakończenie ${selectedCount} zaznaczonych aplikacji? Niezapisane zmiany mogą zostać utracone.`
+      : `Poprosić ${selectedCount} zaznaczonych aplikacji o zwykłe zamknięcie? Najpierw zapisz swoją pracę.`;
+    if (run) {
+      run.dataset.forceTerminate = String(forceTerminate);
+      run.textContent = forceTerminate ? 'Tak, wymuś zakończenie' : 'Tak, poproś o zamknięcie';
+    }
+    if (confirm) confirm.hidden = false;
+  }
+
+  function mockRunProcessClose(forceTerminate) {
+    const confirm = document.getElementById('mock-process-confirm');
+    if (confirm) confirm.hidden = true;
+    const rows = Array.from(mockPage.querySelectorAll('[data-mock-process-row]'));
+    const selected = rows.filter((row) => {
+      const checkbox = row.querySelector('[data-mock-process-select]');
+      return checkbox && checkbox.checked && !checkbox.disabled && !row.hidden;
+    });
+    if (selected.length === 0) {
+      showToast('Zaznacz aplikację z widocznym oknem. Procesy oznaczone jako ważne i składniki Windows są wyłączone z tej akcji.');
+      return;
+    }
+    selected.forEach((row) => {
+      row.classList.add('is-closed');
+      const select = row.querySelector('[data-mock-process-select]');
+      const keep = row.querySelector('[data-mock-process-important]');
+      if (select) { select.checked = false; select.disabled = true; }
+      if (keep) keep.disabled = true;
+    });
+    mockRefreshProcessControls();
+    const result = document.getElementById('mock-process-result');
+    if (result) result.textContent = `Podgląd: wybrano ${selected.length} ${selected.length === 1 ? 'aplikację' : 'aplikacje'} do ${forceTerminate ? 'wymuszonego zakończenia' : 'zwykłego zamknięcia'}.`;
+    showToast(forceTerminate
+      ? 'Makieta: w aplikacji wymuszenie wymaga osobnego potwierdzenia i może utracić niezapisane zmiany.'
+      : 'Makieta: w aplikacji Blessed najpierw prosi aplikację o zapisanie pracy i zwykłe zamknięcie.', 6500);
+  }
+
+  function mockRefreshProcessControls() {
+    if (!mockPage) return;
+    const rows = Array.from(mockPage.querySelectorAll('[data-mock-process-row]'));
+    const candidates = rows.filter((row) => {
+      const select = row.querySelector('[data-mock-process-select]');
+      return select && !select.disabled && !row.hidden;
+    });
+    const selectedCount = candidates.filter((row) => row.querySelector('[data-mock-process-select]').checked).length;
+    const count = document.getElementById('mock-process-selection-count');
+    const status = document.getElementById('mock-process-status');
+    const close = document.getElementById('mock-close-selected');
+    const force = document.getElementById('mock-force-close-selected');
+    if (count) count.textContent = `${selectedCount} zaznaczone`;
+    if (status) status.textContent = `${rows.filter((row) => !row.classList.contains('is-closed')).length} przykładowych pozycji · dane demonstracyjne`;
+    if (close) close.disabled = selectedCount === 0;
+    if (force) force.disabled = selectedCount === 0;
+  }
+
+  function mockFilterProcessRows(query) {
+    if (!mockPage) return;
+    const normalized = query.trim().toLocaleLowerCase();
+    mockPage.querySelectorAll('[data-mock-process-row]').forEach((row) => {
+      row.hidden = normalized.length > 0 && !row.textContent.toLocaleLowerCase().includes(normalized);
+    });
+    mockRefreshProcessControls();
   }
 
   function mockRunUninstall() {
     const confirm = document.getElementById('mock-cleanup-confirm');
     const summary = document.getElementById('mock-cleanup-summary');
     if (confirm) confirm.hidden = true;
-    const boxes = mockAppxBoxes().filter((box) => box.checked && !box.closest('.mock-appx').classList.contains('is-removed'));
+    const boxes = mockAppxBoxes().filter((box) => box.checked && !box.disabled && !box.closest('.mock-appx').classList.contains('is-removed'));
     boxes.forEach((box) => {
       const row = box.closest('.mock-appx');
       if (row) row.classList.add('is-removed');
@@ -506,14 +872,20 @@
     mockRefreshAppxCounter();
     if (summary) {
       summary.hidden = false;
-      summary.textContent = `Gotowe. Odinstalowano ${boxes.length} aplikacji z Twojego konta — wgrasz je z powrotem przez Microsoft Store, kiedy zechcesz.`;
+      summary.textContent = `Symulacja zakończona: ${boxes.length} przykładowych pozycji oznaczono jako usunięte. Niczego nie odinstalowano z Twojego komputera.`;
     }
-    showToast('Makieta: aplikacje „odinstalowane”. W aplikacji wykona to Remove-AppxPackage dla Twojego konta.');
+    showToast('Prototyp: to tylko przykładowe pozycje. Aplikacja Windows wykonałaby rzeczywiste działanie dopiero po Twoim potwierdzeniu.');
   }
 
   function mockHandleClick(event) {
     const target = event.target instanceof Element ? event.target : null;
     if (!target) return;
+
+    const helpButton = target.closest('[data-mock-help]');
+    if (helpButton) {
+      showToast(helpButton.dataset.mockHelp, 6500);
+      return;
+    }
 
     const toastElement = target.closest('[data-toast]');
     if (toastElement) {
@@ -536,6 +908,25 @@
         if (wasProblem) mockRefreshCareState();
         showToast('Sprawa wyciszona — w aplikacji znika z przeglądu na stałe.');
       }
+      return;
+    }
+
+    const blessingGoal = target.closest('[data-blessing-goal]');
+    if (blessingGoal) {
+      mockSetBlessingGoal(blessingGoal.dataset.blessingGoal);
+      return;
+    }
+
+    if (target.closest('#mock-first-blessing-run')) {
+      mockStartBlessingScan();
+      return;
+    }
+    if (target.closest('#mock-renewal-apply')) {
+      mockRunRenewal();
+      return;
+    }
+    if (target.closest('#mock-renewal-again')) {
+      mockReturnToRenewalPlan();
       return;
     }
 
@@ -565,6 +956,25 @@
     const watchSwitch = target.closest('[data-mock-watch]');
     if (watchSwitch) {
       mockToggleWatch(watchSwitch);
+      return;
+    }
+
+    if (target.closest('#mock-close-selected')) {
+      mockShowProcessConfirm(false);
+      return;
+    }
+    if (target.closest('#mock-force-close-selected')) {
+      mockShowProcessConfirm(true);
+      return;
+    }
+    if (target.closest('#mock-process-confirm-run')) {
+      const runButton = target.closest('#mock-process-confirm-run');
+      mockRunProcessClose(runButton.dataset.forceTerminate === 'true');
+      return;
+    }
+    if (target.closest('#mock-process-confirm-cancel')) {
+      const confirm = document.getElementById('mock-process-confirm');
+      if (confirm) confirm.hidden = true;
       return;
     }
 
@@ -655,9 +1065,38 @@
 
   if (mockPage) {
     mockPage.addEventListener('click', mockHandleClick);
+    mockPage.addEventListener('input', (event) => {
+      if (!(event.target instanceof HTMLInputElement)) return;
+      if (event.target.id === 'mock-process-search') mockFilterProcessRows(event.target.value);
+      if (event.target.id === 'mock-cleanup-search') {
+        const query = event.target.value.trim().toLocaleLowerCase();
+        mockPage.querySelectorAll('.mock-appx').forEach((row) => {
+          row.hidden = query.length > 0 && !row.textContent.toLocaleLowerCase().includes(query);
+        });
+      }
+    });
     mockPage.addEventListener('change', (event) => {
-      if (event.target instanceof HTMLInputElement && event.target.hasAttribute('data-mock-appx')) {
-        mockRefreshAppxCounter();
+      if (!(event.target instanceof HTMLInputElement)) return;
+      if (event.target.hasAttribute('data-mock-appx')) mockRefreshAppxCounter();
+      if (event.target.hasAttribute('data-mock-process-important')) {
+        const row = event.target.closest('[data-mock-process-row]');
+        const select = row?.querySelector('[data-mock-process-select]');
+        const role = row?.querySelector('[data-mock-process-role]');
+        if (row && select) {
+          if (event.target.checked) select.checked = false;
+          select.disabled = event.target.checked || row.dataset.processProtected === 'true' || row.classList.contains('is-closed');
+          row.classList.toggle('is-important', event.target.checked);
+        }
+        if (role && row) role.textContent = event.target.checked ? 'Ważny dla Ciebie' : row.dataset.processRole;
+        mockRefreshProcessControls();
+      }
+      if (event.target.hasAttribute('data-mock-process-select')) mockRefreshProcessControls();
+      if (event.target.hasAttribute('data-renewal-item')) {
+        const item = event.target.dataset.renewalItem;
+        if (event.target.checked) mockRenewalSelection.add(item);
+        else mockRenewalSelection.delete(item);
+        mockRenewalCompletedItems = [];
+        mockRefreshRenewalPlan();
       }
     });
   }
@@ -747,14 +1186,14 @@
       const label = auditButton.querySelector('span');
       auditButton.disabled = true;
       auditButton.classList.add('is-scanning');
-      if (label) label.textContent = 'Sprawdzam…';
-      scanFeedback.textContent = 'Sprawdzam dysk, pamięć, ekran, autostart i zasilanie…';
+      if (label) label.textContent = 'Blessed sprawdza…';
+      scanFeedback.textContent = 'Blessed układa plan, który doda komputerowi lekkości…';
       scanFeedback.classList.add('is-visible');
       window.setTimeout(() => {
         auditButton.disabled = false;
         auditButton.classList.remove('is-scanning');
-        if (label) label.textContent = 'Sprawdź ponownie';
-        scanFeedback.textContent = 'Gotowe — Blessed znalazł 3 rzeczy i może zająć się nimi od razu.';
+        if (label) label.textContent = 'Odśwież podgląd';
+        scanFeedback.textContent = 'Gotowe — Blessed znalazł kilka dobrych kroków do Twojej decyzji.';
       }, 900);
     });
   }

@@ -76,4 +76,18 @@ public sealed class AppxInventoryServiceTests
         Assert.Single(packages);
         Assert.Equal(string.Empty, packages[0].Version);
     }
+
+    [Fact]
+    public void ParsePackagesJsonReadsPublisherAndProtectionFlags()
+    {
+        const string json = """{ "Name": "Microsoft.VCLibs.140", "PackageFullName": "Microsoft.VCLibs.140_1.0_x64__abc", "Version": "1.0", "PublisherDisplayName": "Microsoft Corporation", "IsFramework": true, "IsResourcePackage": false, "NonRemovable": true }""";
+
+        var package = Assert.Single(AppxInventoryService.ParsePackagesJson(json));
+
+        Assert.Equal("Microsoft Corporation", package.PublisherDisplayName);
+        Assert.True(package.IsFramework);
+        Assert.False(package.IsResourcePackage);
+        Assert.True(package.NonRemovable);
+        Assert.True(package.Safety.IsProtected);
+    }
 }
